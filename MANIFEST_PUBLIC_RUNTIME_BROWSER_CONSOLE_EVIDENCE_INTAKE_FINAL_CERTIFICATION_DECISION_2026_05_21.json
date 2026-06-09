@@ -1,0 +1,66 @@
+{
+  "batch": "mega_batch_public_runtime_browser_console_evidence_intake_final_certification_decision_2026_05_21",
+  "base_zip": "palwakf_platform_mega_batch_public_runtime_browser_console_uat_closure_homepage_services_final_shell_certification_2026_05_21.zip",
+  "date": "2026-05-21",
+  "decision": "final-shell-certification-deferred-console-errors-present",
+  "production_approved": false,
+  "browser_routes_displayed": true,
+  "console_clean": false,
+  "sovereign_boundaries": {
+    "no_public_media_extraction": true,
+    "legacy_public_media_preserved": true,
+    "locations_authority_gate_open": true,
+    "wave_b1b_not_authorized": true,
+    "no_waqf_assets_mutation": true
+  },
+  "evidence": [
+    {
+      "file": "home_console.png",
+      "source": "لقطة شاشة 2026-05-21 143909.png",
+      "route": "/home",
+      "status": "displayed_with_console_errors",
+      "sha256": "f1d213f977e772bda93d8f15f177edfa8d50d8b5cdb0db8d66a93d71a035b511",
+      "note": "Hero/breaking section displayed; console contains red resource/network errors."
+    },
+    {
+      "file": "news_list_console.png",
+      "source": "لقطة شاشة 2026-05-21 143953.png",
+      "route": "/home/news",
+      "status": "displayed_with_console_errors",
+      "sha256": "0859803465b46b7c71c3dd9114604a81f3c70d18ab426c93b6d13803db9ffe08",
+      "note": "News list/metrics/search shell displayed; console contains red resource/network errors."
+    },
+    {
+      "file": "announcements_list_console.png",
+      "source": "لقطة شاشة 2026-05-21 144122.png",
+      "route": "/home/announcements",
+      "status": "displayed_with_console_errors",
+      "sha256": "8ac81e1a51913b00d4642fde236c7e1e126a536119b2639267156285d4060cce",
+      "note": "Announcements list/metrics/search shell displayed; console contains red resource/network errors."
+    },
+    {
+      "file": "announcement_detail_console.png",
+      "source": "لقطة شاشة 2026-05-21 144153.png",
+      "route": "/home/announcements/1295789704",
+      "status": "displayed_with_console_errors",
+      "sha256": "ce0b639d9c7cb5118e5cfb983355df1beeeca37db42c2305148ee6ab618f6613",
+      "note": "Announcement detail displayed after deep fix; console contains red resource/network errors."
+    },
+    {
+      "file": "services_console.png",
+      "source": "لقطة شاشة 2026-05-21 144237.png",
+      "route": "/home/services",
+      "status": "displayed_with_console_errors",
+      "sha256": "2a46d2808bc6fabc2a4f942aca55eeddeb0d19a5c3702fb9919cc9284c1e76a7",
+      "note": "Services page shell displayed; console contains image and Supabase/site_pages request errors including ERR_CONNECTION_CLOSED."
+    },
+    {
+      "file": "news_detail_console.png",
+      "source": "لقطة شاشة 2026-05-21 144343.png",
+      "route": "/home/news/1963512572",
+      "status": "displayed_with_console_errors",
+      "sha256": "b8b15d2c93f5c4c954f97375e8b35ad0cf158b5c164e67edd9571bc1b5d9771a",
+      "note": "News detail displayed; console contains red resource/network errors."
+    }
+  ]
+}

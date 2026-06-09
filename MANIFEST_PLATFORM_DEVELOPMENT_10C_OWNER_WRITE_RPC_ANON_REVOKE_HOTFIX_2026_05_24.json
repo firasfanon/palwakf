@@ -1,0 +1,20 @@
+{
+  "batch": "Platform Development 10C",
+  "title": "Owner-Write RPC SQL Apply Result Intake + Anonymous Execute Grant Hotfix",
+  "date": "2026-05-24",
+  "base": "palwakf_platform_development_10b_owner_write_rpc_executable_implementation_pack_2026_05_24.zip",
+  "status": "staging-stable / platform-development-10c-sql-apply-result-intaken / owner-write-rpcs-installed / locked-search-path-confirmed / authenticated-execute-grants-confirmed / anon-execute-grant-blocker-detected / anon-revoke-hotfix-added / production-not-approved / negative-uat-pending / browser-console-evidence-pending / flutter-write-reroute-production-disabled / no-auth-users-migration / no-flutter-service-role / no-waqf-assets-mutation",
+  "sql_added": [
+    "sql_sandbox/platform_development_10b_owner_write_rpc_executable_implementation_pack/05_revoke_anon_execute_owner_write_rpc_hotfix_apply.sql",
+    "sql_sandbox/platform_development_10b_owner_write_rpc_executable_implementation_pack/06_post_anon_revoke_catalog_uat_read_only.sql",
+    "sql_sandbox/platform_development_10b_owner_write_rpc_executable_implementation_pack/07_production_gate_redecision_after_anon_revoke_hotfix_read_only.sql"
+  ],
+  "sql_patched": [
+    "sql_sandbox/platform_development_10b_owner_write_rpc_executable_implementation_pack/01_owner_write_rpc_executable_implementation_apply.sql"
+  ],
+  "no_auth_users_migration": true,
+  "no_destructive_sql": true,
+  "no_flutter_service_role": true,
+  "no_waqf_assets_mutation": true,
+  "production_approved": false
+}

@@ -1,0 +1,26 @@
+{
+  "batch": "Platform Development 10A Final SQL42-45 Result Intake + 10B Entry Decision",
+  "date": "2026-05-23",
+  "status": "staging-stable / platform-development-10a-final-sql42-45-result-intaken / authorization-token-recorded-but-not-effective-alone / 10b-entry-contract-confirmed / exact-bodies-still-missing / negative-uat-still-missing / owner-write-rpcs-not-created / grants-not-created / flutter-write-reroute-not-authorized / production-not-approved / no-auth-users-migration / no-destructive-sql / no-flutter-service-role / no-waqf-assets-mutation",
+  "base_zip": "palwakf_platform_development_10a_authorization_token_intake_exact_body_negative_uat_blocker_2026_05_23.zip",
+  "full_baseline": "palwakf_platform_development_10a_final_sql42_45_result_intake_10b_entry_decision_2026_05_23.zip",
+  "updates_only": "palwakf_platform_development_10a_final_sql42_45_result_intake_10b_entry_decision_updates_only_2026_05_23.zip",
+  "sql_added": [
+    "46_platform_development_10a_final_result_intake_10b_gate_read_only.sql"
+  ],
+  "docs_added": [
+    "SQL_RESULT_INTAKE_PLATFORM_DEVELOPMENT_10A_FINAL_SQL42_45_RESULT_INTAKE_2026_05_23.md",
+    "DECISION_PLATFORM_DEVELOPMENT_10A_FINAL_SQL42_45_RESULT_INTAKE_10B_ENTRY_DECISION_2026_05_23.md",
+    "UAT_PLATFORM_DEVELOPMENT_10A_FINAL_SQL42_45_RESULT_INTAKE_2026_05_23.md",
+    "ERROR_RECORD_PLATFORM_DEVELOPMENT_10A_FINAL_GATE_10B_ENTRY_DECISION_2026_05_23.md",
+    "BASELINE_CHANGELOG_PLATFORM_DEVELOPMENT_10A_FINAL_SQL42_45_RESULT_INTAKE_2026_05_23.md",
+    "SESSION_HANDOFF_PLATFORM_DEVELOPMENT_10A_FINAL_SQL42_45_RESULT_INTAKE_2026_05_23.md",
+    "NEXT_SESSION_PROMPT_PLATFORM_DEVELOPMENT_10B_OR_STREAM_SWITCH_2026_05_23.md"
+  ],
+  "no_create_function": true,
+  "no_grant": true,
+  "no_destructive_sql": true,
+  "no_auth_users_migration": true,
+  "no_flutter_service_role": true,
+  "no_waqf_assets_mutation": true
+}

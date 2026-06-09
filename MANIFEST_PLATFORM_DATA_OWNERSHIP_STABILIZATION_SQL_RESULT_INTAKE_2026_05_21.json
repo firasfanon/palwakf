@@ -1,0 +1,13 @@
+{
+  "batch": "Platform Data Ownership Stabilization SQL Result Intake + Execution Gate",
+  "date": "2026-05-21",
+  "base": "palwakf_platform_mega_batch_platform_data_ownership_stabilization_discovery_final_execution_decision_2026_05_21.zip",
+  "status": "staging-stable / platform-data-ownership-stabilization-sql-result-intaken / execution-plan-approved-with-guards-not-executed / presence-counts-locations-services-passed / content-assets-legacy-source-shape-gap-recorded / activities-gallery-reroute-blocked-pending-controlled-execution / no-production-sql / no-public-media-extraction / no-locations-activation / no-activities-gallery-reroute / no-waqf-assets-mutation",
+  "decision": "execution-plan-approved-with-guards-not-executed",
+  "production_sql": false,
+  "public_media_extraction": false,
+  "locations_activation": false,
+  "activities_gallery_reroute": false,
+  "waqf_assets_mutation": false,
+  "notable_gap": "media_center.content_assets.legacy_source does not exist"
+}

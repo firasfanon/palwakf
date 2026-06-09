@@ -1,0 +1,16 @@
+{
+  "batch": "mega_batch_zakat_public_page_pwf_sis_visual_harmonization_uat_result_intake_official_config_gate_decision_2026_05_22",
+  "base": "palwakf_platform_mega_batch_zakat_public_page_pwf_sis_visual_harmonization_official_config_contract_2026_05_22.zip",
+  "decision": "FINAL_ZAKAT_RUNTIME_VISUAL_CERTIFICATION_ACCEPTED_WITH_CONFIG_WRAPPER_PENDING",
+  "status": "staging-stable / zakat-pwf-sis-visual-harmonization-uat-result-intaken / analyzer-clean / chrome-startup-passed / zakat-browser-console-evidence-accepted / zakat-visual-gap-closed-for-runtime / official-config-contract-declared / dedicated-zakat-config-wrapper-pending / final-zakat-runtime-visual-certification-accepted-with-config-wrapper-pending / production-not-approved / no-sql-production-change / no-waqf-assets-mutation",
+  "no_sql_production_change": true,
+  "no_waqf_assets_mutation": true,
+  "production_approved": false,
+  "evidence": [
+    "flutter pub get success",
+    "flutter analyze no issues found",
+    "flutter run -d chrome startup passed",
+    "browser console screenshots accepted",
+    "zakat visual harmonization accepted with config wrapper pending"
+  ]
+}

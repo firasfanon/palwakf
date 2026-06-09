@@ -1,0 +1,12 @@
+{
+  "batch": "Mega Batch — Media/Services Data Ownership Final Closure SQL Result Intake + Legacy Quarantine Certification",
+  "date": "2026-05-22",
+  "status": "staging-stable / media-services-final-closure-sql-result-intaken / final-closure-certified-with-legacy-quarantine-no-delete / media-center-owner-confirmed / platform-services-owner-confirmed / public-wrappers-only / gallery-assets-empty-certified-mapping-ready / production-delete-archive-not-approved / no-waqf-assets-mutation",
+  "input_baseline": "palwakf_platform_mega_batch_media_services_data_ownership_final_closure_legacy_quarantine_decision_2026_05_22.zip",
+  "decision": "MEDIA_SERVICES_OWNERSHIP_FINAL_CLOSURE_ACCEPTED_WITH_LEGACY_QUARANTINE_NO_DELETE",
+  "no_waq_assets_mutation": true,
+  "no_destructive_sql": true,
+  "public_role": "wrappers_rpc_views_only",
+  "media_owner": "media_center",
+  "services_owner": "platform_services"
+}

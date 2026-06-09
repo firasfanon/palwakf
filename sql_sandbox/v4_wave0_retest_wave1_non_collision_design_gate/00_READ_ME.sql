@@ -1,0 +1,3 @@
+-- V4 Wave0 Retest + Wave1 Non-Collision Design Gate
+-- READ ONLY. Does not execute ALTER TABLE, CREATE VIEW, GRANT, DROP, REVOKE, DML, or archive.
+-- Purpose: record Wave0 success and define Wave1 non-collision scope only.

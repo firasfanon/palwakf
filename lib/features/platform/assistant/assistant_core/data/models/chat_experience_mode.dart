@@ -1,0 +1,1 @@
+enum ChatExperienceMode { publicChatbot, internalAssistant }

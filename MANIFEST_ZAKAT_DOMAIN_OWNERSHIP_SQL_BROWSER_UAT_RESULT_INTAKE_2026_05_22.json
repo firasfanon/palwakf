@@ -1,0 +1,15 @@
+{
+  "batch": "Mega Batch — Zakat Domain Ownership Realignment SQL/Browser UAT Result Intake + Production Content Gate Decision",
+  "date": "2026-05-22",
+  "status": "staging-stable / zakat-schema-wrapper-ready-browser-uat-required / production-not-approved",
+  "base_baseline": "palwakf_platform_mega_batch_zakat_domain_ownership_realignment_billing_integration_contract_2026_05_22.zip",
+  "sql_evidence": {
+    "zakat_public_config_gate": "ZAKAT_SCHEMA_WRAPPER_READY_BROWSER_UAT_REQUIRED",
+    "billing_schema_present": false,
+    "sovereign_boundaries_passed": true
+  },
+  "production_approval": false,
+  "waqf_assets_mutation": false,
+  "new_functional_code": false,
+  "new_production_sql": false
+}

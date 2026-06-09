@@ -1,0 +1,7 @@
+-- 05_media_runtime_reroute_OR_data_strategy_DRAFT_NOT_RUN.sql
+-- DO NOT RUN.
+-- This file is intentionally a draft marker.
+-- Choose exactly one future strategy before any runtime reroute:
+--   A) Legacy fallback wrapper with row parity UAT.
+--   B) Controlled media import/seed into media_center with mapping and rollback.
+-- Direct Flutter media reroute to current wrappers is blocked because media_center is empty.

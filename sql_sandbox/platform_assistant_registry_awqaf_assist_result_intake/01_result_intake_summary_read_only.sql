@@ -1,0 +1,1 @@
+select 'result_intake_summary' as section, 'PRODUCTION_BLOCKED_PENDING_V4_EVIDENCE_AND_ASSISTANT_REGISTRY_UAT' as decision, false as skill_registered_by_this_script, false as write_enabled, false as direct_sovereign_reads_authorized, false as service_role_frontend_authorized, false as production_approved, true as read_only;

@@ -1,0 +1,32 @@
+{
+  "batch": "Platform Development 10B — Owner-Write RPC Executable Implementation Pack",
+  "date": "2026-05-24",
+  "starting_baseline": "palwakf_platform_development_10a_final_sql42_45_result_intake_10b_entry_decision_2026_05_23.zip",
+  "status": "executable-implementation-pack-prepared-production-not-approved",
+  "changed_files": [
+    "BASELINE_CHANGELOG_PLATFORM_DEVELOPMENT_10B_OWNER_WRITE_RPC_EXECUTABLE_IMPLEMENTATION_2026_05_24.md",
+    "DECISION_PLATFORM_DEVELOPMENT_10B_OWNER_WRITE_RPC_EXECUTABLE_IMPLEMENTATION_2026_05_24.md",
+    "ERROR_RECORD_PLATFORM_DEVELOPMENT_10B_OWNER_WRITE_RPC_EXECUTABLE_IMPLEMENTATION_2026_05_24.md",
+    "NEXT_SESSION_PROMPT_PLATFORM_DEVELOPMENT_10C_OWNER_WRITE_RPC_SQL_UAT_RESULT_INTAKE_2026_05_24.md",
+    "PLATFORM_DEVELOPMENT_10B_OWNER_WRITE_RPC_EXECUTABLE_IMPLEMENTATION_PACK_2026_05_24.md",
+    "SESSION_HANDOFF_PLATFORM_DEVELOPMENT_10B_OWNER_WRITE_RPC_EXECUTABLE_IMPLEMENTATION_2026_05_24.md",
+    "UAT_PLATFORM_DEVELOPMENT_10B_OWNER_WRITE_RPC_EXECUTABLE_IMPLEMENTATION_2026_05_24.md",
+    "lib/data/repositories/admin_users_repository.dart",
+    "lib/data/repositories/auth_repository.dart",
+    "lib/features/platform/database_migration/presentation/pages/pwf_database_domain_migration_page.dart",
+    "lib/features/platform/public_runtime/domain/pwf_public_schema_controlled_migration_contract.dart",
+    "lib/features/tasks_system/data/repositories/admin_users_repository.dart",
+    "lib/features/tasks_system/data/repositories/auth_repository.dart",
+    "sql_sandbox/platform_development_10b_owner_write_rpc_executable_implementation_pack/01_owner_write_rpc_executable_implementation_apply.sql",
+    "sql_sandbox/platform_development_10b_owner_write_rpc_executable_implementation_pack/02_owner_write_rpc_post_apply_catalog_uat_read_only.sql",
+    "sql_sandbox/platform_development_10b_owner_write_rpc_executable_implementation_pack/03_negative_uat_execution_matrix_read_only.sql",
+    "sql_sandbox/platform_development_10b_owner_write_rpc_executable_implementation_pack/04_production_gate_redecision_after_10b_read_only.sql",
+    "sql_sandbox/platform_development_10b_owner_write_rpc_executable_implementation_pack/README.md"
+  ],
+  "safety": {
+    "no_auth_users_migration": true,
+    "no_waqf_assets_mutation": true,
+    "no_flutter_service_role": true,
+    "production_approved": false
+  }
+}

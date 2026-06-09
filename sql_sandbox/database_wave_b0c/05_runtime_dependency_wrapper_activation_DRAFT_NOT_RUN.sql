@@ -1,0 +1,5 @@
+-- DRAFT ONLY — DO NOT RUN
+-- Database Wave B-0C does not activate wrappers and does not rewrite runtime.
+-- This placeholder documents that wrapper activation belongs to a later controlled wave,
+-- after runtime dependency evidence and browser/analyzer checks are complete.
+-- Forbidden in B-0C: DROP TABLE, ALTER destructive, moving rows, provider rewrites, route rewrites.

@@ -1,0 +1,4 @@
+-- NOT AUTHORIZED FOR EXECUTION
+-- Future Wave 1 move apply pack placeholder only.
+-- It must be generated only after read-only retest acceptance, owner approvals,
+-- Flutter dependency scan, backup/reversal confirmation, and RLS/Role UAT.

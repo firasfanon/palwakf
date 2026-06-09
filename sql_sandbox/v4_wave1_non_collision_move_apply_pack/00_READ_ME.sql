@@ -1,0 +1,16 @@
+-- V4 Wave1 Non-Collision Move Apply Pack
+-- Date: 2026-05-31
+-- Scope: 88 non-collision public base tables only.
+-- Excluded: 9 collision tables, see 06_v4_wave3_collision_exclusion_retest_read_only.sql.
+-- Model: ALTER TABLE public.<table> SET SCHEMA <target_schema> + public compatibility view.
+-- This pack was prepared after explicit operator authorization to prepare the pack only.
+-- Do not run the apply script unless you intentionally replace the guard token and backup reference.
+-- No DROP, DELETE, ARCHIVE, RENAME, or production approval is included.
+-- Suggested order:
+--   01_v4_wave1_pre_apply_gate_read_only.sql
+--   02_v4_wave1_non_collision_move_apply_GUARDED_DEVELOPMENT_STAGING_ONLY.sql
+--   03_v4_wave1_post_apply_validation_read_only.sql
+--   04_v4_wave1_function_rpc_dependency_retest_read_only.sql
+--   05_v4_wave1_role_rls_uat_template_read_only.sql
+--   06_v4_wave3_collision_exclusion_retest_read_only.sql
+--   07_v4_wave1_rollback_GUARDED_ONLY_IF_NEEDED.sql  -- only for rollback, not normal flow

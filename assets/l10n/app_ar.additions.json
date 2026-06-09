@@ -1,0 +1,179 @@
+{
+  "zakatCurrencyIls": "شيكل",
+  "zakatHeroTitle": "حاسبة الزكاة الإلكترونية",
+  "zakatHeroSubtitle": "احسب زكاتك بكل دقة وسهولة لأنواع المال المختلفة وفقاً للشريعة الإسلامية",
+  "zakatTabCash": "النقود والعملات",
+  "zakatTabTrade": "عروض التجارة",
+  "zakatTabAgriculture": "الزراعة والمحاصيل",
+  "zakatCashAmountLabel": "المبلغ الإجمالي ({currency})",
+  "@zakatCashAmountLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatCashAmountHint": "أدخل المبلغ الإجمالي",
+  "zakatCashDebtsLabel": "الديون المستحقة عليك ({currency})",
+  "@zakatCashDebtsLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatCashDebtsHint": "أدخل قيمة الديون",
+  "zakatCashPeriodLabel": "فترة الحول",
+  "zakatCashPeriodFullYear": "سنة كاملة (365 يوم)",
+  "zakatCashPeriodHalfYear": "نصف سنة (180 يوم)",
+  "zakatCashPeriodQuarterYear": "ربع سنة (90 يوم)",
+  "zakatNisabTitle": "هل بلغ المال النصاب؟",
+  "zakatNisabBody": "نصاب زكاة النقود: ما يعادل {grams} جراماً من الذهب عيار 24\nسعر الجرام اليوم: {price} {currency} (تقريباً)\nالنصاب بال{currency}: {nisab}",
+  "@zakatNisabBody": {
+    "placeholders": {
+      "grams": {},
+      "price": {},
+      "currency": {},
+      "nisab": {}
+    }
+  },
+  "zakatCalculateCash": "احسب زكاة النقود",
+  "zakatCalculateTrade": "احسب زكاة التجارة",
+  "zakatCalculateAgriculture": "احسب زكاة الزراعة",
+  "zakatAgriTypeLabel": "نوع الزراعة",
+  "zakatAgriTypeIrrigated": "زراعة مروية (تسقى بمكائن)",
+  "zakatAgriTypeRain": "زراعة بعلية (تعتمد على المطر)",
+  "zakatAgriQuantityLabel": "كمية المحصول (كجم)",
+  "zakatAgriQuantityHint": "كمية المحصول بالكيلوجرام",
+  "zakatAgriPriceLabel": "سعر الكيلوجرام ({currency})",
+  "@zakatAgriPriceLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatAgriPriceHint": "سعر الكيلوجرام",
+  "zakatAgriInfoTitle": "معلومات هامة",
+  "zakatAgriInfoBody": "نصاب الزراعة: 5 أوسق = {nisabKg} كجم تقريباً\nنسبة الزكاة: 10% للبعلية، 5% للمروية\nملاحظة: لا زكاة في الزراعة إلا بعد بلوغ النصاب",
+  "@zakatAgriInfoBody": {
+    "placeholders": {
+      "nisabKg": {}
+    }
+  },
+  "zakatResultsCashTitle": "زكاة النقود والعملات",
+  "zakatResultsTradeTitle": "زكاة عروض التجارة",
+  "zakatResultsAgricultureTitle": "زكاة الزراعة والمحاصيل",
+  "zakatResultsSubtitle": "تاريخ الحساب: {date}",
+  "@zakatResultsSubtitle": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "zakatAmountDueTitle": "مقدار الزكاة الواجب إخراجه",
+  "zakatItemTotalAmount": "المبلغ الإجمالي",
+  "zakatItemDebts": "الديون المستحقة",
+  "zakatItemNetAmount": "المبلغ الصافي",
+  "zakatItemNisab": "النصاب الشرعي",
+  "zakatItemPeriodDays": "فترة الحول",
+  "zakatItemRate": "نسبة الزكاة",
+  "zakatItemTradeGoods": "قيمة البضاعة",
+  "zakatItemTradeCash": "النقد في الصندوق",
+  "zakatItemTradeReceivables": "ديون العملاء",
+  "zakatItemTradeTotalAssets": "إجمالي الأصول",
+  "zakatItemTradePayables": "الديون المستحقة",
+  "zakatItemTradeNetAssets": "القيمة الصافية",
+  "zakatItemAgriType": "نوع الزراعة",
+  "zakatItemAgriQuantity": "كمية المحصول",
+  "zakatItemAgriPrice": "سعر الكيلوجرام",
+  "zakatItemAgriTotalValue": "القيمة الإجمالية",
+  "zakatItemAgriNisab": "النصاب الشرعي",
+  "zakatDaysValue": "{days} يوم",
+  "@zakatDaysValue": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "zakatPercentValue": "{p}%",
+  "@zakatPercentValue": {
+    "placeholders": {
+      "p": {}
+    }
+  },
+  "zakatKgValue": "{kg} كجم",
+  "@zakatKgValue": {
+    "placeholders": {
+      "kg": {}
+    }
+  },
+  "zakatErrorEnterValidAmount": "يرجى إدخال مبلغ صحيح",
+  "zakatErrorEnterValidValues": "يرجى إدخال قيم صحيحة",
+  "zakatErrorBelowNisab": "المبلغ لا يبلغ النصاب ({nisab} {currency})",
+  "@zakatErrorBelowNisab": {
+    "placeholders": {
+      "nisab": {},
+      "currency": {}
+    }
+  },
+  "zakatErrorBelowNisabKg": "كمية المحصول لا تبلغ النصاب ({nisabKg} كجم)",
+  "@zakatErrorBelowNisabKg": {
+    "placeholders": {
+      "nisabKg": {}
+    }
+  },
+  "zakatErrorPleaseCalculateFirst": "يرجى حساب الزكاة أولاً",
+  "zakatErrorSelectDonationOption": "يرجى اختيار خيار التبرع",
+  "zakatPrintNotSupported": "الطباعة غير مدعومة على هذا الجهاز",
+  "zakatInfoSectionTitle": "معلومات هامة عن الزكاة",
+  "zakatInfoConditionsTitle": "شروط وجوب الزكاة",
+  "zakatInfoConditionsBody": "1. الإسلام\n2. الحرية\n3. ملك النصاب\n4. مضي الحول (لسنة كاملة)\n5. عدم وجود دين يستغرق النصاب",
+  "zakatInfoRecipientsTitle": "مصارف الزكاة",
+  "zakatInfoRecipientsBody": "الفقراء - المساكين - العاملين عليها - المؤلفة قلوبهم - في الرقاب - الغارمين - في سبيل الله - ابن السبيل (كما في سورة التوبة: 60)",
+  "zakatInfoNoZakatTitle": "لا تجب الزكاة في",
+  "zakatInfoNoZakatBody": "• المسكن الذي تسكنه\n• الملابس والأثاث الشخصي\n• وسائل النقل الشخصية\n• الديون التي لا يُرجى سدادها\n• ما دون النصاب",
+  "zakatDonationTitle": "التبرع بالزكاة عبر المنصة",
+  "zakatDonationSubtitle": "يمكنك إخراج زكاتك عبر منصة وزارة الأوقاف لضمان وصولها لمستحقيها",
+  "zakatDonationPoorTitle": "الفقراء والمساكين",
+  "zakatDonationPoorDesc": "توزيع مباشر على الأسر الفقيرة في فلسطين",
+  "zakatDonationStudentsTitle": "طلاب العلم",
+  "zakatDonationStudentsDesc": "منح دراسية ومساعدة طلاب العلم الشرعي",
+  "zakatDonationMosquesTitle": "صيانة المساجد",
+  "zakatDonationMosquesDesc": "ترميم وصيانة المساجد والمقدسات",
+  "zakatDonationOrphansTitle": "رعاية الأيتام",
+  "zakatDonationOrphansDesc": "كفالة ورعاية الأيتام في فلسطين",
+  "zakatDonationProceed": "المتابعة للتبرع",
+  "zakatDonationDialogTitle": "تأكيد التبرع",
+  "zakatDonationDialogBody": "سيتم توجيه زكاتك البالغة {amount} إلى: {option}\n\nسيتم فتح صفحة الدفع الإلكتروني...",
+  "@zakatDonationDialogBody": {
+    "placeholders": {
+      "amount": {},
+      "option": {}
+    }
+  },
+  "zakatDialogOk": "حسنًا",
+  "zakatBtnPrint": "طباعة",
+  "zakatBtnDonateNow": "تبرع الآن",
+  "zakatBtnNewCalculation": "حساب جديد",
+  "zakatTradeGoodsLabel": "قيمة البضاعة ({currency})",
+  "@zakatTradeGoodsLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatTradeGoodsHint": "أدخل قيمة البضاعة",
+  "zakatTradeCashLabel": "النقد المتوفر ({currency})",
+  "@zakatTradeCashLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatTradeCashHint": "أدخل النقد المتوفر",
+  "zakatTradeReceivablesLabel": "الديون المستحقة لك ({currency})",
+  "@zakatTradeReceivablesLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatTradeReceivablesHint": "أدخل ديون العملاء",
+  "zakatTradePayablesLabel": "الديون المستحقة عليك ({currency})",
+  "@zakatTradePayablesLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatTradePayablesHint": "أدخل ديون الموردين"
+}

@@ -1,0 +1,17 @@
+select
+  'v4_wave1_pre_apply_hard_gate' as section,
+  97 as mapped_public_table_count,
+  88 as wave1_candidate_count,
+  9 as excluded_collision_table_count,
+  0 as rows_blocked_by_missing_schema,
+  true as all_target_schemas_present,
+  false as owner_approvals_confirmed_by_this_script,
+  false as flutter_dependency_zero_certified_by_this_script,
+  false as backup_and_reversal_confirmed_by_this_script,
+  false as role_rls_uat_confirmed_by_this_script,
+  false as apply_pack_authorized_by_this_script,
+  false as destructive_sql_authorized,
+  false as archive_authorized,
+  false as production_approved,
+  'WAVE1_APPLY_BLOCKED_PENDING_OWNER_APPROVAL_FLUTTER_SCAN_BACKUP_REVERSE_REFERENCE_ROLE_RLS_UAT' as decision,
+  true as read_only;

@@ -1,0 +1,68 @@
+{
+  "version": "n2.9d-2026-05-15",
+  "source": "palwakf_usage_guide_live_package",
+  "docs": [
+    {
+      "id": "platform_general",
+      "title": "دليل استخدام المنصة",
+      "subtitle": "مرجع عام لاستخدام PalWakf ولوحة التحكم والواجهات العامة.",
+      "assetPath": "assets/docs/usage/PLATFORM_USAGE_GUIDE_AR.md",
+      "category": "general",
+      "audience": "كل المستخدمين الإداريين",
+      "systemKey": "platformAdmin",
+      "tags": [
+        "منصة",
+        "لوحة التحكم",
+        "إرشادات عامة"
+      ],
+      "accessScope": "active_admin_common"
+    },
+    {
+      "id": "role_based",
+      "title": "دليل الاستخدام حسب الدور",
+      "subtitle": "يوضح تجربة المستخدم حسب الدور والصلاحيات وحدود الوصول.",
+      "assetPath": "assets/docs/usage/ROLE_BASED_USAGE_GUIDE_AR.md",
+      "category": "roles",
+      "audience": "حسب الدور",
+      "systemKey": "platformAdmin",
+      "tags": [
+        "RBAC",
+        "الأدوار",
+        "الصلاحيات"
+      ],
+      "accessScope": "operational_or_superuser_only"
+    },
+    {
+      "id": "system_unit_permission",
+      "title": "دليل الاستخدام حسب النظام والوحدة والصلاحية",
+      "subtitle": "يوضح ربط الأنظمة والوحدات والصلاحيات في الوصول الإداري.",
+      "assetPath": "assets/docs/usage/SYSTEM_UNIT_PERMISSION_USAGE_GUIDE_AR.md",
+      "category": "systems",
+      "audience": "مدراء الأنظمة والوحدات",
+      "systemKey": "multi-system",
+      "tags": [
+        "الأنظمة",
+        "الوحدات",
+        "الصلاحيات",
+        "Dashboard"
+      ],
+      "accessScope": "operational_or_superuser_only"
+    },
+    {
+      "id": "assistant_binding",
+      "title": "ربط الدليل بالمساعد الداخلي",
+      "subtitle": "ضوابط استفادة المساعد الداخلي من دليل الاستخدام دون تجاوز النطاق.",
+      "assetPath": "assets/docs/assistant/ASSISTANT_USAGE_GUIDE_BINDING_AR.md",
+      "category": "tasks",
+      "audience": "المساعد الداخلي والمستخدمون الإداريون",
+      "systemKey": "assistant",
+      "tags": [
+        "مساعد",
+        "دليل",
+        "نطاق",
+        "مهام"
+      ],
+      "accessScope": "active_admin_common"
+    }
+  ]
+}

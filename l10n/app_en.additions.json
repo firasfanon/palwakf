@@ -1,0 +1,179 @@
+{
+  "zakatCurrencyIls": "ILS",
+  "zakatHeroTitle": "Electronic Zakat Calculator",
+  "zakatHeroSubtitle": "Calculate your zakat accurately and easily for different wealth types according to Islamic law.",
+  "zakatTabCash": "Cash & Currency",
+  "zakatTabTrade": "Trade Goods",
+  "zakatTabAgriculture": "Agriculture",
+  "zakatCashAmountLabel": "Total Amount ({currency})",
+  "@zakatCashAmountLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatCashAmountHint": "Enter the total amount",
+  "zakatCashDebtsLabel": "Debts Owed ({currency})",
+  "@zakatCashDebtsLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatCashDebtsHint": "Enter debts value",
+  "zakatCashPeriodLabel": "Hawl Period",
+  "zakatCashPeriodFullYear": "Full year (365 days)",
+  "zakatCashPeriodHalfYear": "Half year (180 days)",
+  "zakatCashPeriodQuarterYear": "Quarter year (90 days)",
+  "zakatNisabTitle": "Has it reached Nisab?",
+  "zakatNisabBody": "Cash nisab: equivalent to {grams} grams of 24K gold\nGold price today: {price} {currency} (approx.)\nNisab in {currency}: {nisab}",
+  "@zakatNisabBody": {
+    "placeholders": {
+      "grams": {},
+      "price": {},
+      "currency": {},
+      "nisab": {}
+    }
+  },
+  "zakatCalculateCash": "Calculate Cash Zakat",
+  "zakatCalculateTrade": "Calculate Trade Zakat",
+  "zakatCalculateAgriculture": "Calculate Agriculture Zakat",
+  "zakatAgriTypeLabel": "Farming type",
+  "zakatAgriTypeIrrigated": "Irrigated (machines)",
+  "zakatAgriTypeRain": "Rain-fed",
+  "zakatAgriQuantityLabel": "Harvest quantity (kg)",
+  "zakatAgriQuantityHint": "Quantity in kilograms",
+  "zakatAgriPriceLabel": "Price per kg ({currency})",
+  "@zakatAgriPriceLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatAgriPriceHint": "Price per kilogram",
+  "zakatAgriInfoTitle": "Important info",
+  "zakatAgriInfoBody": "Agriculture nisab: ~{nisabKg} kg\nZakat rate: 10% rain-fed, 5% irrigated\nNote: No zakat until nisab is reached",
+  "@zakatAgriInfoBody": {
+    "placeholders": {
+      "nisabKg": {}
+    }
+  },
+  "zakatResultsCashTitle": "Cash & Currency Zakat",
+  "zakatResultsTradeTitle": "Trade Zakat",
+  "zakatResultsAgricultureTitle": "Agriculture Zakat",
+  "zakatResultsSubtitle": "Calculation date: {date}",
+  "@zakatResultsSubtitle": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "zakatAmountDueTitle": "Zakat amount due",
+  "zakatItemTotalAmount": "Total amount",
+  "zakatItemDebts": "Debts",
+  "zakatItemNetAmount": "Net amount",
+  "zakatItemNisab": "Nisab",
+  "zakatItemPeriodDays": "Hawl period",
+  "zakatItemRate": "Zakat rate",
+  "zakatItemTradeGoods": "Goods value",
+  "zakatItemTradeCash": "Cash in hand",
+  "zakatItemTradeReceivables": "Receivables",
+  "zakatItemTradeTotalAssets": "Total assets",
+  "zakatItemTradePayables": "Payables",
+  "zakatItemTradeNetAssets": "Net assets",
+  "zakatItemAgriType": "Farming type",
+  "zakatItemAgriQuantity": "Quantity",
+  "zakatItemAgriPrice": "Price per kg",
+  "zakatItemAgriTotalValue": "Total value",
+  "zakatItemAgriNisab": "Nisab",
+  "zakatDaysValue": "{days} days",
+  "@zakatDaysValue": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "zakatPercentValue": "{p}%",
+  "@zakatPercentValue": {
+    "placeholders": {
+      "p": {}
+    }
+  },
+  "zakatKgValue": "{kg} kg",
+  "@zakatKgValue": {
+    "placeholders": {
+      "kg": {}
+    }
+  },
+  "zakatErrorEnterValidAmount": "Please enter a valid amount",
+  "zakatErrorEnterValidValues": "Please enter valid values",
+  "zakatErrorBelowNisab": "Amount is below nisab ({nisab} {currency})",
+  "@zakatErrorBelowNisab": {
+    "placeholders": {
+      "nisab": {},
+      "currency": {}
+    }
+  },
+  "zakatErrorBelowNisabKg": "Quantity is below nisab ({nisabKg} kg)",
+  "@zakatErrorBelowNisabKg": {
+    "placeholders": {
+      "nisabKg": {}
+    }
+  },
+  "zakatErrorPleaseCalculateFirst": "Please calculate zakat first",
+  "zakatErrorSelectDonationOption": "Please select a donation option",
+  "zakatPrintNotSupported": "Printing is not supported on this device",
+  "zakatInfoSectionTitle": "Important information about zakat",
+  "zakatInfoConditionsTitle": "Conditions",
+  "zakatInfoConditionsBody": "1. Islam\n2. Freedom\n3. Owning nisab\n4. One full hawl\n5. No debt consuming nisab",
+  "zakatInfoRecipientsTitle": "Recipients",
+  "zakatInfoRecipientsBody": "Poor, needy, zakat workers, those whose hearts are reconciled, freeing captives, debtors, in the cause of Allah, traveler (At-Tawbah: 60)",
+  "zakatInfoNoZakatTitle": "No zakat on",
+  "zakatInfoNoZakatBody": "• Primary residence\n• Personal clothing & furniture\n• Personal transportation\n• Unrecoverable debts\n• Below nisab",
+  "zakatDonationTitle": "Donate zakat via the platform",
+  "zakatDonationSubtitle": "Donate through the Ministry platform to ensure it reaches eligible recipients",
+  "zakatDonationPoorTitle": "Poor & Needy",
+  "zakatDonationPoorDesc": "Direct distribution to families in Palestine",
+  "zakatDonationStudentsTitle": "Students of knowledge",
+  "zakatDonationStudentsDesc": "Scholarships and support for students",
+  "zakatDonationMosquesTitle": "Mosque maintenance",
+  "zakatDonationMosquesDesc": "Repair and maintenance of mosques",
+  "zakatDonationOrphansTitle": "Orphans care",
+  "zakatDonationOrphansDesc": "Sponsorship and care for orphans",
+  "zakatDonationProceed": "Proceed to donate",
+  "zakatDonationDialogTitle": "Donation confirmation",
+  "zakatDonationDialogBody": "Your zakat amount {amount} will be directed to: {option}\n\nThe payment page will open...",
+  "@zakatDonationDialogBody": {
+    "placeholders": {
+      "amount": {},
+      "option": {}
+    }
+  },
+  "zakatDialogOk": "OK",
+  "zakatBtnPrint": "Print",
+  "zakatBtnDonateNow": "Donate now",
+  "zakatBtnNewCalculation": "New calculation",
+  "zakatTradeGoodsLabel": "Goods value ({currency})",
+  "@zakatTradeGoodsLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatTradeGoodsHint": "Enter goods value",
+  "zakatTradeCashLabel": "Cash in hand ({currency})",
+  "@zakatTradeCashLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatTradeCashHint": "Enter cash amount",
+  "zakatTradeReceivablesLabel": "Receivables ({currency})",
+  "@zakatTradeReceivablesLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatTradeReceivablesHint": "Enter receivables",
+  "zakatTradePayablesLabel": "Payables ({currency})",
+  "@zakatTradePayablesLabel": {
+    "placeholders": {
+      "currency": {}
+    }
+  },
+  "zakatTradePayablesHint": "Enter payables"
+}

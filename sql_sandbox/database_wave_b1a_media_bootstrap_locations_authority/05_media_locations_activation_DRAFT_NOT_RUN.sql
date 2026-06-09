@@ -1,0 +1,8 @@
+-- DRAFT ONLY — DO NOT RUN
+-- Database Wave B-1A Media/Locations Activation Draft Placeholder
+-- This file intentionally contains no executable migration.
+-- Activation is blocked until:
+-- 1) media_center bootstrap is certified;
+-- 2) locations authority decision gate is closed;
+-- 3) servicepoints/providers ownership is resolved;
+-- 4) Browser/RLS/UAT evidence is accepted.

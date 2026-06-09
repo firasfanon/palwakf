@@ -1,0 +1,17 @@
+{
+  "batch": "Mega Batch — Public Schema Controlled Ownership Migration SQL Result Intake + Compatibility Certification Decision",
+  "date": "2026-05-22",
+  "base": "palwakf_platform_mega_batch_public_schema_controlled_ownership_migration_compatibility_wrappers_2026_05_22.zip",
+  "decision": "CONTROLLED_OWNER_SHADOW_MIGRATION_APPLY_ACCEPTED_STATUS_RPC_PROBE_FIX_REQUIRED",
+  "status": [
+    "staging-stable",
+    "controlled-owner-shadow-migration-evidence-accepted",
+    "public-compatibility-wrappers-evidence-accepted",
+    "status-rpc-presence-probe-root-fix-prepared",
+    "compatibility-certification-deferred-pending-status-rpc-retest",
+    "legacy-public-tables-preserved",
+    "production-not-approved",
+    "no-waqf-assets-mutation"
+  ],
+  "new_or_replaced_files": []
+}

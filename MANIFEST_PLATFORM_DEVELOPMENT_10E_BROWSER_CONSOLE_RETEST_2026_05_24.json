@@ -1,0 +1,12 @@
+{
+  "batch": "Platform Development 10E — Browser Console Retest + Negative UAT Gate",
+  "date": "2026-05-24",
+  "base": "palwakf_platform_development_10d_anon_revoke_uat_console_placeholder_hardening_2026_05_24.zip",
+  "status": "staging-stable / platform-development-10e-browser-console-retest-intaken / 10d-placeholder-console-hardening-accepted-for-public-routes / flutter-reroute-staging-startup-passed / anon-revoke-uat-preserved / public-route-console-clean-evidence-accepted-for-home-about-contact / negative-uat-actor-bundle-pending / production-not-approved / flutter-write-reroute-production-disabled / no-auth-users-migration / no-flutter-service-role / no-waqf-assets-mutation",
+  "production_approved": false,
+  "negative_uat_passed": false,
+  "browser_console_public_routes_accepted": true,
+  "no_auth_users_migration": true,
+  "no_waqf_assets_mutation": true,
+  "files_added_or_updated": []
+}

@@ -1,0 +1,17 @@
+select
+  'v4_wave0_retest_result_intake' as section,
+  8 as required_schema_count,
+  8 as present_schema_count,
+  true as all_required_schemas_present,
+  97 as mapped_public_table_count,
+  23 as target_schema_count,
+  23 as target_schemas_present_count,
+  0 as rows_blocked_by_missing_schema,
+  9 as target_table_collision_count,
+  88 as wave1_candidate_count,
+  9 as wave3_collision_count,
+  false as apply_authorized_by_this_script,
+  false as destructive_sql_authorized,
+  false as archive_authorized,
+  false as production_approved,
+  true as read_only;

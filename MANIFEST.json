@@ -1,0 +1,13 @@
+{
+  "session_name": "تطوير المنصة 6",
+  "created": "2026_05_19",
+  "status": "handoff-ready / platform-development-6-start-point-prepared / pwf-sis-current-wave-not-fully-closed / n2-66c-apply-first / n2-67-high-risk-readiness-only-prepared / database-wave-b-preserved-not-executed / production-not-approved / no-waqf-assets-mutation",
+  "current_start": "Apply N2.66C ASCII-Safe Public Overflow Repair, then run format/analyze/chrome, then verify public homepage and admin login browser console.",
+  "last_runtime_clean": "n2-65b-evidence-accepted / n2-65-services-platform-content-closed / n2-66-analyzer-clean-and-chrome-startup-passed-but-browser-runtime-blocked",
+  "mandatory_next_batch": "N2.66C — ASCII-Safe Public Overflow Repair",
+  "database_wave_b_executed": false,
+  "production_approved": false,
+  "waqf_assets_mutation": false,
+  "full_repository_source_included": false,
+  "note": "This baseline contains consolidated operational baseline, handoff, latest patch materials, changelog, error records, and governance guide update. It is not a full clone of the project source repository."
+}

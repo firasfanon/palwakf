@@ -1,0 +1,25 @@
+-- Public Table Functional Reclassification v4 — Schema-to-Schema Move Safety Gate
+-- Date: 2026-05-31
+-- Purpose: replace the rejected Column Diff model with a correct move-only safety model.
+-- Correct strategy: ALTER TABLE public.<table> SET SCHEMA <target_schema>.
+-- This pack is READ ONLY. It does not execute DDL/DML/GRANT/DROP.
+-- The future apply pack is not authorized by this gate.
+--
+-- Safety principle:
+--   Target tables do NOT need to exist before a move. In fact, existing target tables with the same name are collisions.
+--   Target schemas may be created later in an authorized apply pack if missing.
+--
+-- Run order:
+--   01 target schema + name collision gate
+--   02 sequence/default ownership gate
+--   03 structural view dependency gate
+--   04 function/RPC text dependency gate
+--   05 Flutter dependency operator template
+--   06 grants/RLS/policy inventory
+--   07 compatibility public view plan
+--   08 rollback command matrix
+--   09 owner approval operator template
+--   10 pre-apply hard gate
+--
+-- Forbidden in this pack:
+--   ALTER TABLE / CREATE SCHEMA / CREATE VIEW / DROP / GRANT / REVOKE / INSERT / UPDATE / DELETE.

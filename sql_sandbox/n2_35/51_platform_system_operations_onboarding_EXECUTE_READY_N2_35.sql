@@ -1,0 +1,227 @@
+-- PalWakf Platform — Mega Batch N2.35
+-- 51_platform_system_operations_onboarding_EXECUTE_READY_N2_35.sql
+-- Purpose: Productive platform-side onboarding for system operations console and awqaf_system integration staging.
+-- Scope: platform.system_registry + platform.system_sections only.
+-- Safety: No DDL. No waqf/waqf_assets/awqaf_system mutation. No public cache quarantine.
+
+begin;
+
+insert into platform.system_registry (
+  system_key,
+  name_ar,
+  name_en,
+  description_ar,
+  category_key,
+  module_type,
+  admin_route_path,
+  public_route_path,
+  external_url,
+  icon_key,
+  display_order,
+  is_active,
+  show_in_dashboard,
+  show_in_sidebar,
+  requires_permission,
+  is_sovereign,
+  metadata
+) values (
+  'awqaf_system',
+  'أوقاف سيستم',
+  'Awqaf System',
+  'نظام شبه مستقل مرجعي للبيانات الإدارية والوقفية، مدمج حوكميًا عبر PalWakf ومؤجل تشغيليًا إلى حين دمج runtime الفعلي.',
+  'systems',
+  'custom',
+  '/admin/systems/awqaf_system',
+  '/systems/awqaf-system',
+  null,
+  'account_tree',
+  10,
+  true,
+  true,
+  true,
+  true,
+  true,
+  jsonb_build_object(
+    'sensitivity_level', 'sovereign',
+    'health_status', 'integration_staging',
+    'integration_status', 'platform_bridge_ready_awqaf_runtime_pending',
+    'maintenance_mode', false,
+    'route_owner', 'platform_dynamic_registry_until_awqaf_runtime_merge',
+    'runtime_owner', 'awqaf_system',
+    'platform_owner', 'platform',
+    'no_waqf_assets_mutation', true,
+    'n2_35_decision', 'keep_awqaf_work_no_revert_large_productive_batches'
+  )
+)
+on conflict (system_key) do update set
+  name_ar = excluded.name_ar,
+  name_en = excluded.name_en,
+  description_ar = excluded.description_ar,
+  category_key = excluded.category_key,
+  module_type = excluded.module_type,
+  admin_route_path = excluded.admin_route_path,
+  public_route_path = excluded.public_route_path,
+  external_url = excluded.external_url,
+  icon_key = excluded.icon_key,
+  display_order = excluded.display_order,
+  is_active = excluded.is_active,
+  show_in_dashboard = excluded.show_in_dashboard,
+  show_in_sidebar = excluded.show_in_sidebar,
+  requires_permission = excluded.requires_permission,
+  is_sovereign = excluded.is_sovereign,
+  metadata = coalesce(platform.system_registry.metadata, '{}'::jsonb) || excluded.metadata;
+
+insert into platform.system_sections (
+  system_key,
+  section_key,
+  title_ar,
+  description_ar,
+  route_path,
+  section_type,
+  icon_key,
+  display_order,
+  is_active,
+  show_in_dashboard,
+  show_in_sidebar,
+  required_permission_key,
+  metadata
+) values
+  (
+    'awqaf_system',
+    'dashboard',
+    'مركز التشغيل',
+    'مدخل تشغيل عام يوجّه إلى shell المنصة مؤقتًا إلى حين دمج runtime أوقاف سيستم الفعلي.',
+    '/admin/systems/awqaf_system/sections/dashboard',
+    'operations',
+    'dashboard',
+    10,
+    true,
+    true,
+    true,
+    'read',
+    jsonb_build_object('runtime_pending', true, 'platform_shell', true)
+  ),
+  (
+    'awqaf_system',
+    'waqf-assets-intake',
+    'استلام waqf_assets',
+    'صفحة استلام read-only لمخرجات أوقاف سيستم دون تعديل جدول الأصول السيادي.',
+    '/admin/awqaf-system/waqf-assets-intake',
+    'integration',
+    'rule_folder',
+    20,
+    true,
+    true,
+    true,
+    'read',
+    jsonb_build_object('no_waqf_assets_mutation', true, 'intake_only', true)
+  ),
+  (
+    'awqaf_system',
+    'cross-system-contracts',
+    'عقود الربط',
+    'مصفوفة read-only لعقود الربط بين أوقاف سيستم وباقي الأنظمة.',
+    '/admin/platform/cross-system-contracts',
+    'governance',
+    'account_tree',
+    30,
+    true,
+    true,
+    true,
+    'read',
+    jsonb_build_object('governance_only', true)
+  ),
+  (
+    'awqaf_system',
+    'documents-bridge',
+    'ربط الوثائق',
+    'مسار تشغيل لاحق لربط الوثائق بالأصول/المراجع عبر عقود مراجعة لا عبر كتابة مباشرة.',
+    '/admin/systems/awqaf_system/sections/documents-bridge',
+    'bridge',
+    'documents',
+    40,
+    true,
+    true,
+    true,
+    'read',
+    jsonb_build_object('target_system', 'document_intelligence', 'runtime_pending', true)
+  ),
+  (
+    'awqaf_system',
+    'cases-bridge',
+    'ربط القضايا',
+    'مسار تشغيل لاحق لربط القضايا بالأصول عبر waqf_asset_id فقط بعد اعتماد العقود.',
+    '/admin/systems/awqaf_system/sections/cases-bridge',
+    'bridge',
+    'cases',
+    50,
+    true,
+    true,
+    true,
+    'read',
+    jsonb_build_object('target_system', 'cases', 'binding_key', 'waqf_asset_id', 'runtime_pending', true)
+  ),
+  (
+    'awqaf_system',
+    'tasks-bridge',
+    'ربط المهام',
+    'مسار تشغيل لاحق لإنشاء ومتابعة مهام مراجعة مرتبطة بالأصول والوثائق.',
+    '/admin/systems/awqaf_system/sections/tasks-bridge',
+    'bridge',
+    'tasks',
+    60,
+    true,
+    true,
+    true,
+    'read',
+    jsonb_build_object('target_system', 'tasks', 'runtime_pending', true)
+  ),
+  (
+    'awqaf_system',
+    'billing-bridge',
+    'ربط الفوترة',
+    'مسار تشغيل لاحق لربط الإيرادات والمدفوعات بالأصول دون خلط billing_system مع waqf_assets.',
+    '/admin/systems/awqaf_system/sections/billing-bridge',
+    'bridge',
+    'billing',
+    70,
+    true,
+    true,
+    true,
+    'read',
+    jsonb_build_object('target_system', 'billing_system', 'runtime_pending', true)
+  ),
+  (
+    'awqaf_system',
+    'mustakshif-bridge',
+    'ربط المستكشف',
+    'مسار تشغيل لاحق للعرض والتحليل المكاني/التاريخي فقط؛ mustakshif ليس مصدر تعديل waqf_assets.',
+    '/admin/systems/awqaf_system/sections/mustakshif-bridge',
+    'bridge',
+    'map',
+    80,
+    true,
+    true,
+    true,
+    'read',
+    jsonb_build_object('target_system', 'mustakshif', 'analysis_only', true, 'runtime_pending', true)
+  )
+on conflict (system_key, section_key) do update set
+  title_ar = excluded.title_ar,
+  description_ar = excluded.description_ar,
+  route_path = excluded.route_path,
+  section_type = excluded.section_type,
+  icon_key = excluded.icon_key,
+  display_order = excluded.display_order,
+  is_active = excluded.is_active,
+  show_in_dashboard = excluded.show_in_dashboard,
+  show_in_sidebar = excluded.show_in_sidebar,
+  required_permission_key = excluded.required_permission_key,
+  metadata = coalesce(platform.system_sections.metadata, '{}'::jsonb) || excluded.metadata;
+
+commit;
+
+select 'platform_system_operations_onboarding'::text as section,
+       'awqaf_system_registry_and_sections_upserted'::text as check_key,
+       true as passed,
+       'Applied only to platform.system_registry/platform.system_sections; no waqf/waqf_assets/awqaf_system mutation.'::text as note;

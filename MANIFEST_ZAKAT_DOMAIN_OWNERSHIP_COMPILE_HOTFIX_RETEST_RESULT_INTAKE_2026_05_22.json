@@ -1,0 +1,31 @@
+{
+  "batch_title": "Mega Batch — Zakat Domain Ownership Compile Hotfix Retest Result Intake + Production Content Gate Decision",
+  "date": "2026-05-22",
+  "source_baseline": "palwakf_platform_mega_batch_zakat_domain_ownership_compile_contract_hotfix_2026_05_22.zip",
+  "decision": "ZAKAT_DOMAIN_OWNERSHIP_RUNTIME_CONTENT_CERTIFICATION_ACCEPTED_WITH_BILLING_DEFERRED",
+  "status": "staging-stable / zakat-domain-ownership-compile-hotfix-retest-result-intaken / analyzer-clean / chrome-startup-passed / zakat-browser-console-evidence-accepted / zakat-schema-wrapper-runtime-ready / production-content-certification-accepted-for-zakat-config / billing-system-schema-pending-dedicated-financial-batch / payment-workflow-not-approved / production-not-approved / no-waqf-assets-mutation",
+  "evidence": {
+    "flutter_pub_get": "passed",
+    "dart_format": "passed",
+    "flutter_analyze": "No issues found!",
+    "flutter_run_chrome": "passed",
+    "home_zakat_screenshot": "لقطة شاشة 2026-05-22 192326.png"
+  },
+  "boundaries": {
+    "sql_production_change": false,
+    "billing_workflow": false,
+    "waqf_assets_mutation": false,
+    "production_approval": false
+  },
+  "artifacts_added": [
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/BASELINE_CHANGELOG_ZAKAT_DOMAIN_OWNERSHIP_COMPILE_HOTFIX_RETEST_RESULT_INTAKE_2026_05_22.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/DECISION_ZAKAT_DOMAIN_OWNERSHIP_COMPILE_HOTFIX_RETEST_RESULT_INTAKE_2026_05_22.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/ERROR_RECORD_ZAKAT_DOMAIN_OWNERSHIP_COMPILE_HOTFIX_RETEST_RESULT_INTAKE_2026_05_22.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/NEXT_PROMPT_ZAKAT_DOMAIN_OWNERSHIP_COMPILE_HOTFIX_RETEST_RESULT_INTAKE_2026_05_22.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/SESSION_HANDOFF_ZAKAT_DOMAIN_OWNERSHIP_COMPILE_HOTFIX_RETEST_RESULT_INTAKE_2026_05_22.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/UAT_ZAKAT_DOMAIN_OWNERSHIP_COMPILE_HOTFIX_RETEST_RESULT_INTAKE_2026_05_22.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/evidence/zakat_domain_ownership_compile_hotfix_retest_result_intake/home_zakat_browser_console_screenshot.png",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/evidence/zakat_domain_ownership_compile_hotfix_retest_result_intake/local_retest_raw_log.txt",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/evidence/zakat_domain_ownership_compile_hotfix_retest_result_intake/retest_result_summary.md"
+  ]
+}

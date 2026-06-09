@@ -1,0 +1,15 @@
+select
+  'full_site_audit_production_gate'::text as section,
+  'production_approval'::text as gate_key,
+  false as passed,
+  'Production is not approved. Media and Service ownership closures are accepted, but strict console clean and wider site evidence remain pending.'::text as note,
+  false as execution_authorized_by_this_script,
+  false as production_approved,
+  false as destructive_sql_authorized,
+  false as exact_public_table_replacement_authorized,
+  false as archive_delete_authorized,
+  true as no_auth_users_migration,
+  true as no_flutter_elevated_secret,
+  true as no_waqf_assets_mutation,
+  true as no_gis_mutation,
+  true as read_only;

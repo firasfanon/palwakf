@@ -1,0 +1,16 @@
+{
+  "name": "palwakf-unit-seed-package-v5",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed:dry": "cross-env SEED_MODE=dry node ./scripts/seed-unit-admin-users.mjs",
+    "seed:apply": "cross-env SEED_MODE=apply node ./scripts/seed-unit-admin-users.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.8",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
+}

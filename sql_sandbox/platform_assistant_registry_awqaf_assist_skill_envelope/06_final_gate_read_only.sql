@@ -1,0 +1,10 @@
+-- Final gate is read-only.
+select 'platform_assistant_awqaf_assist_final_gate' as section,
+       'PRODUCTION_BLOCKED_BALANCED_EVIDENCE_EXECUTION_REQUIRED' as v4_current_gate,
+       false as awqaf_assist_skill_registered_by_this_script,
+       false as write_enabled,
+       false as direct_sovereign_reads_authorized,
+       false as service_role_frontend_authorized,
+       false as production_approved,
+       'PRODUCTION_BLOCKED_PENDING_V4_EVIDENCE_AND_ASSISTANT_REGISTRY_UAT' as decision,
+       true as read_only;

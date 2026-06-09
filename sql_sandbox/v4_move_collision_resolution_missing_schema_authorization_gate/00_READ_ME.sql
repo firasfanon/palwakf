@@ -1,0 +1,5 @@
+-- V4 Move Collision Resolution + Missing Schema Creation Authorization Gate
+-- READ ONLY. No DDL/DML/GRANT/DROP/REVOKE is executed by this pack.
+-- Purpose: authorize only the prerequisites for a future schema-to-schema move pack.
+-- Correct move model: ALTER TABLE public.<table> SET SCHEMA <target_schema>.
+-- Not authorized here: CREATE SCHEMA, ALTER TABLE SET SCHEMA, CREATE VIEW, DROP VIEW, GRANT, REVOKE, archive, delete, rename.

@@ -1,0 +1,56 @@
+{
+  "batch": "Public Schema Direct Dependency Remediation Plan + Route Console Evidence Pack",
+  "date": "2026-05-23",
+  "previous_baseline": "palwakf_platform_development_8_public_schema_sql06_retest_result_intake_dependency_zero_blocked_2026_05_23.zip",
+  "decision": "DIRECT_DEPENDENCY_REMEDIATION_PLAN_ADDED_REROUTE_STILL_BLOCKED",
+  "status": [
+    "staging-stable",
+    "public-schema-direct-dependency-remediation-plan-added",
+    "route-console-evidence-pack-added",
+    "dependency-zero-not-certified-29-direct-pairs-16-files",
+    "runtime-reroute-not-authorized",
+    "exact-public-table-name-replacement-blocked",
+    "destructive-sql-not-authorized",
+    "production-not-approved",
+    "no-waqf-assets-mutation"
+  ],
+  "evidence": {
+    "direct_postgrest_unique_file_table_pair_count": 29,
+    "unique_direct_file_count": 16,
+    "family_counts": {
+      "core_linkage": 5,
+      "platform_access_rbac": 10,
+      "platform_shell_site_content": 14
+    },
+    "dependency_zero_certified": false,
+    "route_console_evidence_accepted": false
+  },
+  "not_authorized": [
+    "runtime_reroute",
+    "exact_public_table_name_replacement",
+    "drop_delete_archive_rename_alter",
+    "production_approval",
+    "waqf_assets_waqf_awqaf_system_mutation"
+  ],
+  "new_or_updated_files": [
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/BASELINE_CHANGELOG_PUBLIC_SCHEMA_DIRECT_DEPENDENCY_REMEDIATION_PLAN_ROUTE_CONSOLE_EVIDENCE_PACK_2026_05_23.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/DECISION_PUBLIC_SCHEMA_DIRECT_DEPENDENCY_REMEDIATION_PLAN_ROUTE_CONSOLE_EVIDENCE_PACK_2026_05_23.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/UAT_PUBLIC_SCHEMA_DIRECT_DEPENDENCY_REMEDIATION_PLAN_ROUTE_CONSOLE_EVIDENCE_PACK_2026_05_23.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/ERROR_RECORD_PUBLIC_SCHEMA_DIRECT_DEPENDENCY_REMEDIATION_PLAN_ROUTE_CONSOLE_EVIDENCE_PACK_2026_05_23.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/SESSION_HANDOFF_PLATFORM_DEVELOPMENT_8_PUBLIC_SCHEMA_DIRECT_DEPENDENCY_REMEDIATION_PLAN_2026_05_23.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/NEXT_SESSION_PROMPT_PLATFORM_DEVELOPMENT_8_AFTER_DIRECT_DEPENDENCY_REMEDIATION_PLAN_2026_05_23.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/MANIFEST_PUBLIC_SCHEMA_DIRECT_DEPENDENCY_REMEDIATION_PLAN_ROUTE_CONSOLE_EVIDENCE_PACK_2026_05_23.json",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/LATEST_BASELINE_POINTER.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/PALWAKF_PLATFORM_COMPREHENSIVE_GUIDE.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/lib/features/platform/public_runtime/domain/pwf_public_schema_controlled_migration_contract.dart",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/lib/features/platform/database_migration/presentation/pages/pwf_database_domain_migration_page.dart",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/evidence/public_schema_direct_dependency_remediation_plan_route_console_evidence_pack/DIRECT_DEPENDENCY_INVENTORY_29_PAIRS_2026_05_23.csv",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/evidence/public_schema_direct_dependency_remediation_plan_route_console_evidence_pack/DIRECT_DEPENDENCY_INVENTORY_29_PAIRS_2026_05_23.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/evidence/public_schema_direct_dependency_remediation_plan_route_console_evidence_pack/DIRECT_DEPENDENCY_REMEDIATION_PLAN_2026_05_23.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/evidence/public_schema_direct_dependency_remediation_plan_route_console_evidence_pack/ROUTE_CONSOLE_EVIDENCE_PACK_2026_05_23.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/evidence/public_schema_direct_dependency_remediation_plan_route_console_evidence_pack/RUNTIME_REROUTE_ROLLBACK_PLAN_DRAFT_2026_05_23.md",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/sql_sandbox/mega_batch_public_schema_controlled_migration_dependency_analyzer_browser_uat_runtime_certification_gate/09_direct_dependency_remediation_inventory_read_only.sql",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/sql_sandbox/mega_batch_public_schema_controlled_migration_dependency_analyzer_browser_uat_runtime_certification_gate/10_route_console_evidence_pack_read_only.sql",
+    "public_route_canonicalization_uat_intake_work/b1a_media_locations_work/palwakf_work/sql_sandbox/mega_batch_public_schema_controlled_migration_dependency_analyzer_browser_uat_runtime_certification_gate/11_remediation_planning_sovereign_boundary_read_only.sql"
+  ]
+}

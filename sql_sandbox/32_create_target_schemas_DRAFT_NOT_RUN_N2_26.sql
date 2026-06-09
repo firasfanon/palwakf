@@ -1,0 +1,5 @@
+-- DRAFT ONLY - DO NOT RUN WITHOUT APPROVAL
+-- create schema if not exists site_content;
+-- create schema if not exists media_center;
+-- platform_services already exists.
+-- No physical movement is approved by N2.26.

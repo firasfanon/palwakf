@@ -1,0 +1,16 @@
+-- DRAFT / DO NOT RUN
+-- Database Wave B-1A — Future Media Flutter Runtime Reroute Candidate
+-- This file is intentionally non-executable guidance.
+-- Do not reroute public media pages yet unless Browser UAT scope is approved.
+-- Candidate future sources:
+--   public.v_media_news_compat_v1
+--   public.v_media_announcements_compat_v1
+--   public.v_media_activities_compat_v1
+--   public.v_media_gallery_compat_v1
+--   public.rpc_media_content_compat_v1(...)
+-- Required before future reroute:
+--   1. SQL UAT confirms wrappers exist.
+--   2. public wrapper row behavior is accepted.
+--   3. Media public pages have explicit fallback/empty-state design.
+--   4. No legacy public media table is removed.
+--   5. No Wave B-1B extraction is implied.

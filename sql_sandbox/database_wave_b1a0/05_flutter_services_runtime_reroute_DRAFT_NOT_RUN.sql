@@ -1,0 +1,5 @@
+-- DRAFT_NOT_RUN
+-- Database Wave B-1A.1 placeholder only.
+-- Do not run in SQL Editor.
+-- Purpose: reserve the next phase for Flutter runtime reroute after B-1A.0 SQL UAT passes.
+-- Expected next action: update service catalog repositories/providers to consume public.v_services_catalog_compat_v1 or public.rpc_services_catalog_compat_v1.

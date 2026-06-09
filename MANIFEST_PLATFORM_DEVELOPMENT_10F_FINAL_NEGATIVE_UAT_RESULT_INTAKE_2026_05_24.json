@@ -1,0 +1,23 @@
+{
+  "batch": "Platform Development 10F Final — Negative UAT Result Intake + Production Gate Blocked",
+  "date": "2026-05-24",
+  "source_baseline": "palwakf_platform_development_10f_negative_uat_actor_bundle_staging_reroute_production_gate_2026_05_24.zip",
+  "status": "staging-stable / platform-development-10f-sql10-12-result-intaken / accepted-evidence-preserved / negative-uat-actual-actor-evidence-still-missing / production-not-approved / no-auth-users-migration / no-flutter-elevated-secret / no-waqf-assets-mutation",
+  "production_approved": false,
+  "flutter_write_reroute_production_enabled": false,
+  "owner_write_rpcs_installed": true,
+  "anon_execute_revoked": true,
+  "negative_uat_actual_actor_evidence_supplied": false,
+  "no_auth_users_migration": true,
+  "no_flutter_elevated_secret": true,
+  "no_waqf_assets_mutation": true,
+  "new_files": [
+    "SQL_RESULT_INTAKE_PLATFORM_DEVELOPMENT_10F_FINAL_SQL10_12_RESULT_INTAKE_2026_05_24.md",
+    "DECISION_PLATFORM_DEVELOPMENT_10F_FINAL_NEGATIVE_UAT_PRODUCTION_GATE_2026_05_24.md",
+    "UAT_PLATFORM_DEVELOPMENT_10F_FINAL_NEGATIVE_UAT_ACTOR_BUNDLE_2026_05_24.md",
+    "ERROR_RECORD_PLATFORM_DEVELOPMENT_10F_FINAL_NEGATIVE_UAT_PENDING_2026_05_24.md",
+    "BASELINE_CHANGELOG_PLATFORM_DEVELOPMENT_10F_FINAL_NEGATIVE_UAT_RESULT_INTAKE_2026_05_24.md",
+    "SESSION_HANDOFF_PLATFORM_DEVELOPMENT_10F_FINAL_TO_10G_NEGATIVE_UAT_EVIDENCE_2026_05_24.md",
+    "NEXT_SESSION_PROMPT_PLATFORM_DEVELOPMENT_10G_ACTUAL_NEGATIVE_UAT_EVIDENCE_2026_05_24.md"
+  ]
+}

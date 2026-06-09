@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-06-10",
+  "source_baseline": "palwakf.zip",
+  "clean_baseline": "palwakf_clean_project_baseline_2026_06_10.zip",
+  "policy": "safe clean copy; original file not modified; historical evidence/docs quarantined by index",
+  "original_file_count": 5681,
+  "kept_file_count": 2016,
+  "quarantined_file_count": 3648,
+  "excluded_font_file_count": 17,
+  "original_uncompressed_mb": 120.6,
+  "kept_uncompressed_mb": 13.29,
+  "quarantined_uncompressed_mb": 104.28,
+  "excluded_font_uncompressed_mb": 3.03,
+  "kept_categories": [
+    "runtime Flutter/source folders",
+    "build platform folders",
+    "assets except font files",
+    "Supabase and SQL contracts",
+    "scripts/tools",
+    "governance contracts",
+    "current README/latest pointer/guide"
+  ],
+  "quarantined_categories": [
+    "evidence images and logs",
+    "old UAT/changelog/handoff/manifests",
+    "IDE local files",
+    "source patches/overlays",
+    "historical docs replaced by summary"
+  ]
+}

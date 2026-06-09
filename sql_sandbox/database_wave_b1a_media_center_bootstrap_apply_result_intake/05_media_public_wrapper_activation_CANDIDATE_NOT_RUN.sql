@@ -1,0 +1,3 @@
+-- NOT RUN / CANDIDATE ONLY
+-- Future pack may create public.v_media_content_compat_v1 and public.rpc_media_content_compat_v1.
+-- DO NOT RUN in this result-intake pack.

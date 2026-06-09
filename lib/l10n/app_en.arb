@@ -1,0 +1,59 @@
+{
+  "@@locale": "en",
+  "appTitle": "Awqaf Management System",
+  "systemDescription": "System for managing and registering Waqf properties",
+  "registerNewProperty": "Register New Property",
+  "viewProperties": "View Properties",
+  "comingSoon": "Coming Soon",
+  "featureInDevelopment": "This feature is currently under development",
+  "systemInfo": "System Information",
+  "ministry": "Ministry of Awqaf and Islamic Affairs",
+  "rights": "All rights reserved",
+
+  "propertyRegistration": "Property Registration",
+  "step1": "Step 1",
+  "step2": "Step 2",
+  "step3": "Step 3",
+  "step4": "Step 4",
+  "previous": "Previous",
+  "next": "Next",
+  "save": "Save",
+  "propertyType": "Property Type",
+  "selectPropertyType": "Select the type of property",
+  "pleaseSelectPropertyType": "Please select a property type",
+  "location": "Location",
+  "governorate": "Governorate",
+  "pleaseSelectGovernorate": "Please select a governorate",
+  "sequenceNumber": "Sequence Number",
+  "sequenceValidation": "Must be between 1 and 999",
+  "pleaseEnterSequence": "Please enter sequence number",
+  "pleaseEnterLocation": "Please enter location details",
+  "coordinates": "Coordinates",
+  "longitude": "Longitude",
+  "latitude": "Latitude",
+  "propertyDetails": "Property Details",
+  "propertyName": "Property Name",
+  "pleaseEnterPropertyName": "Please enter property name",
+  "area": "Area",
+  "registrationDate": "Registration Date",
+  "selectDate": "Select Date",
+  "deedNumber": "Deed Number",
+  "description": "Description",
+  "notes": "Notes",
+  "nationalId": "National ID",
+  "registrationDetails": "Registration Details",
+  "successMessage": "Property registered successfully with National ID: {nationalId}",
+  "@successMessage": {
+    "description": "Success message after property registration",
+    "placeholders": {
+      "nationalId": {}
+    }
+  },
+  "errorMessage": "Error: {error}",
+  "@errorMessage": {
+    "description": "Error message when registration fails",
+    "placeholders": {
+      "error": {}
+    }
+  }
+}

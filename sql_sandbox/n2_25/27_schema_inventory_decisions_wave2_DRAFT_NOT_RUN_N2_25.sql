@@ -1,0 +1,13 @@
+-- N2.25 - Draft only. Do NOT run before manual approval.
+-- Purpose: seed future Wave 2 ownership decisions after review.
+
+-- Example only:
+-- insert into platform.schema_inventory_decisions (
+--   schema_name, table_name, object_type,
+--   current_owner_system, recommended_owner_system,
+--   classification, decision, risk_level,
+--   action_required, notes
+-- )
+-- values
+-- ('public','news_articles','table','public','media_center','media_candidate','target_owner_schema','medium','prepare_media_center_migration','N2.25 draft only')
+-- on conflict do nothing;

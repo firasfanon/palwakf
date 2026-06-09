@@ -1,0 +1,15 @@
+select
+  'full_site_audit_production_gate_after_alias_hotfix' as section,
+  'production_approval' as gate_key,
+  false as passed,
+  'Production is not approved. Analyzer and browser retest for /admin/database-migration and /admin/platform/database-migration are still required.' as note,
+  false as execution_authorized_by_this_script,
+  false as production_approved,
+  false as destructive_sql_authorized,
+  false as exact_public_table_replacement_authorized,
+  false as archive_delete_authorized,
+  true as no_auth_users_migration,
+  true as no_flutter_elevated_secret,
+  true as no_waqf_assets_mutation,
+  true as no_gis_mutation,
+  true as read_only;

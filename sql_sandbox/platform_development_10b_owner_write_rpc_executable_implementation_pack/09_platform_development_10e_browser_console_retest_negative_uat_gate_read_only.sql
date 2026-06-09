@@ -1,0 +1,45 @@
+-- Platform Development 10E
+-- Browser Console Retest + Negative UAT Gate
+-- READ ONLY / evidence marker only. No DDL/DML.
+
+select * from (
+  values
+    ('browser_console_retest', 'flutter_run_with_owner_write_reroute_flag', true,
+      'flutter run -d chrome --dart-define=PWF_OWNER_WRITE_RPC_WRITE_REROUTE=true launched and connected to debug service.'),
+    ('browser_console_retest', 'environment_loaded', true,
+      'Environment variables loaded successfully; environment=development.'),
+    ('browser_console_retest', 'storage_service_initialized', true,
+      'Storage service initialized.'),
+    ('browser_console_retest', 'supabase_initialized', true,
+      'Supabase initialized successfully.'),
+    ('browser_console_retest', 'visual_identity_bootstrap_loaded', true,
+      'Visual identity bootstrap loaded 2 published overrides.'),
+    ('browser_console_retest', 'home_route_console_clean_after_placeholder_hardening', true,
+      'Screenshot evidence for /home after 10D shows no red placeholder network error.'),
+    ('browser_console_retest', 'about_route_console_clean_after_placeholder_hardening', true,
+      'Screenshot evidence for /home/about after 10D shows no red placeholder network error.'),
+    ('browser_console_retest', 'contact_route_console_clean_after_placeholder_hardening', true,
+      'Screenshot evidence for /home/contact after 10D shows no red placeholder network error.'),
+    ('anon_revoke_uat', 'anon_blocked_all_owner_write_rpcs', true,
+      'SQL06 evidence already accepted: anon execute revoked for all eight owner-write RPCs.'),
+    ('anon_revoke_uat', 'authenticated_execute_retained', true,
+      'SQL06 evidence already accepted: authenticated retains execute and SQL guards remain responsible for actor scope.'),
+    ('negative_uat', 'anonymous_denied_owner_write_rpc_attempt', false,
+      'Not supplied in 10E. Needs denied RPC attempt evidence, not only public route browsing.'),
+    ('negative_uat', 'unauthorized_authenticated_user_denied', false,
+      'Not supplied in 10E. Needs denied platform/core/admin write attempt evidence.'),
+    ('negative_uat', 'scoped_user_denied_out_of_scope_grants', false,
+      'Not supplied in 10E.'),
+    ('negative_uat', 'unit_admin_denied_platform_wide_unsafe_controls', false,
+      'Not supplied in 10E.'),
+    ('negative_uat', 'platform_admin_denied_privilege_escalation', false,
+      'Not supplied in 10E.'),
+    ('negative_uat', 'superuser_self_lockout_denied', false,
+      'Not supplied in 10E.'),
+    ('production_gate', 'production_approved', false,
+      'Production remains blocked until full Negative UAT actor bundle and role/browser evidence pass.'),
+    ('sovereign_boundary', 'no_auth_users_migration', true,
+      'No auth.users migration or mutation is included in this read-only evidence marker.'),
+    ('sovereign_boundary', 'no_waqf_assets_mutation', true,
+      'No waqf_assets/waqf/awqaf_system DDL or DML is included.')
+) as t(section, check_key, passed, note);

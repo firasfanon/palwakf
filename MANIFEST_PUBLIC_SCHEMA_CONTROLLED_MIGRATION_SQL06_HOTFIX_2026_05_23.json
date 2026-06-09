@@ -1,0 +1,20 @@
+{
+  "baseline": "palwakf_platform_development_8_public_schema_sql06_static_app_scan_scope_hotfix_2026_05_23.zip",
+  "date": "2026-05-23",
+  "status": "staging-stable / sql06-hotfix-applied / retest-required / production-not-approved / no-waqf-assets-mutation",
+  "fixed_files": [
+    "sql_sandbox/mega_batch_public_schema_controlled_migration_dependency_analyzer_browser_uat_runtime_certification_gate/06_dependency_zero_runtime_reroute_planning_gate_read_only.sql"
+  ],
+  "added_docs": [
+    "ERROR_RECORD_PUBLIC_SCHEMA_CONTROLLED_MIGRATION_SQL06_STATIC_APP_SCAN_SCOPE_HOTFIX_2026_05_23.md",
+    "BASELINE_CHANGELOG_PUBLIC_SCHEMA_CONTROLLED_MIGRATION_SQL06_HOTFIX_2026_05_23.md",
+    "NEXT_SESSION_PROMPT_PLATFORM_DEVELOPMENT_8_AFTER_SQL06_HOTFIX_2026_05_23.md"
+  ],
+  "safety": {
+    "select_only": true,
+    "destructive_sql": false,
+    "runtime_reroute": false,
+    "exact_replacement": false,
+    "waqf_assets_mutation": false
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "@@locale": "ar",
+  "appTitle": "نظام إدارة الأوقاف",
+  "systemDescription": "نظام لإدارة وتسجيل العقارات الوقفية",
+  "registerNewProperty": "تسجيل عقار وقفي جديد",
+  "viewProperties": "عرض العقارات",
+  "comingSoon": "قريباً",
+  "featureInDevelopment": "هذه الميزة قيد التطوير حالياً",
+  "systemInfo": "معلومات النظام",
+  "ministry": "وزارة الأوقاف والشؤون الإسلامية",
+  "rights": "جميع الحقوق محفوظة",
+
+  "propertyRegistration": "تسجيل عقار وقفي",
+  "step1": "الخطوة 1",
+  "step2": "الخطوة 2",
+  "step3": "الخطوة 3",
+  "step4": "الخطوة 4",
+  "previous": "السابق",
+  "next": "التالي",
+  "save": "حفظ",
+  "propertyType": "نوع العقار",
+  "selectPropertyType": "اختر نوع العقار",
+  "pleaseSelectPropertyType": "الرجاء اختيار نوع العقار",
+  "location": "الموقع",
+  "governorate": "المحافظة",
+  "pleaseSelectGovernorate": "الرجاء اختيار المحافظة",
+  "sequenceNumber": "الرقم التسلسلي",
+  "sequenceValidation": "يجب أن يكون بين 1 و 999",
+  "pleaseEnterSequence": "الرجاء إدخال الرقم التسلسلي",
+  "pleaseEnterLocation": "الرجاء إدخال تفاصيل الموقع",
+  "coordinates": "الإحداثيات",
+  "longitude": "خط الطول",
+  "latitude": "خط العرض",
+  "propertyDetails": "تفاصيل العقار",
+  "propertyName": "اسم العقار",
+  "pleaseEnterPropertyName": "الرجاء إدخال اسم العقار",
+  "area": "المساحة",
+  "registrationDate": "تاريخ التسجيل",
+  "selectDate": "اختر تاريخ",
+  "deedNumber": "رقم الصك",
+  "description": "الوصف",
+  "notes": "ملاحظات",
+  "nationalId": "الرقم الوطني",
+  "registrationDetails": "تفاصيل التسجيل",
+  "successMessage": "تم تسجيل العقار بنجاح برقم وطني: {nationalId}",
+  "@successMessage": {
+    "description": "رسالة النجاح بعد تسجيل العقار",
+    "placeholders": {
+      "nationalId": {}
+    }
+  },
+  "errorMessage": "خطأ: {error}",
+  "@errorMessage": {
+    "description": "رسالة الخطأ عند فشل التسجيل",
+    "placeholders": {
+      "error": {}
+    }
+  }
+}

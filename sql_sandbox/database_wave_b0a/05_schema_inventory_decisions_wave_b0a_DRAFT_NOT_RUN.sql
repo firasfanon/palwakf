@@ -1,0 +1,14 @@
+-- Database Wave B-0A
+-- DRAFT ONLY / DO NOT RUN WITHOUT APPROVAL.
+-- Purpose: optional registration of Wave B-0A hotspot decisions in platform.schema_inventory_decisions.
+-- This file is intentionally not part of the read-only UAT path.
+-- Review column contract first: source_schema + object_name + notes_ar.
+
+-- Example guarded template only:
+-- insert into platform.schema_inventory_decisions
+--   (source_schema, object_name, object_type, owner_system, owner_schema, decision_status, risk_level, notes_ar, created_at)
+-- values
+--   ('public','services','table','service_center','platform_services','wave_b0a_review','high','جدول خدمات عام يحتاج طبقة توافق قبل أي نقل سيادي.', now()),
+--   ('public','locations','table','mustakshif_gis','gis','wave_b0a_unresolved','high','حسم ملكية locations مطلوب يدويًا قبل أي تغيير.', now()),
+--   ('public','news_articles','table','media_center','media_center','wave_b0a_review','high','جدول إعلام عام مرشح للتغليف/الاستخراج لاحقًا بعد توافق.', now())
+-- on conflict do nothing;

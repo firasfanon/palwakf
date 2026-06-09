@@ -1,0 +1,27 @@
+-- DRAFT / DO NOT RUN
+-- Database Wave B-1A — Future Flutter Media Runtime Reroute Candidate
+-- This is a route/repository planning placeholder only.
+-- Do NOT execute or treat as SQL. No Flutter code is changed in this pack.
+
+-- Candidate read contracts after SQL preflight + Browser UAT approval:
+--   public.v_media_news_compat_v1
+--   public.v_media_announcements_compat_v1
+--   public.v_media_activities_compat_v1
+--   public.rpc_media_content_compat_v1(text,text,text,integer,integer)
+--
+-- Candidate Flutter dependency inventory for review before any patch:
+--   lib/data/services/news_service.dart
+--   lib/data/repositories/announcement_repository.dart
+--   lib/data/repositories/activity_repository.dart
+--   lib/data/repositories/media_gallery_repository.dart
+--   lib/features/media_center/data/repositories/media_center_repository.dart
+--   lib/features/platform/home/presentation/widgets/sections/pwf_announcements_section.dart
+--   lib/features/platform/home/presentation/widgets/sections/pwf_activities_section.dart
+--   lib/features/platform/home/presentation/widgets/sections/pwf_media_gallery_section.dart
+--
+-- Forbidden in this pack:
+--   No Supabase .from('public legacy table') rewrite.
+--   No Flutter provider/repository change.
+--   No gallery reroute while gallery wrapper is zero/pending asset mapping.
+--   No deletion/move/extraction of public legacy media tables.
+--   No waqf_assets mutation.

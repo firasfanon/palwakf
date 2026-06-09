@@ -1,0 +1,26 @@
+{
+  "batch": "Mega Batch — Public Platform Runtime Completion + Media/Services Operational Hardening",
+  "date": "2026-05-21",
+  "starting_baseline": "palwakf_platform_mega_batch_public_runtime_root_cause_retest_evidence_final_shell_decision_2026_05_21.zip",
+  "decision": "public-platform-runtime-completion-accepted-other-systems-unblocked",
+  "production_scope": "production-candidate-approved-not-deployed",
+  "boundaries": {
+    "wave_b1b": false,
+    "public_media_extraction": false,
+    "locations_activation": false,
+    "activities_gallery_reroute": false,
+    "waqf_assets_mutation": false,
+    "production_deployment": false
+  },
+  "accepted_routes": [
+    "/zakat",
+    "/home",
+    "/home/news",
+    "/home/news/1963512572",
+    "/home/announcements",
+    "/home/announcements/1295789704",
+    "/home/services",
+    "/press-releases"
+  ],
+  "methodology": "mega-batches-only; no public-runtime micro-patches except true blockers"
+}

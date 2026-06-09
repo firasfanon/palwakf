@@ -1,0 +1,15 @@
+select
+  'full_site_audit_database_migration_alias' as section,
+  'legacy_alias_hotfix_applied' as gate_key,
+  true as passed,
+  '/admin/database-migration is redirected to canonical /admin/platform/database-migration; retest required.' as note,
+  false as execution_authorized_by_this_script,
+  false as production_approved,
+  false as destructive_sql_authorized,
+  false as exact_public_table_replacement_authorized,
+  false as archive_delete_authorized,
+  true as no_auth_users_migration,
+  true as no_flutter_elevated_secret,
+  true as no_waqf_assets_mutation,
+  true as no_gis_mutation,
+  true as read_only;

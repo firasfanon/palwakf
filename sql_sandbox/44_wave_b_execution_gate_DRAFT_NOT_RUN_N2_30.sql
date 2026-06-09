@@ -1,0 +1,3 @@
+-- DRAFT NOT RUN
+-- Intended to be filled after dependency/RLS/RPC/Flutter evidence is complete.
+-- No DML should be executed from this draft in its current form.

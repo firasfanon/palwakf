@@ -1,0 +1,9 @@
+-- REVIEW ONLY rollback skeleton. Do not run without explicit approval.
+-- drop function if exists public.rpc_services_admin_transition_request_v1(text,text,text,text);
+-- drop function if exists public.rpc_services_admin_request_queue_draft_v1();
+-- drop function if exists public.rpc_services_admin_request_queue_v1(text,integer);
+-- drop function if exists public.rpc_services_track_request_public_v1(text);
+-- drop function if exists public.rpc_services_submit_request_draft_v1(jsonb);
+-- drop function if exists public.rpc_services_submit_request_v1(jsonb);
+-- drop function if exists public.rpc_services_forms_public_v1();
+-- drop schema if exists platform_services cascade;

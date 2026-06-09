@@ -1,0 +1,3 @@
+-- PalWakf Public Table V4 — Wave 0 Missing Schema Creation Result Intake
+-- Read-only retest pack. Do not execute any move statements from this package.
+-- Purpose: verify the 8 previously missing schemas now exist, then re-evaluate move waves.

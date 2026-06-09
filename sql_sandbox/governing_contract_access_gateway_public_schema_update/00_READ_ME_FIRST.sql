@@ -1,0 +1,4 @@
+-- PalWakf Governing Contract Update — READ ME FIRST
+-- This sandbox contains read-only governance markers only.
+-- Do not run any DDL/DML/GRANT/REVOKE from this package.
+-- This package does not approve production.

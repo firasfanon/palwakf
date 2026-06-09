@@ -1,0 +1,3 @@
+-- 05 Flutter media runtime reroute DRAFT — NOT RUN.
+-- This placeholder marks the next possible action after wrapper nonzero and browser UAT preflight.
+-- Do not run as SQL. No runtime reroute is performed by Database Wave B-1A result intake.

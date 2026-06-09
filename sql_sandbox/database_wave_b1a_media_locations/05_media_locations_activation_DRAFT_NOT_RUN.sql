@@ -1,0 +1,9 @@
+-- DRAFT ONLY — DO NOT RUN
+-- Placeholder for a future media/locations activation plan.
+-- This file intentionally contains no executable activation SQL.
+-- Requirements before any future activation:
+-- 1. media_center bootstrap certification.
+-- 2. RLS and editorial workflow certification.
+-- 3. locations authority decision.
+-- 4. rollback plan.
+-- 5. explicit approval for a separate activation batch.

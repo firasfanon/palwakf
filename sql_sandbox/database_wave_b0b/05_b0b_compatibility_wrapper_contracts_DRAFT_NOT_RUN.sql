@@ -1,0 +1,42 @@
+-- Database Wave B-0B
+-- DRAFT ONLY — DO NOT RUN WITHOUT MANUAL REVIEW
+-- Compatibility wrapper design skeletons.
+-- This file intentionally contains safe patterns but must not be executed in this wave.
+-- B-0B does not activate wrappers and does not replace runtime providers.
+
+-- DESIGN RULES:
+-- 1) Do not DROP public legacy tables.
+-- 2) Do not rename existing public tables.
+-- 3) If a compatibility object is needed, use versioned names such as public.v_compat_*_v1.
+-- 4) Preserve existing public façade views and column order; add new columns at the end only.
+-- 5) Wrapper activation belongs to a later approved phase after runtime dependency validation.
+
+-- Example pattern only:
+-- create or replace view public.v_compat_services_catalog_v1 as
+-- select
+--   s.id,
+--   s.name,
+--   s.description,
+--   s.icon,
+--   s.route,
+--   s.created_at
+-- from public.services s;
+
+-- Example pattern only:
+-- create or replace view public.v_compat_media_news_articles_v1 as
+-- select
+--   n.id,
+--   n.title,
+--   n.summary,
+--   n.content,
+--   n.image_url,
+--   n.status,
+--   n.published_at,
+--   n.created_at,
+--   n.updated_at
+-- from public.news_articles n;
+
+-- Example pattern only:
+-- locations wrapper must wait for manual authority decision:
+-- create or replace view public.v_compat_locations_v1 as
+-- select ... from gis.locations; -- NOT AUTHORIZED IN B-0B
