@@ -1,0 +1,6 @@
+surface,grant_action,required
+core.core_locations,GRANT SELECT TO authenticated,yes
+core.core_lgus,GRANT SELECT TO authenticated,yes
+core.core_location_lgu_bridge_candidates,GRANT SELECT TO authenticated IF EXISTS,conditional
+core.core_location_backlog_review_decisions,GRANT SELECT TO authenticated IF EXISTS,conditional
+core.v_core_location_backlog_review_v1,GRANT SELECT TO authenticated IF EXISTS,conditional

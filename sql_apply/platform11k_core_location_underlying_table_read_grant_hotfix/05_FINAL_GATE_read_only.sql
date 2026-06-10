@@ -1,0 +1,16 @@
+select
+  'platform11k_core_location_underlying_table_read_grant_hotfix_final_gate_read_only' as section,
+  'UNDERLYING_TABLE_READ_GRANTS_PREPARED_VERIFY_AND_BROWSER_RETEST_REQUIRED' as decision,
+  true as core_locations_permission_error_intaken,
+  true as core_locations_select_grant_prepared,
+  true as core_lgus_select_grant_prepared,
+  true as optional_existing_underlying_read_surface_grants_prepared,
+  false as dml_authorized,
+  false as public_locations_recreate_authorized,
+  false as gis_locations_boundary_create_authorized,
+  false as waqf_assets_mutation_authorized,
+  false as awqaf_system_files_included,
+  false as flutter_changes_included,
+  false as rpc_wrapper_switch_authorized,
+  false as production_approved,
+  'Apply 02, verify 03/04. If another underlying table is reported, capture exact error and extend grants only for that exact read dependency.' as next_instruction;

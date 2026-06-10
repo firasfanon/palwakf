@@ -1,0 +1,20 @@
+{
+  "artifact": "platform11k_core_location_underlying_table_read_grant_hotfix",
+  "created_at": "2026-06-10",
+  "base": "platform11k_core_location_read_surface_grant_blocker_closure_2026_06_10.zip",
+  "status": "staging-apply-ready / platform-core-location-underlying-table-grant-blocker-intaken / core-core-locations-select-grant-prepared / core-core-lgus-select-grant-prepared / optional-existing-underlying-read-surface-grants-prepared / no-dml / no-flutter-changes / no-awqaf-system-files / no-public-locations-recreate / no-gis-locations-boundary-create / no-waqf-assets-mutation / production-release-not-approved-pending-smoke-and-browser-retest",
+  "files": [
+    "LATEST_BASELINE_POINTER.md",
+    "docs/platform11k_core_location_underlying_table_read_grant_hotfix/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/platform11k_core_location_underlying_table_read_grant_hotfix/DECISION_RECORD.md",
+    "docs/platform11k_core_location_underlying_table_read_grant_hotfix/ERROR_RECORD.md",
+    "docs/platform11k_core_location_underlying_table_read_grant_hotfix/RUNBOOK.md",
+    "registry/platform11k_core_location_underlying_table_read_grant_hotfix/underlying_surfaces.csv",
+    "sql_apply/platform11k_core_location_underlying_table_read_grant_hotfix/00_READ_ME_FIRST.sql",
+    "sql_apply/platform11k_core_location_underlying_table_read_grant_hotfix/01_PREFLIGHT_underlying_surface_acl_read_only.sql",
+    "sql_apply/platform11k_core_location_underlying_table_read_grant_hotfix/02_APPLY_underlying_authenticated_read_grants.sql",
+    "sql_apply/platform11k_core_location_underlying_table_read_grant_hotfix/03_VERIFY_underlying_acl_read_only.sql",
+    "sql_apply/platform11k_core_location_underlying_table_read_grant_hotfix/04_AUTHENTICATED_RPC_SMOKE_read_only.sql",
+    "sql_apply/platform11k_core_location_underlying_table_read_grant_hotfix/05_FINAL_GATE_read_only.sql"
+  ]
+}

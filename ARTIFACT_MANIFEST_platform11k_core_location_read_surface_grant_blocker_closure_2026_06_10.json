@@ -1,0 +1,24 @@
+{
+  "artifact": "platform11k_core_location_read_surface_grant_blocker_closure",
+  "created_at": "2026-06-10",
+  "base": "platform11k_final_browser_runtime_evidence_intake_2026_06_09.zip",
+  "status": "staging-apply-ready / platform-core-read-surface-grant-blocker-intaken / awqaf-routes-working-platform-grant-blocker-confirmed / least-privilege-authenticated-read-grants-prepared / no-dml / no-awqaf-system-files / no-flutter-changes / no-public-locations-recreate / no-gis-locations-boundary-create / no-waqf-assets-mutation / production-release-not-approved-pending-browser-retest",
+  "files": [
+    "LATEST_BASELINE_POINTER.md",
+    "docs/platform11k_core_location_read_surface_grant_blocker_closure/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/platform11k_core_location_read_surface_grant_blocker_closure/AWQAF_RETEST_INSTRUCTIONS.md",
+    "docs/platform11k_core_location_read_surface_grant_blocker_closure/DECISION_RECORD.md",
+    "docs/platform11k_core_location_read_surface_grant_blocker_closure/ERROR_RECORD.md",
+    "docs/platform11k_core_location_read_surface_grant_blocker_closure/HANDOFF.md",
+    "docs/platform11k_core_location_read_surface_grant_blocker_closure/RUNBOOK.md",
+    "registry/platform11k_core_location_read_surface_grant_blocker_closure/surfaces.csv",
+    "sql_apply/platform11k_core_location_read_surface_grant_blocker_closure/00_READ_ME_FIRST.sql",
+    "sql_apply/platform11k_core_location_read_surface_grant_blocker_closure/01_PREFLIGHT_surface_presence_and_acl_read_only.sql",
+    "sql_apply/platform11k_core_location_read_surface_grant_blocker_closure/02_APPLY_authenticated_read_surface_grants.sql",
+    "sql_apply/platform11k_core_location_read_surface_grant_blocker_closure/03_VERIFY_acl_and_function_security_read_only.sql",
+    "sql_apply/platform11k_core_location_read_surface_grant_blocker_closure/04_VERIFY_authenticated_role_rpc_smoke_read_only.sql",
+    "sql_apply/platform11k_core_location_read_surface_grant_blocker_closure/05_BROWSER_RETEST_MATRIX_read_only.sql",
+    "sql_apply/platform11k_core_location_read_surface_grant_blocker_closure/06_FINAL_GATE_read_only.sql",
+    "sql_apply/platform11k_core_location_read_surface_grant_blocker_closure/99_OPTIONAL_SECURITY_DEFINER_FALLBACK_NOT_DEFAULT.sql"
+  ]
+}

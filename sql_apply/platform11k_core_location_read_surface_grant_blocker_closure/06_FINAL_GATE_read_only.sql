@@ -1,0 +1,15 @@
+select
+  'platform11k_core_location_read_surface_grant_blocker_final_gate_read_only' as section,
+  'PLATFORM_CORE_READ_SURFACE_GRANT_BLOCKER_CORRECTION_PREPARED_APPLY_AND_RETEST_REQUIRED' as decision,
+  true as awqaf_runtime_route_working,
+  true as platform_grant_blocker_confirmed,
+  true as read_surface_grants_prepared,
+  false as dml_authorized,
+  false as public_locations_recreate_authorized,
+  false as gis_locations_boundary_create_authorized,
+  false as waqf_assets_mutation_authorized,
+  false as awqaf_system_files_included,
+  false as flutter_changes_included,
+  false as rpc_wrapper_switch_authorized,
+  false as production_approved,
+  'Apply 02, verify 03/04, then repeat browser retest for awqaf locations and selector routes.' as next_instruction;

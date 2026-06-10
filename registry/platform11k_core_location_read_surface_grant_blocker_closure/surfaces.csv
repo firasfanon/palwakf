@@ -1,0 +1,6 @@
+surface,action
+core.v_core_location_backlog_operational_queue_v1,GRANT SELECT TO authenticated
+core.v_core_locations_with_lgus_v1,GRANT SELECT TO authenticated
+public.rpc_core_location_runtime_certification_v1(),GRANT EXECUTE TO authenticated
+public.rpc_core_location_backlog_summary_v1(),GRANT EXECUTE TO authenticated
+"public.rpc_core_location_backlog_operational_queue_v1(text,text,text,integer,integer)",GRANT EXECUTE TO authenticated
