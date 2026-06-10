@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "flutter build web --release",
+  "installCommand": "echo \"Flutter install handled in buildCommand\"",
+  "buildCommand": "bash vercel-build.sh",
   "outputDirectory": "build/web",
-  "installCommand": "echo \"git clone https://github.com/flutter/flutter.git --depth 1 -b stable \"$HOME/flutter\"\"",
   "rewrites": [
     {
       "source": "/(.*)",
