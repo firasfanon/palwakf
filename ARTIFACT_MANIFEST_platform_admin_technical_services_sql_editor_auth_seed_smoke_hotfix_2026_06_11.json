@@ -1,0 +1,17 @@
+{
+  "artifact": "platform_admin_technical_services_sql_editor_auth_seed_smoke_hotfix",
+  "date": "2026_06_11",
+  "base": "platform_admin_technical_services_real_operations_mega_batch_2026_06_11.zip",
+  "changed_files": [
+    "LATEST_BASELINE_POINTER.md",
+    "docs/platform_admin_technical_services_sql_editor_auth_seed_smoke_hotfix/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/platform_admin_technical_services_sql_editor_auth_seed_smoke_hotfix/DECISION_RECORD.md",
+    "docs/platform_admin_technical_services_sql_editor_auth_seed_smoke_hotfix/RUNBOOK.md",
+    "sql_apply/platform_admin_technical_services_real_operations_mega_batch/00A_SQL_EDITOR_AUTH_SEED_SMOKE_HOTFIX_READ_ME.sql",
+    "sql_apply/platform_admin_technical_services_real_operations_mega_batch/04_SEED_initial_health_release_records.sql",
+    "sql_apply/platform_admin_technical_services_real_operations_mega_batch/06A_AUTHENTICATED_RPC_SMOKE_KNOWN_USER.sql",
+    "sql_apply/platform_admin_technical_services_real_operations_mega_batch/06B_ADMIN_USER_RESOLUTION_HELPER_read_only.sql",
+    "sql_apply/platform_admin_technical_services_real_operations_mega_batch/07_FINAL_GATE_read_only.sql"
+  ],
+  "status": "staging-sql-hotfix-ready / platform-technical-backend-contract-structurally-prepared / seed-script-sql-editor-safe / authenticated-smoke-concretized / runtime-auth-preserved / no-backup-restore-execution / no-maintenance-activation / production-not-approved"
+}

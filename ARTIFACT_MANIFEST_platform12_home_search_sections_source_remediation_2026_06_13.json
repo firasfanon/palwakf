@@ -1,0 +1,54 @@
+{
+  "batch": "PLATFORM12_HOME_SEARCH_AND_SECTIONS_SOURCE_REMEDIATION",
+  "date": "2026_06_13",
+  "base": "media_center_mobile_session_handoff_updated_baseline_2026_06_13.zip",
+  "purpose": "Patch homepage header search binding and harden actual homepage sections runtime source through compatibility view reads and canonical section merging.",
+  "scope": [
+    "defer Android runtime UAT temporarily",
+    "homepage header search frontend binding",
+    "search route query propagation",
+    "homepage sections source determination",
+    "homepage sections duplicate-risk mitigation",
+    "read-only diagnostics only"
+  ],
+  "changed_files": [
+    "lib/features/platform/home/presentation/widgets/header/pwf_main_header.dart",
+    "lib/presentation/widgets/header/pwf_main_header.dart",
+    "lib/presentation/screens/public/search/search_screen.dart",
+    "lib/presentation/screens/public/search/web_search_screen.dart",
+    "lib/presentation/screens/public/search/mobile_search_screen.dart",
+    "lib/app/routing/route_groups/public_routes_group.dart",
+    "lib/data/repositories/homepage_repository.dart",
+    "lib/presentation/screens/admin/main/management/home_management/pwf_homepage_sections_manager.dart",
+    "docs/platform12/HOME_SEARCH_AND_SECTIONS_SOURCE_AUDIT_2026_06_13.md",
+    "docs/platform12/ERROR_RECORD_HOME_SEARCH_SECTIONS_2026_06_13.md",
+    "sql_sandbox/platform12_home_search_sections_source_audit_read_only/01_homepage_sections_source_and_duplicates_read_only.sql",
+    "sql_sandbox/platform12_home_search_sections_source_audit_read_only/02_homepage_sections_semantic_overlap_read_only.sql",
+    "PALWAKF_PLATFORM_COMPREHENSIVE_GUIDE.md",
+    "CHANGELOG.md",
+    "LATEST_BASELINE_POINTER.md",
+    "ARTIFACT_MANIFEST_platform12_home_search_sections_source_remediation_2026_06_13.json"
+  ],
+  "current_status": [
+    "home-search-frontend-binding-patched",
+    "search-route-query-propagation-enabled",
+    "search-screen-initial-query-supported",
+    "homepage-sections-runtime-source-repointed-to-compat-view",
+    "section-merge-canonicalized-for-legacy-aliases",
+    "admin-missing-catalog-content-sections-default-inactive",
+    "read-only-diagnostic-sql-prepared",
+    "android-runtime-uat-deferred",
+    "no-sql-executed",
+    "no-public-base-tables",
+    "no-service-role",
+    "production-not-approved"
+  ],
+  "validation": {
+    "static_source_inspection": true,
+    "targeted_grep_checks": true,
+    "flutter_analyze": "not_run_sdk_unavailable_in_sandbox",
+    "browser_uat": "pending_local_environment"
+  },
+  "next_gate": "Run local flutter analyze and browser UAT for /home search + section rendering, then resume Android runtime device/emulator UAT.",
+  "status": "platform12-home-search-bound / homepage-sections-runtime-source-repointed-to-compat-view / admin-catalog-missing-keys-default-inactive / read-only-section-diagnostics-prepared / android-runtime-uat-deferred / no-sql-executed / no-public-base-tables / no-service-role / production-not-approved"
+}

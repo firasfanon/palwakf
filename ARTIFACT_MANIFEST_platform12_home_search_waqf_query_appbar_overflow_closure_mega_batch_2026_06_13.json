@@ -1,0 +1,58 @@
+{
+  "artifact": "platform12_home_search_waqf_query_appbar_overflow_closure_mega_batch_2026_06_13",
+  "session": "تطوير المنصة 12",
+  "date": "2026-06-13",
+  "execution_mode": "Mega Batch / دفعة تطوير كبيرة",
+  "based_on": "platform12_home_search_sections_source_consolidation_mega_batch_2026_06_13.zip",
+  "evidence_intake": [
+    "/home/search?q=مسجد renders a result at normal browser width",
+    "/home/search?q=وقف with documents category returns empty state before this batch",
+    "WebAppBar RenderFlex overflow remains under constrained DevTools width before this batch"
+  ],
+  "status": [
+    "search-masjid-normal-width-confirmed-by-user-evidence",
+    "search-waqf-documents-gap-accepted-and-index-expanded",
+    "web-appbar-constrained-width-overflow-hardened",
+    "homepage-sections-source-decision-preserved",
+    "semantic-family-policy-decision-required",
+    "android-runtime-uat-deferred",
+    "no-sql-executed",
+    "no-service-role",
+    "production-not-approved"
+  ],
+  "sql_status": "not_executed",
+  "production_approval": "not_approved",
+  "changed_files": [
+    "LATEST_BASELINE_POINTER.md",
+    "PALWAKF_PLATFORM_COMPREHENSIVE_GUIDE.md",
+    "CHANGELOG.md",
+    "docs/platform12/PLATFORM12_HOME_SEARCH_WAQF_QUERY_APPBAR_OVERFLOW_CLOSURE_MEGA_BATCH_2026_06_13.md",
+    "docs/platform12/ERROR_RECORD_HOME_SEARCH_WAQF_QUERY_APPBAR_OVERFLOW_2026_06_13.md",
+    "docs/platform12/UAT_HOME_SEARCH_WAQF_QUERY_APPBAR_OVERFLOW_2026_06_13.md",
+    "docs/platform12/evidence/search_waqf_no_results_narrow_devtools_2026_06_13.png",
+    "docs/platform12/evidence/search_masjid_result_normal_width_2026_06_13.png",
+    "lib/presentation/widgets/web/web_app_bar.dart",
+    "lib/presentation/screens/public/search/web_search_screen.dart",
+    "lib/presentation/screens/public/search/mobile_search_screen.dart"
+  ],
+  "verification_required": [
+    "flutter analyze",
+    "flutter test",
+    "flutter run -d chrome",
+    "/home/search?q=وقف category=الوثائق should render waqf-related result",
+    "DevTools docked right should not produce WebAppBar RenderFlex overflow"
+  ],
+  "file_hashes": {
+    "LATEST_BASELINE_POINTER.md": "a1a9ff0369f28c85302777cf0fe6e26abd33fdedb63d40adb33e0fc3fdff98f3",
+    "PALWAKF_PLATFORM_COMPREHENSIVE_GUIDE.md": "9fe02aaca067a779080cf450e19dcc9ca770700368b4cf6777d64a19b734c2f8",
+    "CHANGELOG.md": "77d750f632a00c79d15b1fd7bfb842dcd2eab86999cbe37df8ca073e63fa709b",
+    "docs/platform12/PLATFORM12_HOME_SEARCH_WAQF_QUERY_APPBAR_OVERFLOW_CLOSURE_MEGA_BATCH_2026_06_13.md": "2efd94c09f14bf210b8d9cfd8593583983d8e58e15389b2abcd782d9a7e34ac1",
+    "docs/platform12/ERROR_RECORD_HOME_SEARCH_WAQF_QUERY_APPBAR_OVERFLOW_2026_06_13.md": "040920dad756fb138a0e02ea7c98c59946da2510151915179940170a597809fb",
+    "docs/platform12/UAT_HOME_SEARCH_WAQF_QUERY_APPBAR_OVERFLOW_2026_06_13.md": "aa57b030e53de142aa17ea7520fdfefedf975f0b37b9fee2ff00c0767f97c3e5",
+    "docs/platform12/evidence/search_waqf_no_results_narrow_devtools_2026_06_13.png": "0f6e21e27ca0ffb3e7ec32a755d28d6e56d113373eaea5b276362d1dbc17d036",
+    "docs/platform12/evidence/search_masjid_result_normal_width_2026_06_13.png": "3264d1db84dabd8149bc4779d945b59610d5af729d8d0f8d9c11451c997786e4",
+    "lib/presentation/widgets/web/web_app_bar.dart": "2e76b93b360673620d23a3b2fd68bd8a8951ea0c17b91931238c23d6129e38cf",
+    "lib/presentation/screens/public/search/web_search_screen.dart": "c7049f08d782d57ba212994975706a18a812b4a8e089561102bc536336e1828a",
+    "lib/presentation/screens/public/search/mobile_search_screen.dart": "c293f1d92c722d85cdf54c1a1cf8b72d50e016b19c05fbf3767e431c64a8d47b"
+  }
+}

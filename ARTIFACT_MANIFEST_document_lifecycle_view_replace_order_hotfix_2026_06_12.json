@@ -1,0 +1,19 @@
+{
+  "batch": "DOCUMENT_LIFECYCLE_VIEW_REPLACE_ORDER_HOTFIX",
+  "date": "2026_06_12",
+  "base": "document_lifecycle_policy_registry_apply_and_attachment_classification_2026_06_12.zip",
+  "trigger_error": "ERROR 42P16 cannot change name of view column created_at to confidentiality_level",
+  "cause": "CREATE OR REPLACE VIEW cannot reorder/rename existing columns.",
+  "fix": "DROP VIEW IF EXISTS for public wrappers, then CREATE VIEW with lifecycle-aware columns.",
+  "status": "document-lifecycle-view-replace-order-hotfix-ready / 42p16-view-column-order-fix-prepared / wrappers-drop-recreate-apply-prepared / verification-and-rollback-prepared / no-file-deletion / no-storage-mutation / no-rls-mutation / no-service-role / production-not-approved / operator-apply-pending",
+  "changed_files": [
+    "CHANGELOG.md",
+    "LATEST_BASELINE_POINTER.md",
+    "docs/document_lifecycle_view_replace_order_hotfix/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/document_lifecycle_view_replace_order_hotfix/DECISION_RECORD.md",
+    "docs/document_lifecycle_view_replace_order_hotfix/HOTFIX_SUMMARY.md",
+    "sql_apply/document_lifecycle_view_replace_order_hotfix/01_APPLY_document_lifecycle_view_replace_order_hotfix.sql",
+    "sql_rollback/document_lifecycle_view_replace_order_hotfix/01_ROLLBACK_document_lifecycle_view_replace_order_hotfix.sql",
+    "sql_verification/document_lifecycle_view_replace_order_hotfix/01_VERIFY_document_lifecycle_view_replace_order_hotfix.sql"
+  ]
+}

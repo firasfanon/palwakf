@@ -1,0 +1,29 @@
+# Decision Record
+
+```json
+{
+  "batch": "MEDIA_CENTER_MOBILE_OFFLINE_DRAFTS_ROUTE_TYPE_DECOUPLING_ANALYZER_HOTFIX",
+  "date": "2026_06_13",
+  "base": "media_center_mobile_offline_drafts_analyzer_imports_hotfix_2026_06_13.zip",
+  "evidence": "Same analyzer errors persisted after previous import-focused hotfix.",
+  "fix_strategy": [
+    "Remove MediaCenterLocalDraft type dependency from common_routes_group.dart",
+    "Pass state.extra as Object? to MediaCenterQuickPublishPage",
+    "Perform MediaCenterLocalDraft type check inside feature page",
+    "Replace labelAr extension usage with local content type label helper"
+  ],
+  "changed_files": [
+    "lib/app/routing/route_groups/common_routes_group.dart",
+    "lib/features/media_center_mobile/presentation/pages/media_center_quick_publish_page.dart",
+    "lib/features/media_center_mobile/presentation/pages/media_center_local_drafts_page.dart"
+  ],
+  "boundaries": [
+    "no SQL",
+    "no Gradle changes",
+    "no public base tables",
+    "no service_role",
+    "no production approval"
+  ],
+  "status": "offline-drafts-route-type-decoupling-analyzer-hotfix-prepared / common-routes-no-longer-depends-on-media-center-local-draft-type / quick-publish-page-handles-extra-type-locally / labelAr-extension-dependency-removed / android-build-retest-pending / no-sql / no-gradle-change / no-public-base-tables / no-service-role / production-not-approved"
+}
+```

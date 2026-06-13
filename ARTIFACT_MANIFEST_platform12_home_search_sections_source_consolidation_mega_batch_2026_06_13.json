@@ -1,0 +1,48 @@
+{
+  "artifact": "platform12_home_search_sections_source_consolidation_mega_batch_2026_06_13",
+  "session": "تطوير المنصة 12",
+  "date": "2026-06-13",
+  "execution_mode": "Mega Batch / large governed batch",
+  "based_on": "platform12_web_search_overflow_section_duplicates_evidence_intake_2026_06_13.zip",
+  "status": [
+    "search-route-rendering-confirmed-by-user-evidence",
+    "search-url-query-sync-added",
+    "homepage-sections-runtime-source-certified-to-compat-view",
+    "canonical-section-deduplication-hardened",
+    "semantic-family-policy-decision-required",
+    "android-runtime-uat-deferred",
+    "no-sql-executed",
+    "no-service-role",
+    "production-not-approved"
+  ],
+  "sql_status": "not_executed",
+  "production_approval": "not_approved",
+  "changed_files": [
+    "LATEST_BASELINE_POINTER.md",
+    "PALWAKF_PLATFORM_COMPREHENSIVE_GUIDE.md",
+    "CHANGELOG.md",
+    "docs/platform12/PLATFORM12_HOME_SEARCH_SECTIONS_SOURCE_CONSOLIDATION_MEGA_BATCH_2026_06_13.md",
+    "docs/platform12/ERROR_RECORD_HOME_SEARCH_SECTIONS_CONSOLIDATION_2026_06_13.md",
+    "docs/platform12/UAT_HOME_SEARCH_SECTIONS_CONSOLIDATION_2026_06_13.md",
+    "lib/presentation/screens/public/search/mobile_search_screen.dart",
+    "lib/presentation/screens/public/search/web_search_screen.dart",
+    "lib/data/repositories/homepage_repository.dart"
+  ],
+  "verification_required": [
+    "flutter analyze",
+    "flutter test",
+    "flutter run -d chrome",
+    "browser UAT for /home/search?q=مسجد with DevTools docked"
+  ],
+  "file_hashes": {
+    "LATEST_BASELINE_POINTER.md": "070a32b9d3a5fc4ae66a513aeb6ed9de10e5f2a766d71a853d3244b74da1f156",
+    "PALWAKF_PLATFORM_COMPREHENSIVE_GUIDE.md": "4dfa982e024ae978e61538f7c984a3af3eaea79f67ad6f2eb6b55b3d9a8e4af6",
+    "CHANGELOG.md": "859d0e5e3b66844fe47d4734f2d24e64f3ef62dd74c980c63e45aaf05cc82544",
+    "docs/platform12/PLATFORM12_HOME_SEARCH_SECTIONS_SOURCE_CONSOLIDATION_MEGA_BATCH_2026_06_13.md": "cb723209860eae6c2a84d315b498ef60ba9f1a05737d8b69d0cd6505a806443c",
+    "docs/platform12/ERROR_RECORD_HOME_SEARCH_SECTIONS_CONSOLIDATION_2026_06_13.md": "344eed05f86aa63df9af1ac50f3730d395594974cea9cae88b41682a7a4c7b5b",
+    "docs/platform12/UAT_HOME_SEARCH_SECTIONS_CONSOLIDATION_2026_06_13.md": "6b006d25693153468c1de8c5ae6e95b31ff2aaac3653bc8d7bc07bbb3edd64a6",
+    "lib/presentation/screens/public/search/mobile_search_screen.dart": "7e59ed437a8e7310fbdd7eec0320706c991509b0071166925c92bf39c1449d8a",
+    "lib/presentation/screens/public/search/web_search_screen.dart": "94661b33dbe8c171ef62e848550bcbff772c5f955ba7c46a873771815630d3dc",
+    "lib/data/repositories/homepage_repository.dart": "a25441cef3a688ee2cfc89559c854ef404b8cce2fbb41eba03230ba694e24565"
+  }
+}

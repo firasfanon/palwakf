@@ -1,0 +1,15 @@
+{
+  "artifact": "platform_technical_dashboard_rpc_created_at_order_hotfix",
+  "date": "2026_06_11",
+  "base": "platform_admin_technical_services_sql_editor_auth_seed_smoke_hotfix_2026_06_11.zip",
+  "changed_files": [
+    "LATEST_BASELINE_POINTER.md",
+    "docs/platform_technical_dashboard_rpc_created_at_order_hotfix/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/platform_technical_dashboard_rpc_created_at_order_hotfix/DECISION_RECORD.md",
+    "docs/platform_technical_dashboard_rpc_created_at_order_hotfix/RUNBOOK.md",
+    "sql_apply/platform_admin_technical_services_real_operations_mega_batch/03A_FIX_dashboard_rpc_created_at_order.sql",
+    "sql_apply/platform_admin_technical_services_real_operations_mega_batch/06C_DASHBOARD_RPC_POST_FIX_SMOKE.sql",
+    "sql_apply/platform_admin_technical_services_real_operations_mega_batch/07_FINAL_GATE_read_only.sql"
+  ],
+  "status": "staging-sql-hotfix-ready / platform-technical-dashboard-rpc-created-at-order-fixed / backend-contract-preserved / runtime-auth-preserved / no-ddl / no-rls-change / no-backup-restore-execution / production-not-approved"
+}

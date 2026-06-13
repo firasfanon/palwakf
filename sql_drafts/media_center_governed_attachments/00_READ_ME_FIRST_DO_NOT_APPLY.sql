@@ -1,0 +1,11 @@
+
+-- PalWakf Governed Media Attachments Draft
+-- DO NOT APPLY IN PRODUCTION.
+-- This directory is a draft design only.
+-- No SQL in this pack has been authorized for execution.
+-- Required before any apply:
+-- 1. owner approval
+-- 2. dependency review
+-- 3. rollback plan
+-- 4. RLS policy review
+-- 5. browser UAT plan

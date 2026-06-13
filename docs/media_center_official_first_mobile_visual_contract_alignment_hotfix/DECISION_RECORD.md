@@ -1,0 +1,39 @@
+# Decision Record
+
+```json
+{
+  "batch": "MEDIA_CENTER_OFFICIAL_FIRST_MOBILE_VISUAL_CONTRACT_ALIGNMENT_HOTFIX",
+  "date": "2026_06_13",
+  "base": "media_center_official_first_mobile_publishing_app_breaking_news_nullsafe_runtime_hotfix_2026_06_13.zip",
+  "user_feedback": "Mobile media interfaces are functional but do not respect the platform governing visual contract.",
+  "changed_files": [
+    "lib/features/media_center_mobile/presentation/widgets/media_center_mobile_visual_contract.dart",
+    "lib/features/media_center_mobile/presentation/pages/media_center_mobile_app_page.dart",
+    "lib/features/media_center_mobile/presentation/pages/media_center_quick_publish_page.dart",
+    "lib/features/media_center_public/presentation/pages/official_media_detail_page.dart"
+  ],
+  "visual_contract": {
+    "platform_dark": "#0B1220",
+    "platform_gold": "#D4AF37",
+    "platform_blue": "#0E3A6D",
+    "royal_red": "#B22222",
+    "rtl_first": true,
+    "official_first_message": true,
+    "public_schema_api_edge_only": true
+  },
+  "routes_aligned": [
+    "/app/media-center",
+    "/app/media-center/publish",
+    "/official/media/:family/:id"
+  ],
+  "boundaries": [
+    "no SQL changes",
+    "no public base tables",
+    "no service_role",
+    "no RLS mutation",
+    "no storage mutation",
+    "no production approval"
+  ],
+  "status": "mobile-visual-contract-alignment-hotfix-prepared / official-first-mobile-ui-branded / public-official-detail-ui-branded / bottom-navigation-platform-accented / employee-sign-in-barrier-visible / no-sql-change / no-public-base-tables / no-service-role / production-not-approved / analyzer-runtime-retest-pending"
+}
+```

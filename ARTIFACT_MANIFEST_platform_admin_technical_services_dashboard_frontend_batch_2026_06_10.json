@@ -1,0 +1,45 @@
+{
+  "batch": "Platform Admin Dashboard — Technical Services Frontend Batch",
+  "date": "2026-06-10",
+  "type": "frontend/admin-routing-dashboard-development",
+  "routes_added": [
+    "/admin/platform/technical-services",
+    "/admin/platform/technical-services/backup",
+    "/admin/platform/technical-services/maintenance",
+    "/admin/platform/technical-services/health",
+    "/admin/platform/technical-services/deployment",
+    "/admin/platform/technical-services/audit"
+  ],
+  "scope": {
+    "flutter_changes": true,
+    "sql": false,
+    "ddl": false,
+    "dml": false,
+    "backup_execution": false,
+    "restore_execution": false,
+    "maintenance_mode_activation": false,
+    "service_role_exposure": false,
+    "production_approved": false
+  },
+  "changed_files": [
+    "lib/app/routing/app_routes.dart",
+    "lib/app/routing/go_router_config.dart",
+    "lib/app/routing/route_groups/admin_routes_group.dart",
+    "lib/core/access/admin_route_access_contract.dart",
+    "lib/features/platform/technical_services/presentation/pages/pwf_technical_services_page.dart",
+    "lib/presentation/screens/admin/main/dashboard/web_admin_dashboard.dart",
+    "lib/presentation/widgets/admin/admin_panel_registry.dart",
+    "docs/platform_admin_technical_services_dashboard_2026_06_10/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/platform_admin_technical_services_dashboard_2026_06_10/DECISION_RECORD.md",
+    "docs/platform_admin_technical_services_dashboard_2026_06_10/BROWSER_UAT_CHECKLIST.md",
+    "governance/GOVERNING_CONTRACT_APPENDIX_TECHNICAL_SERVICES_DASHBOARD_2026_06_10.md",
+    "LATEST_BASELINE_POINTER.md"
+  ],
+  "status": "staging-code-ready / platform-admin-dashboard-technical-services-added / backup-maintenance-health-deployment-audit-routes-prepared / frontend-only / no-sql / no-dml / no-backup-execution / no-maintenance-mode-activation / no-service-role / production-not-approved-pending-analyzer-and-browser-uat",
+  "next_required_evidence": [
+    "flutter analyze",
+    "flutter run -d chrome",
+    "browser screenshots",
+    "console clean evidence"
+  ]
+}

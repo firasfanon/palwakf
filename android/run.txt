@@ -1,0 +1,4 @@
+.\scripts\uat_media_center_android_runtime.ps1 -SkipBuild
+أو لبناء جديد ثم تثبيت وتشغيل:
+
+.\scripts\uat_media_center_android_runtime.ps1

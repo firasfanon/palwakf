@@ -1,0 +1,14 @@
+{
+  "batch": "MEDIA_CENTER_MOBILE_DEVELOPMENT_PROCEDURES_MD_ARCHIVE",
+  "date": "2026_06_13",
+  "base": "media_center_android_runtime_uat_device_availability_gate_hotfix_2026_06_13.zip",
+  "purpose": "Archive completed mobile application development procedures as Markdown inside the project.",
+  "document_path": "docs/mobile/MEDIA_CENTER_MOBILE_DEVELOPMENT_PROCEDURES_2026_06_13.md",
+  "status": "mobile-development-procedures-md-archived / project-docs-mobile-file-added / no-code-change / no-sql / no-public-base-tables / no-service-role / production-not-approved",
+  "changed_files": [
+    "ARTIFACT_MANIFEST_media_center_mobile_development_procedures_md_archive_2026_06_13.json",
+    "CHANGELOG.md",
+    "LATEST_BASELINE_POINTER.md",
+    "docs/mobile/MEDIA_CENTER_MOBILE_DEVELOPMENT_PROCEDURES_2026_06_13.md"
+  ]
+}

@@ -1,0 +1,29 @@
+# Decision Record
+
+```json
+{
+  "batch": "DOCUMENT_LIFECYCLE_REGISTRY_APPLIED_EMPTY_SOURCES_EVIDENCE_CLOSURE",
+  "date": "2026_06_12",
+  "base": "document_lifecycle_view_replace_order_hotfix_2026_06_12.zip",
+  "accepted_apply_evidence": {
+    "document_types_table_present": true,
+    "service_wrapper_present": true,
+    "media_wrapper_present": true,
+    "document_type_count": 5,
+    "classified_service_attachment_count": 0,
+    "production_approved": false
+  },
+  "accepted_wrapper_counts": {
+    "service_attachments": 0,
+    "media_assets": 0
+  },
+  "accepted_decision": "DOCUMENT_LIFECYCLE_POLICY_REGISTRY_APPLIED_EMPTY_SOURCE_SURFACES_ACCEPTED",
+  "not_claimed": [
+    "service attachment classification with non-zero rows",
+    "media asset lifecycle row exposure with non-zero rows",
+    "retention enforcement over real attached files",
+    "production approval"
+  ],
+  "status": "document-lifecycle-registry-applied / document-types-count-5 / service-wrapper-present / media-wrapper-present / classified-service-attachment-count-0 / service-wrapper-row-count-0 / media-wrapper-row-count-0 / no-file-deletion / no-storage-mutation / no-rls-mutation / no-service-role / production-not-approved"
+}
+```

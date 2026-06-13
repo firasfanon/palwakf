@@ -1,0 +1,55 @@
+{
+  "batch": "PALWAKF_FILE_CENTER_HOME_NEWS_PUBLIC_API_EDGE_MEGA_BATCH",
+  "date": "2026_06_13",
+  "combined_requests": [
+    "FILE_CENTER_EXPLICIT_UNIT_ASSIGNMENT_AND_OWNER_RECORD_MAPPING_WORKFLOW",
+    "HOME_NEWS_MEDIA_EXPERIENCE_AND_HOMEPAGE_CHALLENGES_CLOSURE_MEGA_BATCH",
+    "PUBLIC_SCHEMA_IS_COMPATIBILITY_AND_API_EDGE_ONLY_NOT_SYSTEM_SOURCE_OF_TRUTH"
+  ],
+  "public_schema_decision": "PUBLIC_SCHEMA_IS_COMPATIBILITY_AND_API_EDGE_ONLY_NOT_SYSTEM_SOURCE_OF_TRUTH",
+  "frontend_changes": [
+    "lib/features/document_center/domain/document_center_models.dart",
+    "lib/features/document_center/data/document_center_repository.dart",
+    "lib/features/document_center/presentation/pages/document_center_unified_page.dart",
+    "lib/data/services/news_service.dart",
+    "lib/core/database/pwf_database_owner_surfaces.dart"
+  ],
+  "sql_included": [
+    "diagnostics",
+    "file center explicit assignment/mapping RPC workflow",
+    "verification",
+    "rollback"
+  ],
+  "boundaries": [
+    "no public base tables",
+    "no owner data migration to public",
+    "public views/functions are API edge only",
+    "no file deletion",
+    "no storage.objects mutation",
+    "no fake owner records",
+    "no public media auto-publish",
+    "no RLS mutation",
+    "no service_role",
+    "no production approval"
+  ],
+  "status": "mega-batch-prepared / file-center-explicit-unit-assignment-workflow-prepared / home-news-media-experience-runtime-hardening-prepared / public-schema-api-edge-only-contract-applied-in-code-and-docs / no-public-base-tables / no-owner-truth-in-public / no-service-role / production-not-approved / operator-apply-and-runtime-retest-pending",
+  "changed_files": [
+    "CHANGELOG.md",
+    "LATEST_BASELINE_POINTER.md",
+    "docs/palwakf_file_center_home_news_public_api_edge_mega_batch/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/palwakf_file_center_home_news_public_api_edge_mega_batch/DECISION_RECORD.md",
+    "docs/palwakf_file_center_home_news_public_api_edge_mega_batch/FILE_CENTER_EXPLICIT_ASSIGNMENT_WORKFLOW.md",
+    "docs/palwakf_file_center_home_news_public_api_edge_mega_batch/HOME_NEWS_MEDIA_EXPERIENCE_CLOSURE.md",
+    "docs/palwakf_file_center_home_news_public_api_edge_mega_batch/PUBLIC_SCHEMA_API_EDGE_POLICY.md",
+    "docs/palwakf_file_center_home_news_public_api_edge_mega_batch/RUNBOOK.md",
+    "lib/core/database/pwf_database_owner_surfaces.dart",
+    "lib/data/services/news_service.dart",
+    "lib/features/document_center/data/document_center_repository.dart",
+    "lib/features/document_center/domain/document_center_models.dart",
+    "lib/features/document_center/presentation/pages/document_center_unified_page.dart",
+    "sql_apply/palwakf_file_center_home_news_public_api_edge_mega_batch/01_APPLY_file_center_explicit_assignment_public_api_edge_workflow.sql",
+    "sql_diagnostics/palwakf_file_center_home_news_public_api_edge_mega_batch/01_READ_ONLY_preflight.sql",
+    "sql_rollback/palwakf_file_center_home_news_public_api_edge_mega_batch/01_ROLLBACK_file_center_explicit_assignment_public_api_edge_workflow.sql",
+    "sql_verification/palwakf_file_center_home_news_public_api_edge_mega_batch/01_VERIFY_file_center_home_news_public_api_edge.sql"
+  ]
+}

@@ -1,0 +1,9 @@
+platform_role,system_key,permission_code,permission_group,scope_policy
+super_admin,awqaf_system,waqf.assets.super_admin,waqf_assets,global
+admin,awqaf_system,waqf.assets.manage,waqf_assets,inherit_assignment_scope
+admin,awqaf_system,waqf.assets.review,waqf_assets,inherit_assignment_scope
+admin,awqaf_system,waqf.assets.read,waqf_assets,inherit_assignment_scope
+manager,awqaf_system,waqf.assets.review,waqf_assets,inherit_assignment_scope
+manager,awqaf_system,waqf.assets.read,waqf_assets,inherit_assignment_scope
+employee,awqaf_system,waqf.assets.read,waqf_assets,inherit_assignment_scope
+viewer,awqaf_system,waqf.assets.read,waqf_assets,inherit_assignment_scope

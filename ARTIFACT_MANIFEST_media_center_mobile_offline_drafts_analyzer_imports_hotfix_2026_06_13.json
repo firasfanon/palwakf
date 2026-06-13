@@ -1,0 +1,35 @@
+{
+  "batch": "MEDIA_CENTER_MOBILE_OFFLINE_DRAFTS_ANALYZER_IMPORTS_HOTFIX",
+  "date": "2026_06_13",
+  "base": "media_center_mobile_offline_drafts_field_reporter_workflow_2026_06_13.zip",
+  "evidence": {
+    "script_fixed_prior": true,
+    "flutter_analyze_failed": true,
+    "issues": [
+      "MediaCenterLocalDraft undefined in common_routes_group.dart",
+      "MediaCenterLocalDraft cast_to_non_type in common_routes_group.dart",
+      "labelAr extension not visible in media_center_local_drafts_page.dart"
+    ]
+  },
+  "changed_files": [
+    "CHANGELOG.md",
+    "LATEST_BASELINE_POINTER.md",
+    "docs/media_center_mobile_offline_drafts_analyzer_imports_hotfix/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/media_center_mobile_offline_drafts_analyzer_imports_hotfix/DECISION_RECORD.md",
+    "docs/media_center_mobile_offline_drafts_analyzer_imports_hotfix/EVIDENCE_AND_FIX_REPORT.md",
+    "lib/app/routing/go_router_config.dart",
+    "lib/features/media_center_mobile/presentation/pages/media_center_local_drafts_page.dart"
+  ],
+  "fixes": [
+    "import MediaCenterLocalDraft defining library in go_router_config.dart parent library",
+    "import media_center_publish_models.dart in local drafts page to expose labelAr extension"
+  ],
+  "boundaries": [
+    "no SQL",
+    "no Gradle changes",
+    "no public base tables",
+    "no service_role",
+    "no production approval"
+  ],
+  "status": "offline-drafts-analyzer-imports-hotfix-prepared / route-part-type-import-fixed-in-parent-library / labelAr-extension-import-fixed / android-build-script-prior-fix-confirmed / android-build-retest-pending / no-sql / no-gradle-change / no-public-base-tables / no-service-role / production-not-approved"
+}

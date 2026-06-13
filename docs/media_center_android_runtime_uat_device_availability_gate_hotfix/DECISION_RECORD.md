@@ -1,0 +1,33 @@
+# Decision Record
+
+```json
+{
+  "batch": "MEDIA_CENTER_ANDROID_RUNTIME_UAT_DEVICE_AVAILABILITY_GATE_HOTFIX",
+  "date": "2026_06_13",
+  "base": "media_center_android_runtime_uat_adb_locator_windows_hotfix_2026_06_13.zip",
+  "evidence": "adb was found but no devices/emulators were available during APK install.",
+  "changed_files": [
+    "scripts/uat_media_center_android_runtime.ps1",
+    "scripts/list_android_devices_and_emulators.ps1"
+  ],
+  "fix": [
+    "add pre-install ready-device gate",
+    "add emulator discovery",
+    "add -EmulatorName support",
+    "add -DeviceSerial support",
+    "add -ListOnly support",
+    "add helper script for devices and AVDs"
+  ],
+  "boundaries": [
+    "no SQL",
+    "no Flutter change",
+    "no Android build change",
+    "no media_center mutation",
+    "no public mutation",
+    "no public base tables",
+    "no service_role",
+    "no production approval"
+  ],
+  "status": "android-runtime-uat-device-availability-gate-hotfix-prepared / adb-found-no-device-gate-handled / emulator-name-support-added / device-serial-support-added / device-avd-list-helper-added / runtime-uat-retest-pending / no-sql / no-public-base-tables / no-service-role / production-not-approved"
+}
+```

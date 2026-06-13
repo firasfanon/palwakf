@@ -1,0 +1,20 @@
+{
+  "batch": "FILE_CENTER_UNIT_AWARE_ORG_UNITS_SCHEMA_SAFE_HOTFIX",
+  "date": "2026_06_12",
+  "base": "file_center_storage_mapping_unit_aware_scope_before_apply_2026_06_12.zip",
+  "trigger_error": "ERROR 42703 column type does not exist",
+  "cause": "Diagnostic referenced optional core.org_units.type directly.",
+  "fix": "Use to_jsonb(ou)->>'field' for optional org_units fields in diagnostics and wrapper.",
+  "status": "file-center-unit-aware-org-units-schema-safe-hotfix-ready / org-units-type-column-error-fixed / optional-org-unit-fields-jsonb-projected / default-restricted-unassigned-scope-preserved / no-file-deletion / no-storage-mutation / no-fake-owner-records / no-rls-mutation / no-service-role / production-not-approved / operator-apply-pending",
+  "changed_files": [
+    "CHANGELOG.md",
+    "LATEST_BASELINE_POINTER.md",
+    "docs/file_center_unit_aware_org_units_schema_safe_hotfix/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/file_center_unit_aware_org_units_schema_safe_hotfix/DECISION_RECORD.md",
+    "docs/file_center_unit_aware_org_units_schema_safe_hotfix/HOTFIX_SUMMARY.md",
+    "sql_apply/file_center_unit_aware_org_units_schema_safe_hotfix/01_APPLY_unit_aware_file_object_registry_schema_safe.sql",
+    "sql_diagnostics/file_center_unit_aware_org_units_schema_safe_hotfix/01_READ_ONLY_unit_aware_storage_mapping_inventory_schema_safe.sql",
+    "sql_rollback/file_center_unit_aware_org_units_schema_safe_hotfix/01_ROLLBACK_unit_aware_file_object_registry_schema_safe.sql",
+    "sql_verification/file_center_unit_aware_org_units_schema_safe_hotfix/01_VERIFY_unit_aware_file_object_registry_schema_safe.sql"
+  ]
+}

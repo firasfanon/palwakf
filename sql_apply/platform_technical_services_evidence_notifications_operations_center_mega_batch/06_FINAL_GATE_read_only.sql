@@ -1,0 +1,16 @@
+select
+  'platform_technical_evidence_notifications_final_gate_read_only' as section,
+  'PLATFORM_TECHNICAL_EVIDENCE_NOTIFICATIONS_OPERATIONS_CENTER_PREPARED_UAT_REQUIRED' as decision,
+  true as evidence_table_prepared,
+  true as notifications_table_prepared,
+  true as operation_decisions_table_prepared,
+  true as evidence_rpc_prepared,
+  true as decision_rpc_prepared,
+  true as notification_rpc_prepared,
+  true as dashboard_enriched,
+  false as backup_restore_execution,
+  false as maintenance_mode_global_activation,
+  false as service_role_from_flutter,
+  false as sovereign_business_data_mutation,
+  false as production_approved,
+  'Run browser UAT and verify dashboard metrics include Evidence and Notifications.' as next_instruction;

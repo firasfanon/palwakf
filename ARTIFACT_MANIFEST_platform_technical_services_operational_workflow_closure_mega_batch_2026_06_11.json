@@ -1,0 +1,21 @@
+{
+  "changed_files": [
+    "LATEST_BASELINE_POINTER.md",
+    "docs/platform_technical_services_operational_workflow_closure_mega_batch/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/platform_technical_services_operational_workflow_closure_mega_batch/BROWSER_UAT_CHECKLIST.md",
+    "docs/platform_technical_services_operational_workflow_closure_mega_batch/DECISION_RECORD.md",
+    "governance/GOVERNING_CONTRACT_APPENDIX_TECHNICAL_SERVICES_WORKFLOW_CLOSURE_2026_06_11.md",
+    "lib/features/platform/technical_services/application/pwf_technical_services_workflow_extensions.dart",
+    "lib/features/platform/technical_services/data/repositories/pwf_technical_services_workflow_repository_extension.dart",
+    "sql_apply/platform_technical_services_operational_workflow_closure_mega_batch/00_READ_ME_FIRST.sql",
+    "sql_apply/platform_technical_services_operational_workflow_closure_mega_batch/01_PREFLIGHT_platform_technical_contract_read_only.sql",
+    "sql_apply/platform_technical_services_operational_workflow_closure_mega_batch/02_APPLY_workflow_and_registry_rpcs.sql",
+    "sql_apply/platform_technical_services_operational_workflow_closure_mega_batch/03_VERIFY_workflow_rpc_presence_read_only.sql",
+    "sql_apply/platform_technical_services_operational_workflow_closure_mega_batch/04_AUTHENTICATED_WORKFLOW_SMOKE_TEMPLATE.sql",
+    "sql_apply/platform_technical_services_operational_workflow_closure_mega_batch/05_FINAL_GATE_read_only.sql"
+  ],
+  "batch": "Platform Technical Services — Operational Workflow Closure Mega Batch",
+  "date": "2026_06_11",
+  "base": "platform_technical_dashboard_rpc_created_at_order_hotfix_2026_06_11.zip",
+  "status": "staging-code-and-sql-ready / platform-technical-workflow-rpcs-prepared / request-lifecycle-prepared / backup-metadata-recording-prepared / maintenance-window-transitions-prepared / public-maintenance-status-prepared / audit-filter-prepared / no-backup-restore-execution / no-maintenance-auto-activation / production-not-approved"
+}

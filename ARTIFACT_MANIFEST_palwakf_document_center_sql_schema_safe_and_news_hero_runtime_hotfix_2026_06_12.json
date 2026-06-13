@@ -1,0 +1,37 @@
+{
+  "batch": "PALWAKF_DOCUMENT_CENTER_SQL_SCHEMA_SAFE_AND_NEWS_HERO_RUNTIME_HOTFIX",
+  "date": "2026_06_12",
+  "base": "palwakf_document_center_unification_and_lifecycle_governance_mega_batch_2026_06_11.zip",
+  "evidence": {
+    "sql_error": "column ca.status does not exist",
+    "storage_counts": {
+      "document-intelligence": 5,
+      "media-gallery": 6
+    },
+    "flutter_analyze": "No issues found",
+    "cms_contract_tests": "All tests passed",
+    "smoke": "passed=3 skipped=1 failed=0; SMK-08 protected RPC skipped without admin token",
+    "runtime_error": "RenderFlex children have non-zero flex but incoming height constraints are unbounded at pwf_news_pages.dart:540"
+  },
+  "fixes": [
+    "Schema-safe unified document center view draft: no ca.status reference",
+    "NewsHeroCard responsive layout: no Expanded in vertical/unbounded constraints"
+  ],
+  "not_performed": [
+    "no SQL apply",
+    "no RLS apply",
+    "no production approval",
+    "no service_role"
+  ],
+  "status": "document-center-sql-draft-schema-safe / news-hero-runtime-flex-hotfixed / analyzer-evidence-accepted / cms-contract-tests-accepted / smoke-public-media-pass-protected-rpc-skip-accepted / no-sql-apply / no-rls-apply / no-service-role / production-not-approved",
+  "changed_files": [
+    "CHANGELOG.md",
+    "LATEST_BASELINE_POINTER.md",
+    "docs/palwakf_document_center_sql_schema_safe_and_news_hero_runtime_hotfix/DECISION_RECORD.md",
+    "docs/palwakf_document_center_sql_schema_safe_and_news_hero_runtime_hotfix/HOTFIX_SUMMARY.md",
+    "docs/palwakf_document_center_sql_schema_safe_and_news_hero_runtime_hotfix/POST_HOTFIX_VERIFICATION.md",
+    "lib/features/platform/home/presentation/screens/pages/pwf_news_pages.dart",
+    "sql_drafts/palwakf_document_center_unification_and_lifecycle_governance_mega_batch/03_DRAFT_unified_document_center_view.sql",
+    "sql_verification/palwakf_document_center_sql_schema_safe_and_news_hero_runtime_hotfix/01_VERIFY_content_assets_unified_view_columns.sql"
+  ]
+}

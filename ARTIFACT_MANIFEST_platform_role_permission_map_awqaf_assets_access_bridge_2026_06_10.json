@@ -1,0 +1,21 @@
+{
+  "artifact": "platform_role_permission_map_awqaf_assets_access_bridge",
+  "created_at": "2026-06-10",
+  "base": "platform11k_core_location_underlying_table_read_grant_hotfix_2026_06_10.zip",
+  "status": "staging-apply-ready / platform-role-permission-map-authorized / platform-access-bridge-table-prepared / awqaf-assets-permission-seed-prepared / no-waqf-function-change-default / no-direct-waqf-assignment-change / no-waqf-assets-table-grant / production-release-not-approved-pending-integration-decision",
+  "files": [
+    "LATEST_BASELINE_POINTER.md",
+    "docs/platform_role_permission_map_awqaf_assets_access_bridge/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/platform_role_permission_map_awqaf_assets_access_bridge/DECISION_RECORD.md",
+    "docs/platform_role_permission_map_awqaf_assets_access_bridge/NEXT_DECISION.md",
+    "docs/platform_role_permission_map_awqaf_assets_access_bridge/RUNBOOK.md",
+    "registry/platform_role_permission_map_awqaf_assets_access_bridge/awqaf_assets_map_seed.csv",
+    "sql_apply/platform_role_permission_map_awqaf_assets_access_bridge/00_READ_ME_FIRST.sql",
+    "sql_apply/platform_role_permission_map_awqaf_assets_access_bridge/01_PREFLIGHT_roles_permissions_contract_read_only.sql",
+    "sql_apply/platform_role_permission_map_awqaf_assets_access_bridge/02_APPLY_create_platform_role_permission_map.sql",
+    "sql_apply/platform_role_permission_map_awqaf_assets_access_bridge/03_APPLY_seed_awqaf_assets_permission_map.sql",
+    "sql_apply/platform_role_permission_map_awqaf_assets_access_bridge/04_VERIFY_platform_role_permission_map_read_only.sql",
+    "sql_apply/platform_role_permission_map_awqaf_assets_access_bridge/05_FINAL_GATE_read_only.sql",
+    "sql_apply/platform_role_permission_map_awqaf_assets_access_bridge/90_DRAFT_NOT_DEFAULT_integrate_map_into_waqf_permission_function.sql"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "batch": "PALWAKF_PLATFORM_IDENTITY_RBAC_AUTHORITY_CONSOLIDATION_MEGA_BATCH",
+  "date": "2026_06_11",
+  "base": "rbac_auth_users_link_readiness_result_intake_2026_06_11.zip",
+  "authorization_received": true,
+  "authorization_scope": [
+    "FK between platform_access.admin_users.id and auth.users.id",
+    "read-only verification after execution",
+    "rollback SQL",
+    "smoke/tests/docs update",
+    "no service_role in Flutter",
+    "no automatic production approval"
+  ],
+  "preconditions_evidence": {
+    "platform_access_admin_users_count": 86,
+    "auth_users_count": 86,
+    "matched_by_id_count": 86,
+    "orphan_admin_users_count": 0,
+    "email_mismatch_count": 0
+  },
+  "included_files": [
+    "sql_apply/palwakf_platform_identity_rbac_authority_consolidation_mega_batch/00_PRE_APPLY_GUARD_READ_ONLY.sql",
+    "sql_apply/palwakf_platform_identity_rbac_authority_consolidation_mega_batch/01_AUTHORIZED_APPLY_platform_access_admin_users_auth_users_fk.sql",
+    "sql_verification/palwakf_platform_identity_rbac_authority_consolidation_mega_batch/01_POST_APPLY_VERIFY_RBAC_AUTH_USERS_FK.sql",
+    "sql_rollback/palwakf_platform_identity_rbac_authority_consolidation_mega_batch/01_ROLLBACK_drop_platform_access_admin_users_auth_users_fk.sql"
+  ],
+  "sql_apply_prepared": true,
+  "sql_executed_by_assistant": false,
+  "rls_changed": false,
+  "service_role_used": false,
+  "production_approved": false,
+  "status": "mega-batch-apply-package-ready / user-authorized-ddl-scope-received / rbac-auth-users-fk-apply-sql-prepared / verification-sql-prepared / rollback-sql-prepared / smoke-docs-updated / no-service-role-in-flutter / production-not-approved / operator-apply-pending",
+  "changed_files": [
+    "CHANGELOG.md",
+    "LATEST_BASELINE_POINTER.md",
+    "docs/palwakf_platform_identity_rbac_authority_consolidation_mega_batch/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/palwakf_platform_identity_rbac_authority_consolidation_mega_batch/DECISION_RECORD.md",
+    "docs/palwakf_platform_identity_rbac_authority_consolidation_mega_batch/README_MEGA_BATCH.md",
+    "docs/palwakf_platform_identity_rbac_authority_consolidation_mega_batch/SMOKE_AND_BROWSER_REGRESSION.md",
+    "docs/palwakf_platform_identity_rbac_authority_consolidation_mega_batch/TEST_PLAN_AND_CLOSURE_CRITERIA.md",
+    "sql_apply/palwakf_platform_identity_rbac_authority_consolidation_mega_batch/00_PRE_APPLY_GUARD_READ_ONLY.sql",
+    "sql_apply/palwakf_platform_identity_rbac_authority_consolidation_mega_batch/01_AUTHORIZED_APPLY_platform_access_admin_users_auth_users_fk.sql",
+    "sql_rollback/palwakf_platform_identity_rbac_authority_consolidation_mega_batch/01_ROLLBACK_drop_platform_access_admin_users_auth_users_fk.sql",
+    "sql_verification/palwakf_platform_identity_rbac_authority_consolidation_mega_batch/01_POST_APPLY_VERIFY_RBAC_AUTH_USERS_FK.sql"
+  ]
+}

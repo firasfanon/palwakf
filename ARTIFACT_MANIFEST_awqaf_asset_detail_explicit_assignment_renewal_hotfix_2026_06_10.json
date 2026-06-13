@@ -1,0 +1,21 @@
+{
+  "artifact": "awqaf_asset_detail_explicit_assignment_renewal_hotfix",
+  "created_at": "2026-06-10",
+  "base": "platform_role_permission_map_awqaf_assets_access_bridge_2026_06_10.zip",
+  "status": "staging-apply-ready / awqaf-asset-detail-explicit-assignment-renewal-authorized / target-user-super-admin-renewal-prepared / no-waqf-function-change / no-waqf-assets-table-grant / no-flutter-changes / no-awqaf-system-files / production-release-not-approved-pending-rpc-smoke-and-browser-retest",
+  "files": [
+    "LATEST_BASELINE_POINTER.md",
+    "docs/awqaf_asset_detail_explicit_assignment_renewal_hotfix/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/awqaf_asset_detail_explicit_assignment_renewal_hotfix/BROWSER_RETEST.md",
+    "docs/awqaf_asset_detail_explicit_assignment_renewal_hotfix/DECISION_RECORD.md",
+    "docs/awqaf_asset_detail_explicit_assignment_renewal_hotfix/RUNBOOK.md",
+    "registry/awqaf_asset_detail_explicit_assignment_renewal_hotfix/assignment_target.csv",
+    "sql_apply/awqaf_asset_detail_explicit_assignment_renewal_hotfix/00_READ_ME_FIRST.sql",
+    "sql_apply/awqaf_asset_detail_explicit_assignment_renewal_hotfix/01_PREFLIGHT_assignment_context_read_only.sql",
+    "sql_apply/awqaf_asset_detail_explicit_assignment_renewal_hotfix/02_APPLY_renew_or_insert_super_admin_assignment.sql",
+    "sql_apply/awqaf_asset_detail_explicit_assignment_renewal_hotfix/03_VERIFY_assignment_effective_read_only.sql",
+    "sql_apply/awqaf_asset_detail_explicit_assignment_renewal_hotfix/04_AUTHENTICATED_ASSET_DETAIL_RPC_SMOKE_read_only.sql",
+    "sql_apply/awqaf_asset_detail_explicit_assignment_renewal_hotfix/05_FINAL_GATE_read_only.sql",
+    "sql_apply/awqaf_asset_detail_explicit_assignment_renewal_hotfix/98_ROLLBACK_reexpire_known_assignment_optional.sql"
+  ]
+}

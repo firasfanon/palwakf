@@ -1,0 +1,1453 @@
+diff -ruN palwakf_platform12_orig/ARTIFACT_MANIFEST_platform12_home_search_sections_source_remediation_2026_06_13.json palwakf_platform12/ARTIFACT_MANIFEST_platform12_home_search_sections_source_remediation_2026_06_13.json
+--- palwakf_platform12_orig/ARTIFACT_MANIFEST_platform12_home_search_sections_source_remediation_2026_06_13.json	1970-01-01 00:00:00.000000000 +0000
++++ palwakf_platform12/ARTIFACT_MANIFEST_platform12_home_search_sections_source_remediation_2026_06_13.json	2026-06-13 05:10:45.343515584 +0000
+@@ -0,0 +1,54 @@
++{
++  "batch": "PLATFORM12_HOME_SEARCH_AND_SECTIONS_SOURCE_REMEDIATION",
++  "date": "2026_06_13",
++  "base": "media_center_mobile_session_handoff_updated_baseline_2026_06_13.zip",
++  "purpose": "Patch homepage header search binding and harden actual homepage sections runtime source through compatibility view reads and canonical section merging.",
++  "scope": [
++    "defer Android runtime UAT temporarily",
++    "homepage header search frontend binding",
++    "search route query propagation",
++    "homepage sections source determination",
++    "homepage sections duplicate-risk mitigation",
++    "read-only diagnostics only"
++  ],
++  "changed_files": [
++    "lib/features/platform/home/presentation/widgets/header/pwf_main_header.dart",
++    "lib/presentation/widgets/header/pwf_main_header.dart",
++    "lib/presentation/screens/public/search/search_screen.dart",
++    "lib/presentation/screens/public/search/web_search_screen.dart",
++    "lib/presentation/screens/public/search/mobile_search_screen.dart",
++    "lib/app/routing/route_groups/public_routes_group.dart",
++    "lib/data/repositories/homepage_repository.dart",
++    "lib/presentation/screens/admin/main/management/home_management/pwf_homepage_sections_manager.dart",
++    "docs/platform12/HOME_SEARCH_AND_SECTIONS_SOURCE_AUDIT_2026_06_13.md",
++    "docs/platform12/ERROR_RECORD_HOME_SEARCH_SECTIONS_2026_06_13.md",
++    "sql_sandbox/platform12_home_search_sections_source_audit_read_only/01_homepage_sections_source_and_duplicates_read_only.sql",
++    "sql_sandbox/platform12_home_search_sections_source_audit_read_only/02_homepage_sections_semantic_overlap_read_only.sql",
++    "PALWAKF_PLATFORM_COMPREHENSIVE_GUIDE.md",
++    "CHANGELOG.md",
++    "LATEST_BASELINE_POINTER.md",
++    "ARTIFACT_MANIFEST_platform12_home_search_sections_source_remediation_2026_06_13.json"
++  ],
++  "current_status": [
++    "home-search-frontend-binding-patched",
++    "search-route-query-propagation-enabled",
++    "search-screen-initial-query-supported",
++    "homepage-sections-runtime-source-repointed-to-compat-view",
++    "section-merge-canonicalized-for-legacy-aliases",
++    "admin-missing-catalog-content-sections-default-inactive",
++    "read-only-diagnostic-sql-prepared",
++    "android-runtime-uat-deferred",
++    "no-sql-executed",
++    "no-public-base-tables",
++    "no-service-role",
++    "production-not-approved"
++  ],
++  "validation": {
++    "static_source_inspection": true,
++    "targeted_grep_checks": true,
++    "flutter_analyze": "not_run_sdk_unavailable_in_sandbox",
++    "browser_uat": "pending_local_environment"
++  },
++  "next_gate": "Run local flutter analyze and browser UAT for /home search + section rendering, then resume Android runtime device/emulator UAT.",
++  "status": "platform12-home-search-bound / homepage-sections-runtime-source-repointed-to-compat-view / admin-catalog-missing-keys-default-inactive / read-only-section-diagnostics-prepared / android-runtime-uat-deferred / no-sql-executed / no-public-base-tables / no-service-role / production-not-approved"
++}
+diff -ruN palwakf_platform12_orig/CHANGELOG.md palwakf_platform12/CHANGELOG.md
+--- palwakf_platform12_orig/CHANGELOG.md	2026-06-13 04:43:30.000000000 +0000
++++ palwakf_platform12/CHANGELOG.md	2026-06-13 05:10:45.344735694 +0000
+@@ -1021,3 +1021,52 @@
+ no service_role
+ production-not-approved
+ ```
++
++
++## 2026-06-13 — Platform 12 Home Search + Sections Source Remediation
++
++### Scope
++
++- Deferred Android runtime UAT temporarily inside the same session.
++- Fixed homepage header search binding.
++- Clarified and hardened homepage sections runtime source.
++- Added read-only SQL diagnostics for duplicate/overlapping homepage sections.
++
++### Fixed
++
++- Header search no longer shows only `البحث قيد الربط`; it submits by Enter or search icon.
++- Legacy mirror header search was aligned with the active header behavior.
++- Search now routes to scoped search pages using `q` query parameter.
++- Search screens consume the initial URL query and run search on first render.
++- Search results now use a frontend site-map index with Arabic normalization and clickable routes.
++- `HomepageRepository.fetchAllSectionsForUnit` now reads from `v_platform_homepage_sections_compat_v1` instead of direct scoped reads from `homepage_sections`.
++- Unit-aware homepage section merging now uses canonical section keys to reduce legacy/canonical duplicate rendering risk.
++- Homepage sections admin manager no longer marks missing newly cataloged content sections active by default.
++
++### Added
++
++```text
++docs/platform12/HOME_SEARCH_AND_SECTIONS_SOURCE_AUDIT_2026_06_13.md
++docs/platform12/ERROR_RECORD_HOME_SEARCH_SECTIONS_2026_06_13.md
++sql_sandbox/platform12_home_search_sections_source_audit_read_only/01_homepage_sections_source_and_duplicates_read_only.sql
++sql_sandbox/platform12_home_search_sections_source_audit_read_only/02_homepage_sections_semantic_overlap_read_only.sql
++ARTIFACT_MANIFEST_platform12_home_search_sections_source_remediation_2026_06_13.json
++```
++
++### Validation
++
++- Static source inspection completed.
++- Targeted grep checks completed.
++- `flutter analyze` was not executed in this sandbox because Flutter/Dart SDK is unavailable here.
++
++### Preserved
++
++```text
++no SQL executed
++read-only diagnostic SQL only
++no public base table creation
++no service_role
++no waqf_assets mutation
++no production approval
++android-runtime-uat-still-deferred
++```
+diff -ruN palwakf_platform12_orig/LATEST_BASELINE_POINTER.md palwakf_platform12/LATEST_BASELINE_POINTER.md
+--- palwakf_platform12_orig/LATEST_BASELINE_POINTER.md	2026-06-13 04:43:30.000000000 +0000
++++ palwakf_platform12/LATEST_BASELINE_POINTER.md	2026-06-13 05:10:07.857393751 +0000
+@@ -1,45 +1,44 @@
+-
+ # Latest Baseline Pointer
+ 
+ Current updated baseline:
+ 
+ ```text
+-media_center_mobile_session_handoff_updated_baseline_2026_06_13.zip
++platform12_home_search_sections_source_remediation_2026_06_13.zip
+ ```
+ 
+ Based on:
+ 
+ ```text
+-media_center_mobile_development_procedures_md_archive_2026_06_13.zip
++media_center_mobile_session_handoff_updated_baseline_2026_06_13.zip
+ ```
+ 
+ Status:
+ 
+ ```text
+-media-center-mobile-session-handoff-ready / updated-baseline-prepared / android-debug-apk-build-accepted / android-runtime-uat-pending-device / no-sql / no-public-base-tables / no-service-role / production-not-approved
++platform12-home-search-bound / homepage-sections-runtime-source-repointed-to-compat-view / admin-catalog-missing-keys-default-inactive / read-only-section-diagnostics-prepared / android-runtime-uat-deferred / no-sql-executed / no-public-base-tables / no-service-role / production-not-approved
+ ```
+ 
+-Primary handoff:
++Primary audit file:
+ 
+ ```text
+-docs/handoff/MEDIA_CENTER_MOBILE_SESSION_HANDOFF_2026_06_13.md
++docs/platform12/HOME_SEARCH_AND_SECTIONS_SOURCE_AUDIT_2026_06_13.md
+ ```
+ 
+-Next session prompt:
++Error record:
+ 
+ ```text
+-docs/handoff/NEXT_SESSION_PROMPT_MEDIA_CENTER_MOBILE_2026_06_13.md
++docs/platform12/ERROR_RECORD_HOME_SEARCH_SECTIONS_2026_06_13.md
+ ```
+ 
+-Next gate:
++Read-only diagnostics:
+ 
+ ```text
+-Android runtime device/emulator UAT
++sql_sandbox/platform12_home_search_sections_source_audit_read_only/01_homepage_sections_source_and_duplicates_read_only.sql
++sql_sandbox/platform12_home_search_sections_source_audit_read_only/02_homepage_sections_semantic_overlap_read_only.sql
+ ```
+ 
+-Commands:
++Next gate:
+ 
+-```powershell
+-.\scripts\list_android_devices_and_emulators.ps1
+-.\scripts\uat_media_center_android_runtime.ps1 -SkipBuild
++```text
++Local Flutter analyze + browser UAT for /home search and section rendering, then resume Android runtime device/emulator UAT.
+ ```
+diff -ruN palwakf_platform12_orig/PALWAKF_PLATFORM_COMPREHENSIVE_GUIDE.md palwakf_platform12/PALWAKF_PLATFORM_COMPREHENSIVE_GUIDE.md
+--- palwakf_platform12_orig/PALWAKF_PLATFORM_COMPREHENSIVE_GUIDE.md	2026-06-13 04:43:30.000000000 +0000
++++ palwakf_platform12/PALWAKF_PLATFORM_COMPREHENSIVE_GUIDE.md	2026-06-13 05:10:07.857620487 +0000
+@@ -48,3 +48,91 @@
+ Latest evidence accepted: Platform Access Gateway `/admin/dashboard` renders for tested superuser/viewer/employee actors after disabling the failing user-scope assignments list RPC path. Network evidence shows `user_scope_assignments?select...` returning `200`, with no visible `rpc_user_scope_assignments_list_v1` `400` in the submitted retest. The unified `/forbidden` route renders a safe Arabic denied page for `admin_access_denied` without protected payload/token exposure.
+ 
+ Production remains not approved; this closes only the tested platform-access RPC400 retest branch.
++
++
++---
++
++## 2026-06-13 — Platform 12 Home Search + Homepage Sections Source Remediation
++
++This update records a platform-home runtime patch executed after temporarily deferring the Media Center Mobile Android runtime UAT gate.
++
++### Home search
++
++The active homepage header search path is:
++
++```text
++PwfHomeWebScreen → PwfHeader → PwfMainHeader → _SearchBox
++```
++
++The search box is now bound to scoped public search routes:
++
++```text
++/home/search?q=<query>
++/<unitSlug>/search?q=<query>
++```
++
++`SearchScreen`, `WebSearchScreen`, and `MobileSearchScreen` accept the initial query and unit slug, then run the first search from the URL query parameter. The current implementation is a frontend site-map index; it is not yet a backend/RPC sovereign search engine.
++
++### Homepage sections source
++
++The active homepage section runtime source is governed by:
++
++```text
++homepageSectionsForUnitProvider(unitSlug)
++HomepageRepository.fetchAllSectionsForUnit
++PwfHomeSectionsRenderer
++```
++
++Runtime reads now use:
++
++```text
++public.v_platform_homepage_sections_compat_v1
++```
++
++instead of direct unit-aware base-table reads from `public.homepage_sections`.
++
++Scoped precedence remains:
++
++```text
++NULL global rows → synthetic global unit → home unit → current unit
++```
++
++Legacy aliases are canonicalized during merge to reduce duplicate logical sections, e.g.:
++
++```text
++news → pwf_news_tabs
++services → pwf_quick_services
++footer → pwf_footer
++```
++
++### Admin sections manager
++
++Missing official catalog keys are displayed for management, but missing content sections now default inactive. Pinned shell sections remain active by default:
++
++```text
++pwf_top_bar
++pwf_main_nav
++pwf_footer
++```
++
++### Diagnostics
++
++Read-only SQL diagnostics were added under:
++
++```text
++sql_sandbox/platform12_home_search_sections_source_audit_read_only/
++```
++
++These scripts must be used to identify real duplicate rows or active semantic overlaps before any cleanup/remediation. No SQL was executed in this patch.
++
++### Decision
++
++```text
++HOME_SEARCH_FRONTEND_BINDING_PATCHED
++HOMEPAGE_SECTIONS_RUNTIME_SOURCE_REPOINTED_TO_COMPAT_VIEW
++ADMIN_CATALOG_MISSING_KEYS_DEFAULT_INACTIVE
++READ_ONLY_DIAGNOSTIC_SQL_PREPARED
++ANDROID_RUNTIME_UAT_DEFERRED
++NO_SQL_EXECUTED
++NO_PRODUCTION_APPROVAL
++```
+diff -ruN palwakf_platform12_orig/docs/platform12/ERROR_RECORD_HOME_SEARCH_SECTIONS_2026_06_13.md palwakf_platform12/docs/platform12/ERROR_RECORD_HOME_SEARCH_SECTIONS_2026_06_13.md
+--- palwakf_platform12_orig/docs/platform12/ERROR_RECORD_HOME_SEARCH_SECTIONS_2026_06_13.md	1970-01-01 00:00:00.000000000 +0000
++++ palwakf_platform12/docs/platform12/ERROR_RECORD_HOME_SEARCH_SECTIONS_2026_06_13.md	2026-06-13 05:09:42.928449699 +0000
+@@ -0,0 +1,85 @@
++# Error Record — Platform 12 Home Search + Sections Source
++
++Date: 2026-06-13
++
++## Error 1
++
++### Symptom
++
++Homepage search box did not return results.
++
++### Cause
++
++The active header search icon was wired to a temporary SnackBar only:
++
++```text
++البحث قيد الربط
++```
++
++No navigation and no query submission were performed.
++
++### Files
++
++```text
++lib/features/platform/home/presentation/widgets/header/pwf_main_header.dart
++lib/presentation/screens/public/search/search_screen.dart
++lib/presentation/screens/public/search/web_search_screen.dart
++lib/presentation/screens/public/search/mobile_search_screen.dart
++lib/app/routing/route_groups/public_routes_group.dart
++```
++
++### Fix
++
++Header search now navigates to scoped search routes with `q`. Search screens consume the initial query and run the search.
++
++## Error 2
++
++### Symptom
++
++Homepage sections appeared duplicated or unclear in source.
++
++### Cause
++
++The unit-aware homepage sections repository method was reading from the legacy base table in its scoped path, despite the platform wrapper policy. It also merged section rows by raw normalized key, not canonical logical key.
++
++### Files
++
++```text
++lib/data/repositories/homepage_repository.dart
++```
++
++### Fix
++
++Runtime reads now use `v_platform_homepage_sections_compat_v1`, and merge keys canonicalize legacy aliases.
++
++## Error 3
++
++### Symptom
++
++Admin sections manager could accidentally activate newly added official catalog sections.
++
++### Cause
++
++Missing official catalog keys were inserted into the draft model as active by default.
++
++### Files
++
++```text
++lib/presentation/screens/admin/main/management/home_management/pwf_homepage_sections_manager.dart
++```
++
++### Fix
++
++Missing catalog entries now default inactive except pinned shell rows.
++
++## Last stable baseline before this patch
++
++```text
++media_center_mobile_session_handoff_updated_baseline_2026_06_13.zip
++```
++
++## New baseline after this patch
++
++```text
++platform12_home_search_sections_source_remediation_2026_06_13.zip
++```
+diff -ruN palwakf_platform12_orig/docs/platform12/HOME_SEARCH_AND_SECTIONS_SOURCE_AUDIT_2026_06_13.md palwakf_platform12/docs/platform12/HOME_SEARCH_AND_SECTIONS_SOURCE_AUDIT_2026_06_13.md
+--- palwakf_platform12_orig/docs/platform12/HOME_SEARCH_AND_SECTIONS_SOURCE_AUDIT_2026_06_13.md	1970-01-01 00:00:00.000000000 +0000
++++ palwakf_platform12/docs/platform12/HOME_SEARCH_AND_SECTIONS_SOURCE_AUDIT_2026_06_13.md	2026-06-13 05:10:45.343931294 +0000
+@@ -0,0 +1,201 @@
++# Platform 12 — Home Search + Homepage Sections Source Audit
++
++Date: 2026-06-13
++Batch: `PLATFORM12_HOME_SEARCH_AND_SECTIONS_SOURCE_REMEDIATION`
++
++## Scope
++
++This batch temporarily defers the Android runtime UAT gate and focuses on two public-home runtime issues:
++
++1. Homepage header search box does not return results.
++2. Homepage sections appear duplicated or unclear in source ownership.
++
++## Finding 1 — Homepage search box
++
++The active web home route uses:
++
++```text
++lib/presentation/screens/public/home/home_screen.dart
++→ PwfHomeWebScreen
++→ PwfHeader
++→ PwfMainHeader
++→ _SearchBox
++```
++
++The active header search box was not connected to the search page. The search icon click only displayed:
++
++```text
++البحث قيد الربط
++```
++
++Therefore the issue was not a backend/RPC failure. It was an incomplete frontend action binding.
++
++## Remediation 1
++
++Changed the active header and the legacy mirror header so that:
++
++```text
++lib/features/platform/home/presentation/widgets/header/pwf_main_header.dart
++lib/presentation/widgets/header/pwf_main_header.dart
++```
++
++The search behavior now ensures:
++
++- pressing Enter submits search;
++- clicking the search icon submits search;
++- an empty query opens the scoped search page;
++- a non-empty query opens the scoped search page with `q=<query>`;
++- ministry home scope routes to `/home/search?q=...`;
++- unit scopes route to `/<unitSlug>/search?q=...`.
++
++Search routes now pass the `q` query parameter to the search screen.
++
++## Finding 2 — Search page initial query
++
++`SearchScreen`, `WebSearchScreen`, and `MobileSearchScreen` previously did not accept an initial query from the URL. Even if the header navigated with a query, the search page would not auto-run the search.
++
++## Remediation 2
++
++Updated search screens to accept:
++
++```dart
++initialQuery
++unitSlug
++```
++
++The web and mobile search screens now initialize the search field from `q`, run the search after first frame, and expose clickable route results.
++
++The current search surface remains a frontend site-map index, not a sovereign backend search engine. This is intentional for this patch because no SQL/RPC production search surface was authorized in this batch.
++
++## Finding 3 — Homepage sections source
++
++The active homepage sections path is:
++
++```text
++PwfHomeWebScreen
++→ homepageSectionsForUnitProvider(unitSlug)
++→ HomepageRepository.fetchAllSectionsForUnit
++→ PwfHomeSectionsRenderer
++```
++
++The actual runtime source should be:
++
++```text
++public.v_platform_homepage_sections_compat_v1
++```
++
++However, the unit-aware read path in `fetchAllSectionsForUnit` was reading directly from:
++
++```text
++public.homepage_sections
++```
++
++This contradicted the wrapper-read governance pattern and made section source diagnosis less reliable.
++
++## Remediation 3
++
++Updated `HomepageRepository.fetchAllSectionsForUnit` to read through:
++
++```text
++v_platform_homepage_sections_compat_v1
++```
++
++The method still preserves the scoped precedence chain:
++
++```text
++NULL global rows → synthetic global unit → home unit → current unit
++```
++
++But the merge key is now canonicalized using known legacy aliases, so rows like:
++
++```text
++news → pwf_news_tabs
++services → pwf_quick_services
++footer → pwf_footer
++```
++
++are treated as the same logical section during merge.
++
++## Finding 4 — Admin manager could activate new catalog rows unintentionally
++
++The home sections admin manager normalizes rows to the official catalog. Missing catalog keys were being added to the draft as `isActive: true`.
++
++This means that if the catalog gained new sections, saving from the manager could activate many sections at once, including semantically overlapping blocks such as:
++
++```text
++pwf_news_tabs + pwf_news
++pwf_media_gallery + pwf_media_gallery_images + pwf_media_gallery_videos
++pwf_quick_services + pwf_public_services_catalog + pwf_eservices_portal
++```
++
++## Remediation 4
++
++Missing catalog rows are now shown in the admin manager for discoverability, but they default to inactive unless they are pinned shell sections:
++
++```text
++pwf_top_bar
++pwf_main_nav
++pwf_footer
++```
++
++This prevents accidental public duplication when the admin saves the sections manager.
++
++## Read-only diagnostic SQL
++
++Added read-only diagnostic scripts under:
++
++```text
++sql_sandbox/platform12_home_search_sections_source_audit_read_only/
++```
++
++These scripts identify:
++
++- the actual source/view/table presence;
++- duplicate canonical section keys by unit scope;
++- semantically overlapping active section families.
++
++## Validation performed in this environment
++
++Static file inspection and targeted grep validation were performed.
++
++Not executed in this sandbox:
++
++```text
++flutter analyze
++flutter test
++browser UAT
++```
++
++Reason: Flutter/Dart SDK is not available inside the current sandbox. The patch is source-level and requires local project validation on the user's Windows/Flutter environment.
++
++## Required local validation
++
++Run:
++
++```powershell
++flutter analyze
++flutter test
++flutter run -d chrome
++```
++
++Manual UAT:
++
++1. Open `/home`.
++2. Type `الخدمات` in the header search box and press Enter.
++3. Confirm navigation to `/home/search?q=...`.
++4. Confirm search results render.
++5. Click a result and confirm it navigates to the correct scoped route.
++6. Open homepage sections manager and confirm newly missing catalog entries do not become active by default.
++7. Run the read-only SQL diagnostics and check duplicate canonical keys.
++
++## Decision
++
++```text
++HOME_SEARCH_FRONTEND_BINDING_PATCHED
++HOMEPAGE_SECTIONS_RUNTIME_SOURCE_REPOINTED_TO_COMPAT_VIEW
++ADMIN_CATALOG_MISSING_KEYS_DEFAULT_INACTIVE
++READ_ONLY_DIAGNOSTIC_SQL_PREPARED
++ANDROID_RUNTIME_UAT_DEFERRED
++NO_SQL_EXECUTED
++NO_PRODUCTION_APPROVAL
++```
+diff -ruN palwakf_platform12_orig/lib/app/routing/route_groups/public_routes_group.dart palwakf_platform12/lib/app/routing/route_groups/public_routes_group.dart
+--- palwakf_platform12_orig/lib/app/routing/route_groups/public_routes_group.dart	2026-06-13 04:43:30.000000000 +0000
++++ palwakf_platform12/lib/app/routing/route_groups/public_routes_group.dart	2026-06-13 05:06:30.446520319 +0000
+@@ -267,7 +267,10 @@
+       ),
+       GoRoute(
+         path: AppRoutes.search,
+-        builder: (context, state) => const SearchScreen(),
++        builder: (context, state) => SearchScreen(
++          initialQuery: state.uri.queryParameters['q'] ?? '',
++          unitSlug: 'home',
++        ),
+       ),
+       GoRoute(
+         path: AppRoutes.fridaySermon,
+@@ -787,7 +790,14 @@
+           ),
+           GoRoute(
+             path: 'search',
+-            builder: (context, state) => const SearchScreen(),
++            builder: (context, state) {
++              final slug =
++                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
++              return SearchScreen(
++                initialQuery: state.uri.queryParameters['q'] ?? '',
++                unitSlug: slug,
++              );
++            },
+           ),
+           GoRoute(
+             path: 'chat',
+diff -ruN palwakf_platform12_orig/lib/data/repositories/homepage_repository.dart palwakf_platform12/lib/data/repositories/homepage_repository.dart
+--- palwakf_platform12_orig/lib/data/repositories/homepage_repository.dart	2026-06-13 04:43:30.000000000 +0000
++++ palwakf_platform12/lib/data/repositories/homepage_repository.dart	2026-06-13 05:08:14.063564007 +0000
+@@ -29,6 +29,42 @@
+       'v_platform_breaking_news_compat_v1';
+   static const String _breakingNewsLegacyWriteTable = 'breaking_news';
+ 
++  static const Map<String, String> _sectionLegacyAliases = <String, String>{
++    'minister': 'pwf_minister_word',
++    'statistics': 'pwf_stats_grid',
++    'breaking_news': 'pwf_breaking_news_marquee',
++    'announcements': 'pwf_announcements',
++    'services': 'pwf_quick_services',
++    'service_catalog': 'pwf_public_services_catalog',
++    'services_catalog': 'pwf_public_services_catalog',
++    'public_services_catalog': 'pwf_public_services_catalog',
++    'media_center_highlights': 'pwf_media_center_highlights',
++    'services_center_highlights': 'pwf_services_center_highlights',
++    'social_posts': 'pwf_social_posts_section',
++    'press_releases': 'pwf_press_releases_section',
++    'official_statements': 'pwf_official_statements_section',
++    'awareness_campaigns': 'pwf_awareness_campaigns_section',
++    'sanctities_observatory': 'pwf_sanctities_observatory_section',
++    'legal_references': 'pwf_legal_references_section',
++    'events': 'pwf_events_section',
++    'pwf_services_catalog': 'pwf_public_services_catalog',
++    'news': 'pwf_news_tabs',
++    'top_bar': 'pwf_top_bar',
++    'pwf_topbar': 'pwf_top_bar',
++    'main_nav': 'pwf_main_nav',
++    'pwf_mainnav': 'pwf_main_nav',
++    'footer': 'pwf_footer',
++  };
++
++  static String _canonicalSectionKey(String raw) {
++    final normalized = raw
++        .trim()
++        .toLowerCase()
++        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
++        .replaceAll(RegExp(r'_+'), '_');
++    return _sectionLegacyAliases[normalized] ?? normalized;
++  }
++
+   // ============================================
+   // SITE SETTINGS (Single Row)
+   // ============================================
+@@ -424,13 +460,13 @@
+       Future<List<HomepageSection>> fetchScoped(String? scopedUnitId) async {
+         final rows = scopedUnitId == null
+             ? await _client
+-                  .from(sectionsTable)
++                  .from(_sectionsReadSurface)
+                   .select(
+                     'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
+                   )
+                   .isFilter('unit_id', null)
+             : await _client
+-                  .from(sectionsTable)
++                  .from(_sectionsReadSurface)
+                   .select(
+                     'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
+                   )
+@@ -466,16 +502,10 @@
+ 
+       final scopedResults = await Future.wait(idsToFetch.map(fetchScoped));
+ 
+-      String normalizeKey(String raw) => raw
+-          .trim()
+-          .toLowerCase()
+-          .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+-          .replaceAll(RegExp(r'_+'), '_');
+-
+       final merged = <String, HomepageSection>{};
+       for (final rows in scopedResults) {
+         for (final row in rows) {
+-          merged[normalizeKey(row.sectionName)] = row;
++          merged[_canonicalSectionKey(row.sectionName)] = row;
+         }
+       }
+ 
+diff -ruN palwakf_platform12_orig/lib/features/platform/home/presentation/widgets/header/pwf_main_header.dart palwakf_platform12/lib/features/platform/home/presentation/widgets/header/pwf_main_header.dart
+--- palwakf_platform12_orig/lib/features/platform/home/presentation/widgets/header/pwf_main_header.dart	2026-06-13 04:43:30.000000000 +0000
++++ palwakf_platform12/lib/features/platform/home/presentation/widgets/header/pwf_main_header.dart	2026-06-13 05:06:20.668169079 +0000
+@@ -98,6 +98,7 @@
+                           _SearchBox(
+                             width: searchWidth,
+                             scopeLabel: settings.siteName,
++                            unitSlug: normalizedSlug,
+                           ),
+                           SizedBox(width: compact ? 12 : 20),
+                           Row(
+@@ -201,10 +202,15 @@
+ }
+ 
+ class _SearchBox extends StatefulWidget {
+-  const _SearchBox({required this.width, required this.scopeLabel});
++  const _SearchBox({
++    required this.width,
++    required this.scopeLabel,
++    required this.unitSlug,
++  });
+ 
+   final double width;
+   final String scopeLabel;
++  final String unitSlug;
+ 
+   @override
+   State<_SearchBox> createState() => _SearchBoxState();
+@@ -220,6 +226,22 @@
+     super.dispose();
+   }
+ 
++  void _submitSearch() {
++    final query = _c.text.trim();
++    final slug = widget.unitSlug.trim().isEmpty
++        ? 'home'
++        : widget.unitSlug.trim().toLowerCase();
++    final path = slug == 'home' ? '/home/search' : '/$slug/search';
++
++    if (query.isEmpty) {
++      context.go(path);
++      return;
++    }
++
++    final encodedQuery = Uri(queryParameters: {'q': query}).query;
++    context.go('$path?$encodedQuery');
++  }
++
+   @override
+   Widget build(BuildContext context) {
+     final placeholder = widget.scopeLabel.trim().isEmpty
+@@ -240,6 +262,8 @@
+               padding: const EdgeInsetsDirectional.only(start: 20, end: 8),
+               child: TextField(
+                 controller: _c,
++                textInputAction: TextInputAction.search,
++                onSubmitted: (_) => _submitSearch(),
+                 style: GoogleFonts.cairo(
+                   fontSize: 14,
+                   color: PwfHomePalette.primary,
+@@ -261,11 +285,7 @@
+             onEnter: (_) => setState(() => _hover = true),
+             onExit: (_) => setState(() => _hover = false),
+             child: GestureDetector(
+-              onTap: () {
+-                ScaffoldMessenger.of(context).showSnackBar(
+-                  const SnackBar(content: Text('البحث قيد الربط')),
+-                );
+-              },
++              onTap: _submitSearch,
+               child: AnimatedContainer(
+                 duration: const Duration(milliseconds: 200),
+                 width: 56,
+diff -ruN palwakf_platform12_orig/lib/presentation/screens/admin/main/management/home_management/pwf_homepage_sections_manager.dart palwakf_platform12/lib/presentation/screens/admin/main/management/home_management/pwf_homepage_sections_manager.dart
+--- palwakf_platform12_orig/lib/presentation/screens/admin/main/management/home_management/pwf_homepage_sections_manager.dart	2026-06-13 04:43:30.000000000 +0000
++++ palwakf_platform12/lib/presentation/screens/admin/main/management/home_management/pwf_homepage_sections_manager.dart	2026-06-13 05:08:14.064177041 +0000
+@@ -279,7 +279,7 @@
+           id: '',
+           sectionName: def.key,
+           settings: const <String, dynamic>{},
+-          isActive: true,
++          isActive: _defaultActiveForMissingCatalogKey(def),
+           displayOrder: kPwfHomeSections.indexOf(def),
+           createdAtIso: nowIso,
+           updatedAtIso: nowIso,
+@@ -291,6 +291,14 @@
+     return byKey.values.toList(growable: false);
+   }
+ 
++  bool _defaultActiveForMissingCatalogKey(PwfHomeSectionDef def) {
++    // Missing catalog rows are shown in the admin manager for discoverability,
++    // but they must not become active public sections merely because the
++    // catalog grew. Pinned shell rows stay active so header/footer controls
++    // remain visible when a scoped page has partial data.
++    return def.pin != PwfHomeSectionPin.none;
++  }
++
+   bool _shouldPreferRow(HomepageSection current, HomepageSection candidate) {
+     final currentExact =
+         current.sectionName == canonicalPwfHomeSectionKey(current.sectionName);
+diff -ruN palwakf_platform12_orig/lib/presentation/screens/public/search/mobile_search_screen.dart palwakf_platform12/lib/presentation/screens/public/search/mobile_search_screen.dart
+--- palwakf_platform12_orig/lib/presentation/screens/public/search/mobile_search_screen.dart	2026-06-13 04:43:30.000000000 +0000
++++ palwakf_platform12/lib/presentation/screens/public/search/mobile_search_screen.dart	2026-06-13 05:07:34.156236502 +0000
+@@ -1,12 +1,20 @@
+ // lib/presentation/screens/public/search/mobile_search_screen.dart
+ import 'package:flutter/material.dart';
++import 'package:go_router/go_router.dart';
+ import '../../../../core/constants/app_constants.dart';
+ import '../../../widgets/common/custom_app_bar.dart';
+ 
+ /// Mobile-optimized Search Screen
+ /// Features: Vertical scrolling, mobile-friendly search interface
+ class MobileSearchScreen extends StatefulWidget {
+-  const MobileSearchScreen({super.key});
++  const MobileSearchScreen({
++    super.key,
++    this.initialQuery = '',
++    this.unitSlug = 'home',
++  });
++
++  final String initialQuery;
++  final String unitSlug;
+ 
+   @override
+   State<MobileSearchScreen> createState() => _MobileSearchScreenState();
+@@ -29,6 +37,19 @@
+   ];
+ 
+   @override
++  void initState() {
++    super.initState();
++    final initial = widget.initialQuery.trim();
++    if (initial.isNotEmpty) {
++      _searchController.text = initial;
++      _searchQuery = initial;
++      WidgetsBinding.instance.addPostFrameCallback((_) {
++        if (mounted) _performSearch(initial);
++      });
++    }
++  }
++
++  @override
+   void dispose() {
+     _searchController.dispose();
+     super.dispose();
+@@ -279,9 +300,7 @@
+           ],
+         ),
+         trailing: const Icon(Icons.chevron_right),
+-        onTap: () {
+-          // Navigate to result
+-        },
++        onTap: () => context.go(result.route),
+       ),
+     );
+   }
+@@ -312,25 +331,128 @@
+   }
+ 
+   List<SearchResult> _getMockResults(String query) {
++    final searchLower = _normalizeSearch(query);
++    final allResults = _searchIndex();
++    final scoped = _selectedCategory == 'all'
++        ? allResults
++        : allResults.where((result) => result.category == _selectedCategory);
++    return scoped.where((result) {
++      final haystack = _normalizeSearch(
++        [result.title, result.description, ...result.keywords].join(' '),
++      );
++      return haystack.contains(searchLower);
++    }).toList();
++  }
++
++  List<SearchResult> _searchIndex() {
++    final base = _unitBasePath();
+     return [
+       SearchResult(
+-        title: 'دليل المساجد في فلسطين',
+-        description: 'دليل شامل للمساجد في جميع المحافظات الفلسطينية',
+-        category: 'mosques',
++        title: 'الصفحة الرئيسية',
++        description: 'الواجهة الرئيسية للوزارة وأقسام الأخبار والخدمات والمعلومات العامة.',
++        category: 'documents',
++        route: base,
++        keywords: const ['الرئيسية', 'وزارة', 'الأوقاف', 'المنصة', 'home'],
++      ),
++      SearchResult(
++        title: 'الأخبار',
++        description: 'آخر أخبار الوزارة والوحدات والمديريات المنشورة للجمهور.',
++        category: 'news',
++        route: '$base/news',
++        keywords: const ['اخبار', 'خبر', 'إعلام', 'المركز الإعلامي'],
++      ),
++      SearchResult(
++        title: 'الإعلانات',
++        description: 'الإعلانات الرسمية والتنبيهات العامة المنشورة على المنصة.',
++        category: 'news',
++        route: '$base/announcements',
++        keywords: const ['اعلانات', 'إعلان', 'تنبيه', 'بلاغ'],
++      ),
++      SearchResult(
++        title: 'الأنشطة والفعاليات',
++        description: 'الأنشطة والفعاليات والبرامج العامة الخاصة بالوزارة والوحدات.',
++        category: 'activities',
++        route: '$base/activities',
++        keywords: const ['نشاط', 'فعاليات', 'برامج', 'events'],
+       ),
+       SearchResult(
+         title: 'الخدمات الإلكترونية',
+-        description: 'احصل على الخدمات الحكومية بطريقة سهلة وسريعة',
++        description: 'بوابة الخدمات الإلكترونية وتتبع طلبات الجمهور.',
+         category: 'services',
++        route: '$base/services',
++        keywords: const ['خدمات', 'خدمة', 'طلب', 'تتبع', 'معاملة'],
+       ),
+       SearchResult(
+-        title: 'آخر الأخبار',
+-        description: 'تابع آخر الأخبار والتحديثات من الوزارة',
++        title: 'المركز الإعلامي',
++        description: 'مركز الأخبار والبيانات والتصريحات والحملات الإعلامية.',
+         category: 'news',
++        route: '$base/media-center',
++        keywords: const ['إعلام', 'بيانات', 'تصريحات', 'حملات', 'صور', 'فيديو'],
++      ),
++      SearchResult(
++        title: 'المساجد',
++        description: 'البحث في المساجد والمعلومات العامة ذات العلاقة.',
++        category: 'mosques',
++        route: '$base/mosques',
++        keywords: const ['مسجد', 'مساجد', 'إمام', 'خطيب'],
++      ),
++      SearchResult(
++        title: 'خطب الجمعة',
++        description: 'أرشيف خطب الجمعة والنشرات العامة.',
++        category: 'documents',
++        route: '$base/friday-sermon',
++        keywords: const ['خطبة', 'خطب', 'جمعة', 'خطيب'],
++      ),
++      SearchResult(
++        title: 'الأنظمة والقوانين والتعليمات',
++        description: 'مراجع قانونية وتعليمات ونماذج عامة منشورة للجمهور.',
++        category: 'documents',
++        route: '$base/legal-references',
++        keywords: const ['قانون', 'قوانين', 'تعليمات', 'نظام', 'نماذج'],
++      ),
++      SearchResult(
++        title: 'الشكاوى والبلاغات',
++        description: 'تقديم الشكاوى والبلاغات العامة عبر المنصة.',
++        category: 'services',
++        route: '$base/complaints',
++        keywords: const ['شكوى', 'شكاوى', 'بلاغ', 'ملاحظة'],
++      ),
++      SearchResult(
++        title: 'كلمة الوزير',
++        description: 'صفحة الوزير والكلمة الرسمية ومعلومات الاتصال المؤسسي.',
++        category: 'documents',
++        route: '$base/minister',
++        keywords: const ['وزير', 'معالي', 'كلمة الوزير'],
++      ),
++      SearchResult(
++        title: 'اتصل بنا',
++        description: 'معلومات التواصل الرسمية مع الوزارة والوحدات.',
++        category: 'services',
++        route: '$base/contact',
++        keywords: const ['اتصال', 'تواصل', 'هاتف', 'عنوان'],
+       ),
+     ];
+   }
+ 
++  String _unitBasePath() {
++    final slug = widget.unitSlug.trim().isEmpty
++        ? 'home'
++        : widget.unitSlug.trim().toLowerCase();
++    return slug == 'home' ? '/home' : '/$slug';
++  }
++
++  String _normalizeSearch(String value) {
++    return value
++        .trim()
++        .toLowerCase()
++        .replaceAll('أ', 'ا')
++        .replaceAll('إ', 'ا')
++        .replaceAll('آ', 'ا')
++        .replaceAll('ة', 'ه')
++        .replaceAll('ى', 'ي')
++        .replaceAll(RegExp(r'\s+'), ' ');
++  }
++
+   List<String> _getRecentSearches() {
+     return ['المساجد', 'الخدمات', 'الأنشطة'];
+   }
+@@ -393,10 +515,14 @@
+   final String title;
+   final String description;
+   final String category;
++  final String route;
++  final List<String> keywords;
+ 
+   SearchResult({
+     required this.title,
+     required this.description,
+     required this.category,
++    this.route = '/home',
++    this.keywords = const <String>[],
+   });
+ }
+diff -ruN palwakf_platform12_orig/lib/presentation/screens/public/search/search_screen.dart palwakf_platform12/lib/presentation/screens/public/search/search_screen.dart
+--- palwakf_platform12_orig/lib/presentation/screens/public/search/search_screen.dart	2026-06-13 04:43:30.000000000 +0000
++++ palwakf_platform12/lib/presentation/screens/public/search/search_screen.dart	2026-06-13 05:06:30.445608796 +0000
+@@ -10,14 +10,21 @@
+ /// - Web: WebSearchScreen (with horizontal navbar, multi-column layout, advanced filters)
+ /// - Mobile: MobileSearchScreen (with vertical scrolling, single column, mobile-friendly search)
+ class SearchScreen extends StatelessWidget {
+-  const SearchScreen({super.key});
++  const SearchScreen({
++    super.key,
++    this.initialQuery = '',
++    this.unitSlug = 'home',
++  });
++
++  final String initialQuery;
++  final String unitSlug;
+ 
+   @override
+   Widget build(BuildContext context) {
+     if (kIsWeb) {
+-      return const WebSearchScreen();
++      return WebSearchScreen(initialQuery: initialQuery, unitSlug: unitSlug);
+     } else {
+-      return const MobileSearchScreen();
++      return MobileSearchScreen(initialQuery: initialQuery, unitSlug: unitSlug);
+     }
+   }
+ }
+diff -ruN palwakf_platform12_orig/lib/presentation/screens/public/search/web_search_screen.dart palwakf_platform12/lib/presentation/screens/public/search/web_search_screen.dart
+--- palwakf_platform12_orig/lib/presentation/screens/public/search/web_search_screen.dart	2026-06-13 04:43:30.000000000 +0000
++++ palwakf_platform12/lib/presentation/screens/public/search/web_search_screen.dart	2026-06-13 05:06:59.353093452 +0000
+@@ -1,5 +1,6 @@
+ // lib/presentation/screens/public/search/web_search_screen.dart
+ import 'package:flutter/material.dart';
++import 'package:go_router/go_router.dart';
+ import '../../../../core/constants/app_constants.dart';
+ import '../../../widgets/web/web_app_bar.dart';
+ import '../../../widgets/web/web_container.dart';
+@@ -9,7 +10,14 @@
+ /// Web-optimized Search Screen
+ /// Features: Horizontal navbar, multi-column layout, advanced filters
+ class WebSearchScreen extends StatefulWidget {
+-  const WebSearchScreen({super.key});
++  const WebSearchScreen({
++    super.key,
++    this.initialQuery = '',
++    this.unitSlug = 'home',
++  });
++
++  final String initialQuery;
++  final String unitSlug;
+ 
+   @override
+   State<WebSearchScreen> createState() => _WebSearchScreenState();
+@@ -32,6 +40,19 @@
+   ];
+ 
+   @override
++  void initState() {
++    super.initState();
++    final initial = widget.initialQuery.trim();
++    if (initial.isNotEmpty) {
++      _searchController.text = initial;
++      _searchQuery = initial;
++      WidgetsBinding.instance.addPostFrameCallback((_) {
++        if (mounted) _performSearch(initial);
++      });
++    }
++  }
++
++  @override
+   void dispose() {
+     _searchController.dispose();
+     super.dispose();
+@@ -241,7 +262,7 @@
+     return Card(
+       margin: const EdgeInsets.only(bottom: 20),
+       child: InkWell(
+-        onTap: () {},
++        onTap: () => context.go(result.route),
+         borderRadius: BorderRadius.circular(AppConstants.radiusM),
+         child: Padding(
+           padding: const EdgeInsets.all(24),
+@@ -305,7 +326,7 @@
+                     ),
+                     const SizedBox(height: 12),
+                     TextButton.icon(
+-                      onPressed: () {},
++                      onPressed: () => context.go(result.route),
+                       icon: const Icon(Icons.arrow_forward, size: 16),
+                       label: const Text('عرض التفاصيل'),
+                     ),
+@@ -547,72 +568,132 @@
+   }
+ 
+   List<SearchResult> _getMockResults(String query) {
+-    // All available results
+-    final allResults = [
++    final allResults = _searchIndex();
++
++    var filteredResults = _selectedCategory == 'all'
++        ? allResults
++        : allResults
++              .where((result) => result.category == _selectedCategory)
++              .toList();
++
++    final searchLower = _normalizeSearch(query);
++    filteredResults = filteredResults.where((result) {
++      final haystack = _normalizeSearch(
++        [result.title, result.description, ...result.keywords].join(' '),
++      );
++      return haystack.contains(searchLower);
++    }).toList();
++
++    return filteredResults;
++  }
++
++  List<SearchResult> _searchIndex() {
++    final base = _unitBasePath();
++    return [
+       SearchResult(
+-        title: 'دليل المساجد في فلسطين',
+-        description:
+-            'دليل شامل للمساجد في جميع المحافظات الفلسطينية مع معلومات تفصيلية عن كل مسجد',
+-        category: 'mosques',
++        title: 'الصفحة الرئيسية',
++        description: 'الواجهة الرئيسية للوزارة وأقسام الأخبار والخدمات والمعلومات العامة.',
++        category: 'documents',
++        route: base,
++        keywords: const ['الرئيسية', 'وزارة', 'الأوقاف', 'المنصة', 'home'],
+       ),
+       SearchResult(
+-        title: 'مسجد الأقصى المبارك',
+-        description: 'أولى القبلتين وثالث الحرمين الشريفين في القدس المحتلة',
+-        category: 'mosques',
++        title: 'الأخبار',
++        description: 'آخر أخبار الوزارة والوحدات والمديريات المنشورة للجمهور.',
++        category: 'news',
++        route: '$base/news',
++        keywords: const ['اخبار', 'خبر', 'إعلام', 'المركز الإعلامي'],
+       ),
+       SearchResult(
+-        title: 'الخدمات الإلكترونية',
+-        description:
+-            'احصل على الخدمات الحكومية بطريقة سهلة وسريعة من خلال البوابة الإلكترونية',
+-        category: 'services',
++        title: 'الإعلانات',
++        description: 'الإعلانات الرسمية والتنبيهات العامة المنشورة على المنصة.',
++        category: 'news',
++        route: '$base/announcements',
++        keywords: const ['اعلانات', 'إعلان', 'تنبيه', 'بلاغ'],
+       ),
+       SearchResult(
+-        title: 'خدمة حجز موعد',
+-        description: 'احجز موعدك لمراجعة الوزارة بكل سهولة',
++        title: 'الأنشطة والفعاليات',
++        description: 'الأنشطة والفعاليات والبرامج العامة الخاصة بالوزارة والوحدات.',
++        category: 'activities',
++        route: '$base/activities',
++        keywords: const ['نشاط', 'فعاليات', 'برامج', 'events'],
++      ),
++      SearchResult(
++        title: 'الخدمات الإلكترونية',
++        description: 'بوابة الخدمات الإلكترونية وتتبع طلبات الجمهور.',
+         category: 'services',
++        route: '$base/services',
++        keywords: const ['خدمات', 'خدمة', 'طلب', 'تتبع', 'معاملة'],
+       ),
+       SearchResult(
+-        title: 'آخر الأخبار والإعلانات',
+-        description: 'تابع آخر الأخبار والتحديثات والإعلانات الهامة من الوزارة',
++        title: 'المركز الإعلامي',
++        description: 'مركز الأخبار والبيانات والتصريحات والحملات الإعلامية.',
+         category: 'news',
++        route: '$base/media-center',
++        keywords: const ['إعلام', 'بيانات', 'تصريحات', 'حملات', 'صور', 'فيديو'],
+       ),
+       SearchResult(
+-        title: 'افتتاح مسجد جديد في رام الله',
+-        description: 'تم افتتاح مسجد جديد في حي الطيرة بحضور معالي الوزير',
+-        category: 'news',
++        title: 'المساجد',
++        description: 'البحث في المساجد والمعلومات العامة ذات العلاقة.',
++        category: 'mosques',
++        route: '$base/mosques',
++        keywords: const ['مسجد', 'مساجد', 'إمام', 'خطيب'],
+       ),
+       SearchResult(
+-        title: 'الأنشطة والفعاليات القادمة',
+-        description: 'تعرف على الأنشطة والفعاليات التي تنظمها الوزارة',
+-        category: 'activities',
++        title: 'خطب الجمعة',
++        description: 'أرشيف خطب الجمعة والنشرات العامة.',
++        category: 'documents',
++        route: '$base/friday-sermon',
++        keywords: const ['خطبة', 'خطب', 'جمعة', 'خطيب'],
+       ),
+       SearchResult(
+-        title: 'دورة تدريبية لأئمة المساجد',
+-        description: 'دورة متخصصة في فن الخطابة والإلقاء',
+-        category: 'activities',
++        title: 'الأنظمة والقوانين والتعليمات',
++        description: 'مراجع قانونية وتعليمات ونماذج عامة منشورة للجمهور.',
++        category: 'documents',
++        route: '$base/legal-references',
++        keywords: const ['قانون', 'قوانين', 'تعليمات', 'نظام', 'نماذج'],
+       ),
+       SearchResult(
+-        title: 'وثائق الوزارة',
+-        description: 'الوثائق والتقارير الرسمية الصادرة عن الوزارة',
++        title: 'الشكاوى والبلاغات',
++        description: 'تقديم الشكاوى والبلاغات العامة عبر المنصة.',
++        category: 'services',
++        route: '$base/complaints',
++        keywords: const ['شكوى', 'شكاوى', 'بلاغ', 'ملاحظة'],
++      ),
++      SearchResult(
++        title: 'كلمة الوزير',
++        description: 'صفحة الوزير والكلمة الرسمية ومعلومات الاتصال المؤسسي.',
+         category: 'documents',
++        route: '$base/minister',
++        keywords: const ['وزير', 'معالي', 'كلمة الوزير'],
++      ),
++      SearchResult(
++        title: 'اتصل بنا',
++        description: 'معلومات التواصل الرسمية مع الوزارة والوحدات.',
++        category: 'services',
++        route: '$base/contact',
++        keywords: const ['اتصال', 'تواصل', 'هاتف', 'عنوان'],
+       ),
+     ];
++  }
+ 
+-    // Filter by category if not 'all'
+-    var filteredResults = _selectedCategory == 'all'
+-        ? allResults
+-        : allResults
+-              .where((result) => result.category == _selectedCategory)
+-              .toList();
+-
+-    // Filter by search query (case insensitive search in title and description)
+-    filteredResults = filteredResults.where((result) {
+-      final searchLower = query.toLowerCase();
+-      return result.title.toLowerCase().contains(searchLower) ||
+-          result.description.toLowerCase().contains(searchLower);
+-    }).toList();
+-
+-    return filteredResults;
++  String _unitBasePath() {
++    final slug = widget.unitSlug.trim().isEmpty
++        ? 'home'
++        : widget.unitSlug.trim().toLowerCase();
++    return slug == 'home' ? '/home' : '/$slug';
++  }
++
++  String _normalizeSearch(String value) {
++    return value
++        .trim()
++        .toLowerCase()
++        .replaceAll('أ', 'ا')
++        .replaceAll('إ', 'ا')
++        .replaceAll('آ', 'ا')
++        .replaceAll('ة', 'ه')
++        .replaceAll('ى', 'ي')
++        .replaceAll(RegExp(r'\s+'), ' ');
+   }
+ 
+   String _getCategoryName(String category) {
+@@ -673,10 +754,14 @@
+   final String title;
+   final String description;
+   final String category;
++  final String route;
++  final List<String> keywords;
+ 
+   SearchResult({
+     required this.title,
+     required this.description,
+     required this.category,
++    this.route = '/home',
++    this.keywords = const <String>[],
+   });
+ }
+diff -ruN palwakf_platform12_orig/lib/presentation/widgets/header/pwf_main_header.dart palwakf_platform12/lib/presentation/widgets/header/pwf_main_header.dart
+--- palwakf_platform12_orig/lib/presentation/widgets/header/pwf_main_header.dart	2026-06-13 04:43:30.000000000 +0000
++++ palwakf_platform12/lib/presentation/widgets/header/pwf_main_header.dart	2026-06-13 05:10:34.106582793 +0000
+@@ -59,7 +59,7 @@
+             // Actions: search + user buttons
+             Row(
+               children: [
+-                const _SearchBox(),
++                _SearchBox(unitSlug: unitSlug),
+                 const SizedBox(width: 20),
+                 Row(
+                   children: [
+@@ -89,7 +89,9 @@
+ }
+ 
+ class _SearchBox extends StatefulWidget {
+-  const _SearchBox();
++  const _SearchBox({required this.unitSlug});
++
++  final String unitSlug;
+ 
+   @override
+   State<_SearchBox> createState() => _SearchBoxState();
+@@ -105,6 +107,20 @@
+     super.dispose();
+   }
+ 
++  void _submitSearch() {
++    final query = _c.text.trim();
++    final slug = widget.unitSlug.trim().isEmpty
++        ? 'home'
++        : widget.unitSlug.trim().toLowerCase();
++    final path = slug == 'home' ? '/home/search' : '/$slug/search';
++    if (query.isEmpty) {
++      context.go(path);
++      return;
++    }
++    final encodedQuery = Uri(queryParameters: {'q': query}).query;
++    context.go('$path?$encodedQuery');
++  }
++
+   @override
+   Widget build(BuildContext context) {
+     return Container(
+@@ -121,6 +137,8 @@
+               padding: const EdgeInsetsDirectional.only(start: 20, end: 8),
+               child: TextField(
+                 controller: _c,
++                textInputAction: TextInputAction.search,
++                onSubmitted: (_) => _submitSearch(),
+                 style: GoogleFonts.cairo(
+                   fontSize: 14,
+                   color: PwfHomePalette.primary,
+@@ -142,11 +160,7 @@
+             onEnter: (_) => setState(() => _hover = true),
+             onExit: (_) => setState(() => _hover = false),
+             child: GestureDetector(
+-              onTap: () {
+-                ScaffoldMessenger.of(context).showSnackBar(
+-                  const SnackBar(content: Text('البحث قيد الربط')),
+-                );
+-              },
++              onTap: _submitSearch,
+               child: AnimatedContainer(
+                 duration: const Duration(milliseconds: 200),
+                 width: 56,
+diff -ruN palwakf_platform12_orig/sql_sandbox/platform12_home_search_sections_source_audit_read_only/01_homepage_sections_source_and_duplicates_read_only.sql palwakf_platform12/sql_sandbox/platform12_home_search_sections_source_audit_read_only/01_homepage_sections_source_and_duplicates_read_only.sql
+--- palwakf_platform12_orig/sql_sandbox/platform12_home_search_sections_source_audit_read_only/01_homepage_sections_source_and_duplicates_read_only.sql	1970-01-01 00:00:00.000000000 +0000
++++ palwakf_platform12/sql_sandbox/platform12_home_search_sections_source_audit_read_only/01_homepage_sections_source_and_duplicates_read_only.sql	2026-06-13 05:09:42.935401909 +0000
+@@ -0,0 +1,71 @@
++-- Platform 12 — Homepage Sections Source + Duplicate Canonical Key Diagnostics
++-- READ ONLY. Do not run as a write operation.
++-- No DDL/DML/GRANT/REVOKE/DROP/TRUNCATE/ALTER/UPDATE/INSERT/DELETE.
++
++with object_presence as (
++  select
++    'object_presence' as section,
++    to_regclass('public.v_platform_homepage_sections_compat_v1') is not null as compat_view_present,
++    to_regclass('public.homepage_sections') is not null as legacy_table_present
++), alias_map(raw_key, canonical_key) as (
++  values
++    ('minister', 'pwf_minister_word'),
++    ('statistics', 'pwf_stats_grid'),
++    ('breaking_news', 'pwf_breaking_news_marquee'),
++    ('announcements', 'pwf_announcements'),
++    ('services', 'pwf_quick_services'),
++    ('service_catalog', 'pwf_public_services_catalog'),
++    ('services_catalog', 'pwf_public_services_catalog'),
++    ('public_services_catalog', 'pwf_public_services_catalog'),
++    ('media_center_highlights', 'pwf_media_center_highlights'),
++    ('services_center_highlights', 'pwf_services_center_highlights'),
++    ('social_posts', 'pwf_social_posts_section'),
++    ('press_releases', 'pwf_press_releases_section'),
++    ('official_statements', 'pwf_official_statements_section'),
++    ('awareness_campaigns', 'pwf_awareness_campaigns_section'),
++    ('sanctities_observatory', 'pwf_sanctities_observatory_section'),
++    ('legal_references', 'pwf_legal_references_section'),
++    ('events', 'pwf_events_section'),
++    ('pwf_services_catalog', 'pwf_public_services_catalog'),
++    ('news', 'pwf_news_tabs'),
++    ('top_bar', 'pwf_top_bar'),
++    ('pwf_topbar', 'pwf_top_bar'),
++    ('main_nav', 'pwf_main_nav'),
++    ('pwf_mainnav', 'pwf_main_nav'),
++    ('footer', 'pwf_footer')
++), source_rows as (
++  select
++    id,
++    unit_id,
++    section_name,
++    lower(regexp_replace(regexp_replace(trim(section_name), '[^a-zA-Z0-9]+', '_', 'g'), '_+', '_', 'g')) as normalized_key,
++    is_active,
++    display_order,
++    updated_at
++  from public.v_platform_homepage_sections_compat_v1
++), canonical_rows as (
++  select
++    s.*,
++    coalesce(a.canonical_key, s.normalized_key) as canonical_key,
++    coalesce(s.unit_id::text, 'GLOBAL_NULL') as unit_scope
++  from source_rows s
++  left join alias_map a on a.raw_key = s.normalized_key
++)
++select
++  'canonical_duplicate_keys' as diagnostic,
++  unit_scope,
++  canonical_key,
++  count(*) as row_count,
++  count(*) filter (where coalesce(is_active, false)) as active_count,
++  array_agg(section_name order by display_order nulls last, section_name) as source_section_names,
++  min(display_order) as min_display_order,
++  max(updated_at) as latest_updated_at
++from canonical_rows
++where canonical_key is not null and canonical_key <> ''
++group by unit_scope, canonical_key
++having count(*) > 1 or count(*) filter (where coalesce(is_active, false)) > 1
++order by active_count desc, row_count desc, unit_scope, canonical_key;
++
++-- Expected interpretation:
++-- - Any returned row means more than one source row maps to the same logical section.
++-- - Active duplicates should be cleaned or scoped intentionally.
+diff -ruN palwakf_platform12_orig/sql_sandbox/platform12_home_search_sections_source_audit_read_only/02_homepage_sections_semantic_overlap_read_only.sql palwakf_platform12/sql_sandbox/platform12_home_search_sections_source_audit_read_only/02_homepage_sections_semantic_overlap_read_only.sql
+--- palwakf_platform12_orig/sql_sandbox/platform12_home_search_sections_source_audit_read_only/02_homepage_sections_semantic_overlap_read_only.sql	1970-01-01 00:00:00.000000000 +0000
++++ palwakf_platform12/sql_sandbox/platform12_home_search_sections_source_audit_read_only/02_homepage_sections_semantic_overlap_read_only.sql	2026-06-13 05:09:42.942668175 +0000
+@@ -0,0 +1,43 @@
++-- Platform 12 — Homepage Sections Semantic Overlap Diagnostics
++-- READ ONLY. Identifies active section families that may look duplicated to users.
++
++with family_map(section_name, semantic_family) as (
++  values
++    ('pwf_news_tabs', 'news_family'),
++    ('pwf_news', 'news_family'),
++    ('news', 'news_family'),
++    ('pwf_media_gallery', 'media_gallery_family'),
++    ('pwf_media_gallery_images', 'media_gallery_family'),
++    ('pwf_media_gallery_videos', 'media_gallery_family'),
++    ('pwf_quick_services', 'services_family'),
++    ('services', 'services_family'),
++    ('pwf_public_services_catalog', 'services_family'),
++    ('pwf_eservices_portal', 'services_family'),
++    ('pwf_quick_links_grid', 'links_family'),
++    ('pwf_important_links', 'links_family')
++), source_rows as (
++  select
++    coalesce(unit_id::text, 'GLOBAL_NULL') as unit_scope,
++    section_name,
++    coalesce(is_active, false) as is_active,
++    display_order,
++    updated_at
++  from public.v_platform_homepage_sections_compat_v1
++)
++select
++  'semantic_overlap_active_sections' as diagnostic,
++  r.unit_scope,
++  f.semantic_family,
++  count(*) filter (where r.is_active) as active_count,
++  array_agg(r.section_name order by r.display_order nulls last, r.section_name) filter (where r.is_active) as active_sections,
++  max(r.updated_at) filter (where r.is_active) as latest_active_update
++from source_rows r
++join family_map f on f.section_name = r.section_name
++group by r.unit_scope, f.semantic_family
++having count(*) filter (where r.is_active) > 1
++order by active_count desc, r.unit_scope, f.semantic_family;
++
++-- Expected interpretation:
++-- - news_family: usually choose either pwf_news_tabs or pwf_news.
++-- - media_gallery_family: usually choose unified gallery OR split images/videos, not all.
++-- - services_family: choose the intended public services strategy for the homepage.

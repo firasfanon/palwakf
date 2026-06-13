@@ -1,0 +1,50 @@
+{
+  "batch": "PLATFORM12_WEB_SEARCH_OVERFLOW_AND_SECTION_DUPLICATES_EVIDENCE_INTAKE",
+  "date": "2026_06_13",
+  "base": "platform12_home_search_sections_source_remediation_2026_06_13.zip",
+  "purpose": "Accept browser evidence for public search route rendering, fix constrained-width WebAppBar RenderFlex overflow, harden web search narrow layout, and prepare guarded duplicate section remediation SQL without execution.",
+  "scope": [
+    "browser evidence intake for /home/search?q=مسجد",
+    "web app bar responsive overflow hotfix",
+    "web search result/sidebar narrow layout hardening",
+    "homepage sections duplicate diagnostic evidence classification",
+    "guarded SQL remediation pack prepared but not executed",
+    "Android runtime UAT remains deferred"
+  ],
+  "changed_files": [
+    "lib/presentation/widgets/web/web_app_bar.dart",
+    "lib/presentation/screens/public/search/web_search_screen.dart",
+    "docs/platform12/WEB_SEARCH_OVERFLOW_AND_SECTION_DUPLICATES_EVIDENCE_INTAKE_2026_06_13.md",
+    "docs/platform12/ERROR_RECORD_WEB_SEARCH_OVERFLOW_2026_06_13.md",
+    "sql_sandbox/platform12_homepage_sections_duplicate_remediation_guarded/00_READ_ME_FIRST.sql",
+    "sql_sandbox/platform12_homepage_sections_duplicate_remediation_guarded/01_preflight_duplicate_rows_read_only.sql",
+    "sql_sandbox/platform12_homepage_sections_duplicate_remediation_guarded/02_deactivate_legacy_alias_duplicates_GUARDED_DML.sql",
+    "sql_sandbox/platform12_homepage_sections_duplicate_remediation_guarded/03_post_apply_validation_read_only.sql",
+    "sql_sandbox/platform12_homepage_sections_duplicate_remediation_guarded/04_semantic_family_policy_matrix_read_only.sql",
+    "CHANGELOG.md",
+    "LATEST_BASELINE_POINTER.md",
+    "PALWAKF_PLATFORM_COMPREHENSIVE_GUIDE.md",
+    "ARTIFACT_MANIFEST_platform12_web_search_overflow_section_duplicates_evidence_intake_2026_06_13.json"
+  ],
+  "current_status": [
+    "search-route-rendering-confirmed",
+    "web-appbar-responsive-overflow-hotfix-prepared",
+    "search-page-narrow-layout-hardened",
+    "duplicate-section-evidence-accepted",
+    "guarded-legacy-alias-duplicate-dml-prepared-not-executed",
+    "semantic-family-policy-decision-required",
+    "android-runtime-uat-deferred",
+    "no-sql-executed",
+    "no-service-role",
+    "production-not-approved"
+  ],
+  "validation": {
+    "browser_evidence_received": true,
+    "static_source_patch_prepared": true,
+    "read_only_sql_result_interpreted": true,
+    "flutter_analyze": "not_run_sdk_unavailable_in_sandbox",
+    "browser_retest_after_patch": "pending_local_environment"
+  },
+  "next_gate": "Run local flutter analyze and browser UAT for /home/search with DevTools docked. Then decide semantic homepage section family policy and optionally authorize guarded DML for legacy alias duplicates.",
+  "status": "platform12-search-route-rendering-confirmed / web-appbar-responsive-overflow-hotfix-prepared / duplicate-section-evidence-accepted / guarded-dml-prepared-not-executed / no-sql-executed / production-not-approved"
+}

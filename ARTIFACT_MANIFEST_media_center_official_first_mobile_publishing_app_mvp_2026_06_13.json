@@ -1,0 +1,58 @@
+{
+  "batch": "MEDIA_CENTER_OFFICIAL_FIRST_MOBILE_PUBLISHING_APP_MVP_MEGA_BATCH",
+  "date": "2026_06_13",
+  "idea": "Official-first mobile publishing app: publish to official platform first, then share official link on social media.",
+  "routes": [
+    "/app/media-center",
+    "/app/media-center/publish",
+    "/official/media/:family/:id"
+  ],
+  "workflows": {
+    "normal_employee": "create draft -> submit for review",
+    "trusted_publisher": "create draft -> publish now with audit",
+    "public": "open official URL and share official link"
+  },
+  "sql_rpcs": [
+    "public.rpc_media_center_mobile_create_draft_v1",
+    "public.rpc_media_center_mobile_submit_for_review_v1",
+    "public.rpc_media_center_mobile_publish_v1",
+    "public.rpc_media_center_public_content_detail_v1"
+  ],
+  "owner_schema": "media_center",
+  "public_schema_policy": "API edge only, not source of truth",
+  "android_host_config": true,
+  "boundaries": [
+    "no public base tables",
+    "no service_role",
+    "no RLS mutation",
+    "no storage.objects mutation",
+    "no file deletion",
+    "no media-gallery auto-publication",
+    "production_not_approved"
+  ],
+  "status": "official-first-mobile-publishing-app-mvp-prepared / quick-compose-mobile-ui-prepared / draft-submit-publish-workflows-prepared / public-official-detail-interface-prepared / android-host-config-prepared / media-center-owner-schema-source-of-truth / public-api-edge-only / no-public-base-tables / no-service-role / production-not-approved / operator-apply-and-runtime-retest-pending",
+  "changed_files": [
+    "CHANGELOG.md",
+    "LATEST_BASELINE_POINTER.md",
+    "android/app/src/main/AndroidManifest.xml",
+    "android/app/src/main/res/values/strings.xml",
+    "docs/media_center_official_first_mobile_publishing_app_mvp/ANDROID_HOST_CONFIGURATION.md",
+    "docs/media_center_official_first_mobile_publishing_app_mvp/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/media_center_official_first_mobile_publishing_app_mvp/DECISION_RECORD.md",
+    "docs/media_center_official_first_mobile_publishing_app_mvp/PUBLIC_INTERFACES.md",
+    "docs/media_center_official_first_mobile_publishing_app_mvp/RUNBOOK.md",
+    "lib/app/routing/app_routes.dart",
+    "lib/app/routing/go_router_config.dart",
+    "lib/app/routing/route_groups/common_routes_group.dart",
+    "lib/features/media_center_mobile/data/models/media_center_publish_models.dart",
+    "lib/features/media_center_mobile/data/repositories/media_center_mobile_publishing_repository.dart",
+    "lib/features/media_center_mobile/presentation/pages/media_center_mobile_app_page.dart",
+    "lib/features/media_center_mobile/presentation/pages/media_center_quick_publish_page.dart",
+    "lib/features/media_center_mobile/presentation/providers/media_center_publishing_providers.dart",
+    "lib/features/media_center_public/presentation/pages/official_media_detail_page.dart",
+    "sql_apply/media_center_official_first_mobile_publishing_app_mvp/01_APPLY_official_first_mobile_publishing_rpc_workflow.sql",
+    "sql_diagnostics/media_center_official_first_mobile_publishing_app_mvp/01_READ_ONLY_official_first_mobile_preflight.sql",
+    "sql_rollback/media_center_official_first_mobile_publishing_app_mvp/01_ROLLBACK_official_first_mobile_publishing_workflow.sql",
+    "sql_verification/media_center_official_first_mobile_publishing_app_mvp/01_VERIFY_official_first_mobile_publishing_workflow.sql"
+  ]
+}

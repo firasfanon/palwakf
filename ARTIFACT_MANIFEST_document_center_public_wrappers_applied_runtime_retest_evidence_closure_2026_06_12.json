@@ -1,0 +1,42 @@
+{
+  "batch": "DOCUMENT_CENTER_PUBLIC_WRAPPERS_APPLIED_RUNTIME_RETEST_EVIDENCE_CLOSURE",
+  "date": "2026_06_12",
+  "base": "document_center_public_wrappers_apply_and_runtime_retest_2026_06_12.zip",
+  "accepted_sql_apply_evidence": {
+    "service_attachments_wrapper_present": true,
+    "media_assets_wrapper_present": true,
+    "service_attachments_authenticated_select": true,
+    "media_assets_authenticated_select": true,
+    "production_approved": false
+  },
+  "accepted_storage_counts": {
+    "document-intelligence": 5,
+    "media-gallery": 6
+  },
+  "accepted_browser_evidence": {
+    "home_news": "renders; network media/news requests 200; no visible RenderFlex error after hotfix",
+    "admin_documents": "renders unified document center; no visible PGRST106 red panel; document-intelligence rows visible"
+  },
+  "accepted_decision": "DOCUMENT_CENTER_PUBLIC_WRAPPERS_APPLIED_AND_RUNTIME_RETEST_PASSED",
+  "route_decision": "DOCUMENT_CENTER_ROUTE_UNIFIED_READ_PORTAL_RUNTIME_CERTIFIED",
+  "not_claimed": [
+    "service attachments row count greater than zero",
+    "media assets row count greater than zero",
+    "document lifecycle registry SQL applied",
+    "retention enforcement active",
+    "production approval"
+  ],
+  "rls_changed": false,
+  "data_mutation": false,
+  "service_role_used": false,
+  "production_approved": false,
+  "status": "document-center-public-wrappers-applied / authenticated-select-verified / admin-documents-runtime-retest-passed / home-news-runtime-retest-passed / owner-schemas-private-preserved / pgrst106-cleared / no-rls-mutation / no-data-mutation / no-service-role / production-not-approved",
+  "changed_files": [
+    "CHANGELOG.md",
+    "LATEST_BASELINE_POINTER.md",
+    "docs/document_center_public_wrappers_applied_runtime_retest_evidence_closure/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/document_center_public_wrappers_applied_runtime_retest_evidence_closure/DECISION_RECORD.md",
+    "docs/document_center_public_wrappers_applied_runtime_retest_evidence_closure/DOCUMENT_CENTER_UNIFICATION_CLOSURE_UPDATE.md",
+    "docs/document_center_public_wrappers_applied_runtime_retest_evidence_closure/EVIDENCE_CLOSURE_REPORT.md"
+  ]
+}

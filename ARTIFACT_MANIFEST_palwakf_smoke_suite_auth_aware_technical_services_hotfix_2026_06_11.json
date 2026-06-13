@@ -1,0 +1,31 @@
+{
+  "batch": "PalWakf Smoke Suite Auth-Aware Technical Services Hotfix",
+  "date": "2026_06_11",
+  "base": "palwakf_priority_implementation_mega_batch_2026_06_11.zip",
+  "evidence_intake": {
+    "flutter_analyze": "No issues found",
+    "cms_payload_contract_tests": "All tests passed",
+    "smoke_public_views": "SMK-05/06/07 passed HTTP 200",
+    "smoke_technical_services_rpc": "HTTP 401 PLATFORM_TECHNICAL_AUTH_REQUIRED with anon key"
+  },
+  "root_cause": "Technical Services dashboard RPC is protected and requires authenticated admin context; the smoke suite used anon key only.",
+  "fix": [
+    "Add optional authenticated access token support for protected RPC smoke checks",
+    "Classify PLATFORM_TECHNICAL_AUTH_REQUIRED as SKIP/PROTECTED when no access token is provided",
+    "Keep public view smoke tests strict HTTP 2xx",
+    "Do not use service_role"
+  ],
+  "changed_files": [
+    "LATEST_BASELINE_POINTER.md",
+    "docs/palwakf_smoke_suite_auth_aware_technical_services_hotfix/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/palwakf_smoke_suite_auth_aware_technical_services_hotfix/DECISION_RECORD.md",
+    "docs/palwakf_smoke_suite_auth_aware_technical_services_hotfix/UAT_CHECKLIST.md",
+    "tools/smoke/README.md",
+    "tools/smoke/palwakf_smoke_suite.dart"
+  ],
+  "sql_changed": false,
+  "rls_changed": false,
+  "service_role_used": false,
+  "production_approved": false,
+  "status": "staging-code-ready / analyzer-clean-evidence-accepted / cms-contract-tests-passed / smoke-suite-auth-aware-hotfix-prepared / technical-services-rpc-protected-auth-classified / no-sql / no-rls-change / no-service-role / production-not-approved"
+}

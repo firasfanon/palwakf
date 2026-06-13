@@ -1,0 +1,35 @@
+{
+  "batch": "Platform Technical Services Final Operations Center Closure",
+  "date": "2026_06_11",
+  "base": "cms_shared_content_save_helper_removedlist_warning_closure_2026_06_11.zip",
+  "nature": "development + operational closure + UAT documentation",
+  "frontend_changes": [
+    "Dashboard model now parses evidence, notifications, operation_decisions from enriched RPC payload",
+    "Overview page displays final Technical Closure Strip",
+    "Overview and Audit pages display Operations Center counts and previews",
+    "Evidence, Notifications, and Operation Decisions are surfaced instead of remaining invisible backend data"
+  ],
+  "backend_changes": "none in this batch; uses previously prepared/applied platform_technical RPC contracts",
+  "routes_in_scope": [
+    "/admin/platform/technical-services",
+    "/admin/platform/technical-services/backup",
+    "/admin/platform/technical-services/maintenance",
+    "/admin/platform/technical-services/health",
+    "/admin/platform/technical-services/deployment",
+    "/admin/platform/technical-services/audit"
+  ],
+  "sql_changed": false,
+  "rls_changed": false,
+  "service_role_used": false,
+  "production_approved": false,
+  "status": "staging-code-ready / technical-services-final-operations-center-closure-prepared / evidence-notifications-decisions-surfaced / routes-preserved / rpc-first-contract-preserved / no-sql / no-rls-change / production-not-approved",
+  "changed_files": [
+    "LATEST_BASELINE_POINTER.md",
+    "docs/platform_technical_services_final_operations_center_closure/ARABIC_SIMPLE_SUMMARY.md",
+    "docs/platform_technical_services_final_operations_center_closure/BROWSER_UAT_CHECKLIST.md",
+    "docs/platform_technical_services_final_operations_center_closure/DECISION_RECORD.md",
+    "docs/platform_technical_services_final_operations_center_closure/TECHNICAL_SERVICES_TEST_CASES_TABLE.md",
+    "lib/features/platform/technical_services/domain/models/pwf_technical_service_models.dart",
+    "lib/features/platform/technical_services/presentation/pages/pwf_technical_services_page.dart"
+  ]
+}
