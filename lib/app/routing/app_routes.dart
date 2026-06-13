@@ -23,6 +23,11 @@ class AppRoutes {
   static const serviceRequestTracking = '/services/track';
   static const socialServices = '/social-services';
   static const mediaCenter = '/media-center';
+  static const mediaCenterMobileOperationalHome = '/app/media';
+  static const mediaCenterMobileApp = '/app/media-center';
+  static const mediaCenterMobilePublish = '/app/media-center/publish';
+  static const mediaCenterMobileDrafts = '/app/media-center/drafts';
+  static const officialMediaBase = '/official/media';
   static const socialPosts = '/social-posts';
   static const pressReleases = '/press-releases';
   static const officialStatements = '/official-statements';
@@ -79,6 +84,17 @@ class AppRoutes {
       '/admin/platform/cross-system-contracts';
   static const adminDynamicSystemRegistry = '/admin/platform/system-registry';
   static const adminSystemOperations = '/admin/platform/system-operations';
+  static const adminTechnicalServices = '/admin/platform/technical-services';
+  static const adminTechnicalServicesBackup =
+      '/admin/platform/technical-services/backup';
+  static const adminTechnicalServicesMaintenance =
+      '/admin/platform/technical-services/maintenance';
+  static const adminTechnicalServicesHealth =
+      '/admin/platform/technical-services/health';
+  static const adminTechnicalServicesDeployment =
+      '/admin/platform/technical-services/deployment';
+  static const adminTechnicalServicesAudit =
+      '/admin/platform/technical-services/audit';
   static const adminDatabaseMigration = '/admin/platform/database-migration';
   // Legacy audit URL kept as a redirect-only alias after Full Site Audit clean retest.
   static const adminDatabaseMigrationLegacyAlias = '/admin/database-migration';

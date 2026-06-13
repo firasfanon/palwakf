@@ -254,11 +254,11 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = AdminPanelRegistry.tabs;
     final groups = AdminPanelRegistry.orderedGroups;
+    final tabs = groups.map(_tabForGroup).toList(growable: false);
 
     return DefaultTabController(
-      length: tabs.length,
+      length: groups.length,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('بوابة إدارة المنصة'),
@@ -268,14 +268,39 @@ class SettingsScreen extends StatelessWidget {
                 .map(
                   (tab) => Tab(text: tab.label, icon: Icon(tab.icon, size: 18)),
                 )
-                .toList(),
+                .toList(growable: false),
           ),
         ),
         body: TabBarView(
-          children: groups.map((group) => _GatewayTab(group: group)).toList(),
+          children: groups
+              .map((group) => _GatewayTab(group: group))
+              .toList(growable: false),
         ),
       ),
     );
+  }
+
+  AdminPanelTabItem _tabForGroup(AdminPanelGroup group) {
+    for (final tab in AdminPanelRegistry.tabs) {
+      if (tab.key == group.id) return tab;
+    }
+
+    return AdminPanelTabItem(
+      key: group.id,
+      label: group.title,
+      icon: _fallbackIconForGroup(group.id),
+    );
+  }
+
+  IconData _fallbackIconForGroup(String groupId) {
+    switch (groupId) {
+      case 'public_pages':
+        return Icons.article_outlined;
+      case 'platform_services':
+        return Icons.miscellaneous_services_outlined;
+      default:
+        return Icons.folder_open_outlined;
+    }
   }
 }
 
@@ -614,85 +639,107 @@ class _GatewayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: () => context.go(item.route),
-      child: Ink(
-        decoration: BoxDecoration(
-          color: Colors.white,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact =
+            constraints.maxHeight < 126 || constraints.maxWidth < 210;
+        final padding = compact ? 12.0 : 16.0;
+        final iconSize = compact ? 36.0 : 44.0;
+        final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              fontSize: compact ? 13.5 : null,
+            );
+
+        return InkWell(
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
+          onTap: () => context.go(item.route),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Row(
+            child: Padding(
+              padding: EdgeInsets.all(padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1D4E89).withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(item.icon, color: const Color(0xFF1D4E89)),
-                  ),
-                  const Spacer(),
-                  if (item.badge != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFB22222),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        item.badge.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
+                  Row(
+                    children: [
+                      Container(
+                        width: iconSize,
+                        height: iconSize,
+                        decoration: BoxDecoration(
+                          color:
+                              const Color(0xFF1D4E89).withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          item.icon,
+                          color: const Color(0xFF1D4E89),
+                          size: compact ? 20 : 24,
                         ),
                       ),
+                      const Spacer(),
+                      if (item.badge != null)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: compact ? 7 : 8,
+                            vertical: compact ? 3 : 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFB22222),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            item.badge.toString(),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: compact ? 10 : 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  SizedBox(height: compact ? 8 : 12),
+                  Text(
+                    item.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: titleStyle,
+                  ),
+                  SizedBox(height: compact ? 3 : 6),
+                  Flexible(
+                    child: Text(
+                      item.description,
+                      maxLines: compact ? 1 : 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF6B7280),
+                            height: compact ? 1.15 : 1.35,
+                            fontSize: compact ? 11.5 : null,
+                          ),
                     ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                item.label,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                item.description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: const Color(0xFF6B7280),
-                  height: 1.4,
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
+
 
 class _VisualIdentityExecutionCard extends ConsumerWidget {
   const _VisualIdentityExecutionCard();

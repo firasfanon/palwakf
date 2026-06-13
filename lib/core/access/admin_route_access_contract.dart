@@ -373,6 +373,17 @@ class AdminRouteAccessContracts {
       governanceRoute: true,
     ),
     AdminRouteAccessContract(
+      routePrefix: '/admin/platform/technical-services',
+      systemKey: SystemKey.platformAdmin,
+      minRole: UserRole.admin,
+      readPermission: Permission.manageSystems,
+      writePermissions: {Permission.manageSystems},
+      labelAr: 'الخدمات التقنية للمنصة',
+      scopePolicyAr:
+          'منصة مركزية؛ readiness للنسخ الاحتياطي والصيانة والصحة والنشر والسجلات دون تنفيذ مؤثر من الواجهة.',
+      governanceRoute: true,
+    ),
+    AdminRouteAccessContract(
       routePrefix: '/admin/platform/database-migration',
       systemKey: SystemKey.platformAdmin,
       minRole: UserRole.admin,

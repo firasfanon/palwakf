@@ -82,11 +82,12 @@ class _BreakingNewsSliderState extends ConsumerState<BreakingNewsSlider>
 
     return breakingNewsAsync.when(
       data: (items) {
-        if (items.isEmpty || settingsState.settings?.enabled == false) {
+        final settings =
+            settingsState.settings ?? const BreakingNewsSectionSettings();
+
+        if (items.isEmpty || !settings.enabled) {
           return const SizedBox.shrink();
         }
-
-        final settings = settingsState.settings!;
 
         return _BreakingNewsBar(
           items: items,

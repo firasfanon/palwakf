@@ -581,6 +581,44 @@ class _WebAdminDashboardState extends ConsumerState<WebAdminDashboard> {
         ],
       ),
       _AdminHubGroup(
+        id: 'technical_services',
+        title: 'الخدمات التقنية',
+        subtitle:
+            'مركز النسخ الاحتياطي والصيانة وصحة النظام والنشر والسجلات ضمن بوابات آمنة لا تنفذ إجراءات مؤثرة من Flutter.',
+        items: const [
+          _AdminHubItem(
+            'الخدمات التقنية',
+            AppRoutes.adminTechnicalServices,
+            Icons.admin_panel_settings_rounded,
+          ),
+          _AdminHubItem(
+            'النسخ الاحتياطي',
+            AppRoutes.adminTechnicalServicesBackup,
+            Icons.backup_rounded,
+          ),
+          _AdminHubItem(
+            'وضع الصيانة',
+            AppRoutes.adminTechnicalServicesMaintenance,
+            Icons.construction_rounded,
+          ),
+          _AdminHubItem(
+            'صحة النظام',
+            AppRoutes.adminTechnicalServicesHealth,
+            Icons.monitor_heart_rounded,
+          ),
+          _AdminHubItem(
+            'النشر والإصدارات',
+            AppRoutes.adminTechnicalServicesDeployment,
+            Icons.rocket_launch_rounded,
+          ),
+          _AdminHubItem(
+            'السجلات والتدقيق',
+            AppRoutes.adminTechnicalServicesAudit,
+            Icons.manage_search_rounded,
+          ),
+        ],
+      ),
+      _AdminHubGroup(
         id: 'systems',
         title: 'الأنظمة',
         subtitle:

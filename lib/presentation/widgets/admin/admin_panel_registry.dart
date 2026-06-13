@@ -653,6 +653,48 @@ class AdminPanelRegistry {
         icon: Icons.account_tree_rounded,
       ),
       AdminPanelEntry(
+        label: 'الخدمات التقنية',
+        description:
+            'بوابة محكومة للنسخ الاحتياطي، الصيانة، صحة النظام، النشر، والسجلات دون تنفيذ مؤثر من Flutter.',
+        route: AppRoutes.adminTechnicalServices,
+        icon: Icons.admin_panel_settings_rounded,
+      ),
+      AdminPanelEntry(
+        label: 'النسخ الاحتياطي',
+        description:
+            'جاهزية backup/restore دون export أو restore من الواجهة ودون تجاوز RLS.',
+        route: AppRoutes.adminTechnicalServicesBackup,
+        icon: Icons.backup_rounded,
+      ),
+      AdminPanelEntry(
+        label: 'وضع الصيانة',
+        description:
+            'تخطيط نوافذ الصيانة ورسائلها وحدودها دون إغلاق تلقائي للموقع.',
+        route: AppRoutes.adminTechnicalServicesMaintenance,
+        icon: Icons.construction_rounded,
+      ),
+      AdminPanelEntry(
+        label: 'صحة النظام',
+        description:
+            'قراءة مؤشرات صحة Flutter Web وSupabase وRPCs وPostGIS دون mutation.',
+        route: AppRoutes.adminTechnicalServicesHealth,
+        icon: Icons.monitor_heart_rounded,
+      ),
+      AdminPanelEntry(
+        label: 'النشر والإصدارات',
+        description:
+            'توثيق Flutter/Dart/Vercel وأوامر التشغيل والبناء دون CI/CD مباشر من اللوحة.',
+        route: AppRoutes.adminTechnicalServicesDeployment,
+        icon: Icons.rocket_launch_rounded,
+      ),
+      AdminPanelEntry(
+        label: 'السجلات والتدقيق التقني',
+        description:
+            'متابعة سجلات التشغيل والـ smoke evidence وطلبات الصيانة دون حذف سجلات.',
+        route: AppRoutes.adminTechnicalServicesAudit,
+        icon: Icons.manage_search_rounded,
+      ),
+      AdminPanelEntry(
         label: 'برنامج نقل ملكية الجداول',
         description:
             'متابعة تنظيف public schema، حسم كاش الوحدات، واختيار مرشحي النقل إلى site_content/media_center/platform_services.',
@@ -1134,6 +1176,12 @@ class AdminPanelRegistry {
           AppRoutes.adminUsers,
           AppRoutes.adminOrgUnits,
           AppRoutes.adminProfile,
+          AppRoutes.adminTechnicalServices,
+          AppRoutes.adminTechnicalServicesBackup,
+          AppRoutes.adminTechnicalServicesMaintenance,
+          AppRoutes.adminTechnicalServicesHealth,
+          AppRoutes.adminTechnicalServicesDeployment,
+          AppRoutes.adminTechnicalServicesAudit,
           AppRoutes.adminDatabaseMigration,
         ],
       ),
@@ -1186,7 +1234,15 @@ class AdminPanelRegistry {
       AdminPanelEntrySection(
         title: 'الصيانة والتشخيص',
         icon: Icons.developer_mode_rounded,
-        routes: [AppRoutes.adminDeveloper],
+        routes: [
+          AppRoutes.adminTechnicalServices,
+          AppRoutes.adminTechnicalServicesBackup,
+          AppRoutes.adminTechnicalServicesMaintenance,
+          AppRoutes.adminTechnicalServicesHealth,
+          AppRoutes.adminTechnicalServicesDeployment,
+          AppRoutes.adminTechnicalServicesAudit,
+          AppRoutes.adminDeveloper,
+        ],
       ),
     ],
   };
@@ -1373,6 +1429,7 @@ class AdminPanelRegistry {
     '/admin/profile',
     '/admin/settings',
     '/admin/platform/system-registry',
+    '/admin/platform/technical-services',
     '/admin/platform/design-system',
     '/admin/platform/design-system/visual-identity-bridge',
     '/admin/platform/design-system/awqaf-pilot',

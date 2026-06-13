@@ -15,6 +15,10 @@ class NewsService {
     defaultValue: false,
   );
   static const bool _mediaOwnerReadDefault = !_forceLegacyPublicMedia;
+  static const bool _allowLegacyPublicBaseFallback = bool.fromEnvironment(
+    'PWF_ALLOW_LEGACY_PUBLIC_MEDIA_BASE_FALLBACK',
+    defaultValue: false,
+  );
   static const Duration _mediaOwnerRuntimeTimeout = Duration(seconds: 8);
 
   Future<List<NewsArticle>> _getCompatNews({
@@ -129,8 +133,8 @@ class NewsService {
       'PWF_MEDIA_CENTER_ROOT_CUTOVER '
       'family=$family '
       'owner_read=true '
-      'surface=public.$surface '
-      'projection=* '
+      'api_edge=public.$surface '
+      'owner_schema=media_center projection=* '
       'filtering=client-side '
       'ordering=client-side '
       'rows=$rows '
@@ -165,10 +169,21 @@ class NewsService {
     }
   }
 
+
+  bool _canUseLegacyPublicBaseFallback(String operation) {
+    if (_allowLegacyPublicBaseFallback) return true;
+    _logMediaRuntimeFallback(
+      family: 'news',
+      reason: 'legacy-public-base-fallback-disabled:$operation',
+    );
+    return false;
+  }
+
   // news_service.dart - Clean version
   Future<List<NewsArticle>> getAllNews({int? limit, int? offset}) async {
     final compat = await _getCompatNews(limit: limit, offset: offset);
     if (compat.isNotEmpty) return compat;
+    if (!_canUseLegacyPublicBaseFallback('getAllNews')) return _getSampleNews();
 
     try {
       var query = _supabase
@@ -199,6 +214,9 @@ class NewsService {
   Future<List<NewsArticle>> getFeaturedNews({int limit = 5}) async {
     final compat = await _getCompatNews(limit: limit);
     if (compat.isNotEmpty) return compat.take(limit).toList();
+    if (!_canUseLegacyPublicBaseFallback('getFeaturedNews')) {
+      return _getSampleNews().where((article) => article.isFeatured).take(limit).toList();
+    }
 
     try {
       final response = await _supabase
@@ -221,6 +239,9 @@ class NewsService {
   Future<List<NewsArticle>> getLatestNews({int limit = 10}) async {
     final compat = await _getCompatNews(limit: limit);
     if (compat.isNotEmpty) return compat;
+    if (!_canUseLegacyPublicBaseFallback('getLatestNews')) {
+      return _getSampleNews().take(limit).toList();
+    }
 
     try {
       final response = await _supabase
@@ -242,6 +263,11 @@ class NewsService {
   Future<List<NewsArticle>> getNewsByCategory(NewsCategory category) async {
     final compat = await _getCompatNews(category: category);
     if (compat.isNotEmpty) return compat;
+    if (!_canUseLegacyPublicBaseFallback('getNewsByCategory')) {
+      return _getSampleNews()
+          .where((article) => article.category == category)
+          .toList();
+    }
 
     try {
       final response = await _supabase
@@ -265,6 +291,9 @@ class NewsService {
   Future<NewsArticle?> getNewsById(int id) async {
     final compat = await _getCompatNewsById(id);
     if (compat != null) return compat;
+    if (!_canUseLegacyPublicBaseFallback('getNewsById')) {
+      return _getSampleNews().firstWhere((article) => article.id == id);
+    }
 
     try {
       final response = await _supabase
@@ -284,6 +313,15 @@ class NewsService {
   Future<List<NewsArticle>> searchNews(String query) async {
     final compat = await _getCompatNews(searchQuery: query);
     if (compat.isNotEmpty) return compat;
+    if (!_canUseLegacyPublicBaseFallback('searchNews')) {
+      return _getSampleNews()
+          .where(
+            (article) =>
+                article.title.toLowerCase().contains(query.toLowerCase()) ||
+                article.content.toLowerCase().contains(query.toLowerCase()),
+          )
+          .toList();
+    }
 
     try {
       final response = await _supabase
@@ -317,6 +355,17 @@ class NewsService {
         'categories': NewsCategory.values.length,
         'runtime_source': 'public.v_media_news_compat_v1',
         'runtime_decision': 'media-center-owner-read-default-root-cutover',
+      };
+    }
+
+    if (!_canUseLegacyPublicBaseFallback('getNewsStatistics')) {
+      final sampleNews = _getSampleNews();
+      return {
+        'total_news': sampleNews.length,
+        'featured_news': sampleNews.where((a) => a.isFeatured).length,
+        'categories': NewsCategory.values.length,
+        'runtime_source': 'sample-news',
+        'runtime_decision': 'legacy-public-base-disabled',
       };
     }
 

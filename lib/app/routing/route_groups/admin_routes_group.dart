@@ -47,6 +47,40 @@ RouteBase _buildAdminShellRoute(Ref ref) {
         builder: (context, state) => const PwfPlatformSystemOperationsPage(),
       ),
       GoRoute(
+        path: AppRoutes.adminTechnicalServices,
+        builder: (context, state) => const PwfTechnicalServicesPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminTechnicalServicesBackup,
+        builder: (context, state) => const PwfTechnicalServicesPage(
+          section: PwfTechnicalServiceSection.backup,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.adminTechnicalServicesMaintenance,
+        builder: (context, state) => const PwfTechnicalServicesPage(
+          section: PwfTechnicalServiceSection.maintenance,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.adminTechnicalServicesHealth,
+        builder: (context, state) => const PwfTechnicalServicesPage(
+          section: PwfTechnicalServiceSection.health,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.adminTechnicalServicesDeployment,
+        builder: (context, state) => const PwfTechnicalServicesPage(
+          section: PwfTechnicalServiceSection.deployment,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.adminTechnicalServicesAudit,
+        builder: (context, state) => const PwfTechnicalServicesPage(
+          section: PwfTechnicalServiceSection.audit,
+        ),
+      ),
+      GoRoute(
         path: AppRoutes.adminDatabaseMigration,
         builder: (context, state) => const PwfDatabaseDomainMigrationPage(),
       ),

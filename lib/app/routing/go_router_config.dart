@@ -81,6 +81,11 @@ import '../../features/document_intelligence/presentation/pages/document_review_
 import '../../features/document_intelligence/presentation/pages/document_review_page.dart';
 import '../../features/document_intelligence/presentation/pages/document_linking_page.dart';
 import '../../features/media_center/presentation/pages/media_center_dashboard_page.dart';
+import '../../features/media_center_mobile/presentation/pages/media_center_mobile_app_page.dart';
+import '../../features/media_center_mobile/presentation/pages/media_center_mobile_operational_home_page.dart';
+import '../../features/media_center_public/presentation/pages/official_media_detail_page.dart';
+import '../../features/media_center_mobile/presentation/pages/media_center_quick_publish_page.dart';
+import '../../features/media_center_mobile/presentation/pages/media_center_local_drafts_page.dart';
 import '../../features/platform/media_center/presentation/pages/media_center_operational_pages.dart';
 import '../../presentation/providers/auth_provider.dart';
 import '../../features/platform/assistant/assistant_core/data/services/chat_route_context_service.dart';
@@ -110,6 +115,7 @@ import '../../features/platform/dynamic_systems/presentation/pages/pwf_dynamic_s
 import '../../features/platform/dynamic_systems/presentation/pages/pwf_dynamic_system_home_page.dart';
 import '../../features/platform/dynamic_systems/presentation/pages/pwf_dynamic_system_registry_admin_page.dart';
 import '../../features/platform/dynamic_systems/presentation/pages/pwf_platform_system_operations_page.dart';
+import '../../features/platform/technical_services/presentation/pages/pwf_technical_services_page.dart';
 import '../../features/platform/database_migration/presentation/pages/pwf_database_domain_migration_page.dart';
 import '../../features/platform_design_system/presentation/routes/pwf_sis_routes.dart';
 

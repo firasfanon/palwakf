@@ -1,7 +1,20 @@
+
 # Latest Baseline Pointer
 
-Current baseline: `platform11k_core_location_underlying_table_read_grant_hotfix_2026_06_10.zip`
+Current baseline:
 
-Status: `staging-apply-ready / platform-core-location-underlying-table-grant-blocker-intaken / core-core-locations-select-grant-prepared / core-core-lgus-select-grant-prepared / optional-existing-underlying-read-surface-grants-prepared / no-dml / no-flutter-changes / no-awqaf-system-files / no-public-locations-recreate / no-gis-locations-boundary-create / no-waqf-assets-mutation / production-release-not-approved-pending-smoke-and-browser-retest`
+```text
+media_center_mobile_development_procedures_md_archive_2026_06_13.zip
+```
 
-Next: apply SQL 02, verify 03/04, then repeat Awqaf browser retest.
+Status:
+
+```text
+mobile-development-procedures-md-archived / project-docs-mobile-file-added / no-code-change / no-sql / no-public-base-tables / no-service-role / production-not-approved
+```
+
+Archived document:
+
+```text
+docs/mobile/MEDIA_CENTER_MOBILE_DEVELOPMENT_PROCEDURES_2026_06_13.md
+```

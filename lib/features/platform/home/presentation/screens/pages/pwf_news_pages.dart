@@ -537,146 +537,177 @@ class _NewsHeroCard extends StatelessWidget {
         builder: (context, c) {
           final narrow = c.maxWidth < 900;
           final image = article.imageUrl;
-          return Flex(
-            direction: narrow ? Axis.vertical : Axis.horizontal,
-            children: [
-              Expanded(
-                flex: narrow ? 0 : 5,
-                child: SizedBox(
-                  height: narrow ? 240 : 360,
-                  child: image?.trim().isNotEmpty == true
-                      ? Image.network(
-                          image!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              _NewsHeroPlaceholder(category: article.category),
-                        )
-                      : _NewsHeroPlaceholder(category: article.category),
-                ),
-              ),
-              Expanded(
-                flex: 6,
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          Widget imagePane() {
+            return SizedBox(
+              height: narrow ? 240 : 360,
+              width: narrow ? double.infinity : null,
+              child: image?.trim().isNotEmpty == true
+                  ? Image.network(
+                      image!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          _NewsHeroPlaceholder(category: article.category),
+                    )
+                  : _NewsHeroPlaceholder(category: article.category),
+            );
+          }
+
+          Widget contentPane() {
+            return Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
                     children: [
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: [
-                          PwfMetaBadge(
-                            label: article.category.displayName,
-                            icon: Icons.category_outlined,
-                          ),
-                          if (article.isPinned)
-                            const PwfMetaBadge(
-                              label: 'مثبت',
-                              icon: Icons.push_pin,
-                              color: PwfHomePalette.royalRed,
-                            ),
-                          if (article.isFeatured)
-                            const PwfMetaBadge(
-                              label: 'مميز',
-                              icon: Icons.star_rounded,
-                              color: PwfHomePalette.secondary,
-                            ),
-                          PwfMetaBadge(
-                            label: pwfFormatArabicDate(published),
-                            icon: Icons.calendar_today_outlined,
-                            color: PwfHomePalette.textSecondary,
-                          ),
-                        ],
+                      PwfMetaBadge(
+                        label: article.category.displayName,
+                        icon: Icons.category_outlined,
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        article.title,
-                        style: GoogleFonts.cairo(
-                          fontSize: 27,
-                          fontWeight: FontWeight.w800,
-                          height: 1.35,
-                          color: PwfHomePalette.primary,
+                      if (article.isPinned)
+                        const PwfMetaBadge(
+                          label: 'مثبت',
+                          icon: Icons.push_pin,
+                          color: PwfHomePalette.royalRed,
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        article.excerpt.trim().isNotEmpty
-                            ? article.excerpt
-                            : article.content,
-                        maxLines: 4,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.cairo(
-                          fontSize: 14.5,
-                          height: 1.8,
-                          color: PwfHomePalette.textSecondary,
+                      if (article.isFeatured)
+                        const PwfMetaBadge(
+                          label: 'مميز',
+                          icon: Icons.star_rounded,
+                          color: PwfHomePalette.secondary,
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 18,
-                        runSpacing: 10,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.person_outline,
-                                size: 18,
-                                color: PwfHomePalette.textSecondary,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                article.author,
-                                style: GoogleFonts.cairo(
-                                  color: PwfHomePalette.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.visibility_outlined,
-                                size: 18,
-                                color: PwfHomePalette.textSecondary,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${article.viewCount} مشاهدة',
-                                style: GoogleFonts.cairo(
-                                  color: PwfHomePalette.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: () => context.go(
-                          UnitRoutes.newsDetail(unitSlug, article.id),
-                          extra: article,
-                        ),
-                        icon: const Icon(Icons.arrow_back),
-                        label: const Text('قراءة الخبر كاملاً'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: PwfHomePalette.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
+                      PwfMetaBadge(
+                        label: pwfFormatArabicDate(published),
+                        icon: Icons.calendar_today_outlined,
+                        color: PwfHomePalette.textSecondary,
                       ),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  Text(
+                    article.title,
+                    style: GoogleFonts.cairo(
+                      fontSize: 27,
+                      fontWeight: FontWeight.w800,
+                      height: 1.35,
+                      color: PwfHomePalette.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    article.excerpt.trim().isNotEmpty
+                        ? article.excerpt
+                        : article.content,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.cairo(
+                      fontSize: 14.5,
+                      height: 1.8,
+                      color: PwfHomePalette.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 18,
+                    runSpacing: 10,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.person_outline,
+                            size: 18,
+                            color: PwfHomePalette.textSecondary,
+                          ),
+                          const SizedBox(width: 6),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 220),
+                            child: Text(
+                              article.author,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.cairo(
+                                color: PwfHomePalette.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.visibility_outlined,
+                            size: 18,
+                            color: PwfHomePalette.textSecondary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${article.viewCount} مشاهدة',
+                            style: GoogleFonts.cairo(
+                              color: PwfHomePalette.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: () => context.go(
+                      UnitRoutes.newsDetail(unitSlug, article.id),
+                      extra: article,
+                    ),
+                    icon: const Icon(Icons.arrow_back),
+                    label: const Text('قراءة الخبر كاملاً'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: PwfHomePalette.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 14,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            );
+          }
+
+          if (narrow) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                imagePane(),
+                contentPane(),
+              ],
+            );
+          }
+
+          return SizedBox(
+            height: 360,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: imagePane(),
+                ),
+                Expanded(
+                  flex: 6,
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: contentPane(),
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),

@@ -19,6 +19,9 @@ class PwfDatabaseOwnerSurfaces {
   static const bool destructiveSqlAuthorized = false;
   static const bool exactPublicTableReplacementAuthorized = false;
   static const bool productionApproved = false;
+  static const bool publicSchemaIsCompatibilityAndApiEdgeOnly = true;
+  static const bool publicBaseTableCreationAuthorized = false;
+  static const bool publicWrappersAreTransitionalApiFacade = true;
   static const bool authUsersMigrationAllowed = false;
   static const bool flutterElevatedSecretAllowed = false;
   static const bool waqfAssetsMutationAllowed = false;
@@ -122,20 +125,20 @@ class PwfDatabaseOwnerSurfaces {
   static const bool mediaCenterOwnerReadDefault = true;
   static const bool mediaCenterLegacyPublicFallbackOnly = true;
 
-  /// owner=public; target=public.v_media_activities_compat_v1; decision=approved_public_wrapper.
+  /// api_edge=public; owner=media_center; target=media_center.content_items; decision=approved_transitional_public_wrapper_not_source_of_truth.
   static const String vMediaActivitiesCompatV1 = 'v_media_activities_compat_v1';
 
-  /// owner=public; target=public.v_media_announcements_compat_v1; decision=approved_public_wrapper.
+  /// api_edge=public; owner=media_center; target=media_center.content_items; decision=approved_transitional_public_wrapper_not_source_of_truth.
   static const String vMediaAnnouncementsCompatV1 =
       'v_media_announcements_compat_v1';
 
-  /// owner=public; target=public.v_media_gallery_compat_v1; decision=approved_public_wrapper.
+  /// api_edge=public; owner=media_center; target=media_center.media_gallery_items; decision=approved_transitional_public_wrapper_not_source_of_truth.
   static const String vMediaGalleryCompatV1 = 'v_media_gallery_compat_v1';
 
-  /// owner=public; target=public.v_media_news_compat_v1; decision=approved_public_wrapper.
+  /// api_edge=public; owner=media_center; target=media_center.content_items; decision=approved_transitional_public_wrapper_not_source_of_truth.
   static const String vMediaNewsCompatV1 = 'v_media_news_compat_v1';
 
-  /// owner=public; target=public.v_platform_center_content; decision=approved_public_wrapper.
+  /// api_edge=public; owner=platform_content/media_center; decision=approved_transitional_public_wrapper_not_source_of_truth.
   static const String vPlatformCenterContent = 'v_platform_center_content';
 
   /// owner=public; target=public.v_services_catalog_compat_v1; decision=approved_public_wrapper.
