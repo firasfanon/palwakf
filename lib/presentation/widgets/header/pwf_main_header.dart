@@ -59,7 +59,7 @@ class PwfMainHeader extends StatelessWidget {
             // Actions: search + user buttons
             Row(
               children: [
-                const _SearchBox(),
+                _SearchBox(unitSlug: unitSlug),
                 const SizedBox(width: 20),
                 Row(
                   children: [
@@ -89,7 +89,9 @@ class PwfMainHeader extends StatelessWidget {
 }
 
 class _SearchBox extends StatefulWidget {
-  const _SearchBox();
+  const _SearchBox({required this.unitSlug});
+
+  final String unitSlug;
 
   @override
   State<_SearchBox> createState() => _SearchBoxState();
@@ -103,6 +105,20 @@ class _SearchBoxState extends State<_SearchBox> {
   void dispose() {
     _c.dispose();
     super.dispose();
+  }
+
+  void _submitSearch() {
+    final query = _c.text.trim();
+    final slug = widget.unitSlug.trim().isEmpty
+        ? 'home'
+        : widget.unitSlug.trim().toLowerCase();
+    final path = slug == 'home' ? '/home/search' : '/$slug/search';
+    if (query.isEmpty) {
+      context.go(path);
+      return;
+    }
+    final encodedQuery = Uri(queryParameters: {'q': query}).query;
+    context.go('$path?$encodedQuery');
   }
 
   @override
@@ -121,6 +137,8 @@ class _SearchBoxState extends State<_SearchBox> {
               padding: const EdgeInsetsDirectional.only(start: 20, end: 8),
               child: TextField(
                 controller: _c,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _submitSearch(),
                 style: GoogleFonts.cairo(
                   fontSize: 14,
                   color: PwfHomePalette.primary,
@@ -142,11 +160,7 @@ class _SearchBoxState extends State<_SearchBox> {
             onEnter: (_) => setState(() => _hover = true),
             onExit: (_) => setState(() => _hover = false),
             child: GestureDetector(
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('البحث قيد الربط')),
-                );
-              },
+              onTap: _submitSearch,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: 56,

@@ -10,14 +10,21 @@ import 'web_search_screen.dart';
 /// - Web: WebSearchScreen (with horizontal navbar, multi-column layout, advanced filters)
 /// - Mobile: MobileSearchScreen (with vertical scrolling, single column, mobile-friendly search)
 class SearchScreen extends StatelessWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({
+    super.key,
+    this.initialQuery = '',
+    this.unitSlug = 'home',
+  });
+
+  final String initialQuery;
+  final String unitSlug;
 
   @override
   Widget build(BuildContext context) {
     if (kIsWeb) {
-      return const WebSearchScreen();
+      return WebSearchScreen(initialQuery: initialQuery, unitSlug: unitSlug);
     } else {
-      return const MobileSearchScreen();
+      return MobileSearchScreen(initialQuery: initialQuery, unitSlug: unitSlug);
     }
   }
 }

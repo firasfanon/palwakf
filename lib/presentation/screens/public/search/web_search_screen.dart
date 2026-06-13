@@ -1,5 +1,6 @@
 // lib/presentation/screens/public/search/web_search_screen.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../widgets/web/web_app_bar.dart';
 import '../../../widgets/web/web_container.dart';
@@ -9,7 +10,14 @@ import '../../../widgets/common/app_filter_chip.dart';
 /// Web-optimized Search Screen
 /// Features: Horizontal navbar, multi-column layout, advanced filters
 class WebSearchScreen extends StatefulWidget {
-  const WebSearchScreen({super.key});
+  const WebSearchScreen({
+    super.key,
+    this.initialQuery = '',
+    this.unitSlug = 'home',
+  });
+
+  final String initialQuery;
+  final String unitSlug;
 
   @override
   State<WebSearchScreen> createState() => _WebSearchScreenState();
@@ -30,6 +38,19 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
     'activities',
     'documents',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialQuery.trim();
+    if (initial.isNotEmpty) {
+      _searchController.text = initial;
+      _searchQuery = initial;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _performSearch(initial);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -165,24 +186,37 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
       color: AppColors.surfaceVariant,
       padding: const EdgeInsets.symmetric(vertical: 60),
       child: WebContainer(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Main Results (70%)
-            Expanded(flex: 7, child: _buildSearchResults()),
-            const SizedBox(width: 30),
-            // Sidebar (30%)
-            Expanded(
-              flex: 3,
-              child: Column(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final narrow = constraints.maxWidth < 900;
+            final sidebar = Column(
+              children: [
+                _buildPopularSearches(),
+                const SizedBox(height: 20),
+                _buildQuickLinks(),
+              ],
+            );
+
+            if (narrow) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildPopularSearches(),
-                  const SizedBox(height: 20),
-                  _buildQuickLinks(),
+                  _buildSearchResults(),
+                  const SizedBox(height: 24),
+                  sidebar,
                 ],
-              ),
-            ),
-          ],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 7, child: _buildSearchResults()),
+                const SizedBox(width: 30),
+                Expanded(flex: 3, child: sidebar),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -212,8 +246,11 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
         Card(
           child: Padding(
             padding: const EdgeInsets.all(20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 16,
+              runSpacing: 8,
               children: [
                 Text(
                   'نتائج البحث (${_searchResults.length})',
@@ -223,6 +260,8 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
                 ),
                 Text(
                   'البحث عن: "$_searchQuery"',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: AppConstants.textSecondary,
                   ),
@@ -241,7 +280,7 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 20),
       child: InkWell(
-        onTap: () {},
+        onTap: () => context.go(result.route),
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -305,7 +344,7 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
                     ),
                     const SizedBox(height: 12),
                     TextButton.icon(
-                      onPressed: () {},
+                      onPressed: () => context.go(result.route),
                       icon: const Icon(Icons.arrow_forward, size: 16),
                       label: const Text('عرض التفاصيل'),
                     ),
@@ -534,85 +573,232 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
       _isSearching = true;
       _searchQuery = query;
     });
+    _syncSearchQueryToRoute(query);
 
-    // Simulate search delay
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        setState(() {
-          _searchResults = _getMockResults(query);
-          _isSearching = false;
-        });
-      }
+    // Use the governed local public-route index until a database-backed
+    // public search RPC is approved. Keep a short async boundary so the
+    // loading state remains testable without blocking the UI thread.
+    Future<void>.delayed(const Duration(milliseconds: 120), () {
+      if (!mounted) return;
+      setState(() {
+        _searchResults = _getIndexedResults(query);
+        _isSearching = false;
+      });
     });
   }
 
-  List<SearchResult> _getMockResults(String query) {
-    // All available results
-    final allResults = [
-      SearchResult(
-        title: 'دليل المساجد في فلسطين',
-        description:
-            'دليل شامل للمساجد في جميع المحافظات الفلسطينية مع معلومات تفصيلية عن كل مسجد',
-        category: 'mosques',
-      ),
-      SearchResult(
-        title: 'مسجد الأقصى المبارك',
-        description: 'أولى القبلتين وثالث الحرمين الشريفين في القدس المحتلة',
-        category: 'mosques',
-      ),
-      SearchResult(
-        title: 'الخدمات الإلكترونية',
-        description:
-            'احصل على الخدمات الحكومية بطريقة سهلة وسريعة من خلال البوابة الإلكترونية',
-        category: 'services',
-      ),
-      SearchResult(
-        title: 'خدمة حجز موعد',
-        description: 'احجز موعدك لمراجعة الوزارة بكل سهولة',
-        category: 'services',
-      ),
-      SearchResult(
-        title: 'آخر الأخبار والإعلانات',
-        description: 'تابع آخر الأخبار والتحديثات والإعلانات الهامة من الوزارة',
-        category: 'news',
-      ),
-      SearchResult(
-        title: 'افتتاح مسجد جديد في رام الله',
-        description: 'تم افتتاح مسجد جديد في حي الطيرة بحضور معالي الوزير',
-        category: 'news',
-      ),
-      SearchResult(
-        title: 'الأنشطة والفعاليات القادمة',
-        description: 'تعرف على الأنشطة والفعاليات التي تنظمها الوزارة',
-        category: 'activities',
-      ),
-      SearchResult(
-        title: 'دورة تدريبية لأئمة المساجد',
-        description: 'دورة متخصصة في فن الخطابة والإلقاء',
-        category: 'activities',
-      ),
-      SearchResult(
-        title: 'وثائق الوزارة',
-        description: 'الوثائق والتقارير الرسمية الصادرة عن الوزارة',
-        category: 'documents',
-      ),
-    ];
 
-    // Filter by category if not 'all'
+  void _syncSearchQueryToRoute(String query) {
+    final trimmed = query.trim();
+    final base = '${_unitBasePath()}/search';
+    final target = trimmed.isEmpty
+        ? base
+        : '$base?${Uri(queryParameters: {'q': trimmed}).query}';
+    if (GoRouterState.of(context).uri.toString() != target) {
+      context.replace(target);
+    }
+  }
+
+  List<SearchResult> _getIndexedResults(String query) {
+    final allResults = _searchIndex();
+
     var filteredResults = _selectedCategory == 'all'
         ? allResults
         : allResults
               .where((result) => result.category == _selectedCategory)
               .toList();
 
-    // Filter by search query (case insensitive search in title and description)
+    final searchLower = _normalizeSearch(query);
+    final queryTerms = _expandedSearchTerms(searchLower);
     filteredResults = filteredResults.where((result) {
-      final searchLower = query.toLowerCase();
-      return result.title.toLowerCase().contains(searchLower) ||
-          result.description.toLowerCase().contains(searchLower);
+      final haystack = _normalizeSearch(
+        [result.title, result.description, ...result.keywords].join(' '),
+      );
+      return queryTerms.any(haystack.contains);
     }).toList();
 
     return filteredResults;
+  }
+
+  List<SearchResult> _searchIndex() {
+    final base = _unitBasePath();
+    return [
+      SearchResult(
+        title: 'الصفحة الرئيسية',
+        description: 'الواجهة الرئيسية للوزارة وأقسام الأخبار والخدمات والمعلومات العامة.',
+        category: 'documents',
+        route: base,
+        keywords: const [
+          'الرئيسية',
+          'وزارة',
+          'الأوقاف',
+          'الاوقاف',
+          'وقف',
+          'وقفي',
+          'المنصة',
+          'home',
+        ],
+      ),
+      SearchResult(
+        title: 'مستكشف الوقف',
+        description:
+            'مدخل استكشاف الأوقاف والأصول الوقفية والخرائط والمؤشرات العامة ذات العلاقة.',
+        category: 'documents',
+        route: '/mustakshif',
+        keywords: const [
+          'وقف',
+          'اوقاف',
+          'الأوقاف',
+          'الاوقاف',
+          'وقفي',
+          'وقفية',
+          'وقفيه',
+          'أصل وقفي',
+          'اصل وقفي',
+          'أصول وقفية',
+          'اصول وقفيه',
+          'أراضي وقفية',
+          'اراضي وقفيه',
+          'مستكشف',
+          'خريطة',
+          'خرائط',
+          'تحليل مكاني',
+        ],
+      ),
+      SearchResult(
+        title: 'الأخبار',
+        description: 'آخر أخبار الوزارة والوحدات والمديريات المنشورة للجمهور.',
+        category: 'news',
+        route: '$base/news',
+        keywords: const ['اخبار', 'خبر', 'إعلام', 'المركز الإعلامي'],
+      ),
+      SearchResult(
+        title: 'الإعلانات',
+        description: 'الإعلانات الرسمية والتنبيهات العامة المنشورة على المنصة.',
+        category: 'news',
+        route: '$base/announcements',
+        keywords: const ['اعلانات', 'إعلان', 'تنبيه', 'بلاغ'],
+      ),
+      SearchResult(
+        title: 'الأنشطة والفعاليات',
+        description: 'الأنشطة والفعاليات والبرامج العامة الخاصة بالوزارة والوحدات.',
+        category: 'activities',
+        route: '$base/activities',
+        keywords: const ['نشاط', 'فعاليات', 'برامج', 'events'],
+      ),
+      SearchResult(
+        title: 'الخدمات الإلكترونية',
+        description: 'بوابة الخدمات الإلكترونية وتتبع طلبات الجمهور.',
+        category: 'services',
+        route: '$base/services',
+        keywords: const ['خدمات', 'خدمة', 'طلب', 'تتبع', 'معاملة'],
+      ),
+      SearchResult(
+        title: 'المركز الإعلامي',
+        description: 'مركز الأخبار والبيانات والتصريحات والحملات الإعلامية.',
+        category: 'news',
+        route: '$base/media-center',
+        keywords: const ['إعلام', 'بيانات', 'تصريحات', 'حملات', 'صور', 'فيديو'],
+      ),
+      SearchResult(
+        title: 'المساجد',
+        description: 'البحث في المساجد والمعلومات العامة ذات العلاقة.',
+        category: 'mosques',
+        route: '$base/mosques',
+        keywords: const ['مسجد', 'مساجد', 'إمام', 'خطيب'],
+      ),
+      SearchResult(
+        title: 'خطب الجمعة',
+        description: 'أرشيف خطب الجمعة والنشرات العامة.',
+        category: 'documents',
+        route: '$base/friday-sermon',
+        keywords: const ['خطبة', 'خطب', 'جمعة', 'خطيب'],
+      ),
+      SearchResult(
+        title: 'الأنظمة والقوانين والتعليمات',
+        description: 'مراجع قانونية وتعليمات ونماذج عامة منشورة للجمهور.',
+        category: 'documents',
+        route: '$base/legal-references',
+        keywords: const [
+          'قانون',
+          'قوانين',
+          'تعليمات',
+          'نظام',
+          'نماذج',
+          'وقف',
+          'أوقاف',
+          'اوقاف',
+        ],
+      ),
+      SearchResult(
+        title: 'الشكاوى والبلاغات',
+        description: 'تقديم الشكاوى والبلاغات العامة عبر المنصة.',
+        category: 'services',
+        route: '$base/complaints',
+        keywords: const ['شكوى', 'شكاوى', 'بلاغ', 'ملاحظة'],
+      ),
+      SearchResult(
+        title: 'كلمة الوزير',
+        description: 'صفحة الوزير والكلمة الرسمية ومعلومات الاتصال المؤسسي.',
+        category: 'documents',
+        route: '$base/minister',
+        keywords: const ['وزير', 'معالي', 'كلمة الوزير'],
+      ),
+      SearchResult(
+        title: 'اتصل بنا',
+        description: 'معلومات التواصل الرسمية مع الوزارة والوحدات.',
+        category: 'services',
+        route: '$base/contact',
+        keywords: const ['اتصال', 'تواصل', 'هاتف', 'عنوان'],
+      ),
+    ];
+  }
+
+  String _unitBasePath() {
+    final slug = widget.unitSlug.trim().isEmpty
+        ? 'home'
+        : widget.unitSlug.trim().toLowerCase();
+    return slug == 'home' ? '/home' : '/$slug';
+  }
+
+  String _normalizeSearch(String value) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[\u064B-\u065F\u0670]'), '')
+        .replaceAll('ـ', '')
+        .replaceAll('أ', 'ا')
+        .replaceAll('إ', 'ا')
+        .replaceAll('آ', 'ا')
+        .replaceAll('ؤ', 'و')
+        .replaceAll('ئ', 'ي')
+        .replaceAll('ة', 'ه')
+        .replaceAll('ى', 'ي')
+        .replaceAll(RegExp(r'\s+'), ' ');
+  }
+
+  Set<String> _expandedSearchTerms(String normalizedQuery) {
+    final terms = <String>{normalizedQuery};
+    for (final token in normalizedQuery.split(' ')) {
+      final trimmed = token.trim();
+      if (trimmed.isEmpty) continue;
+      terms.add(trimmed);
+      if (trimmed == 'وقف') {
+        terms.addAll(const [
+          'وقف',
+          'وقفي',
+          'وقفيه',
+          'اوقاف',
+          'الاوقاف',
+          'اصول وقفيه',
+          'اراضي وقفيه',
+        ]);
+      }
+      if (trimmed == 'اوقاف' || trimmed == 'الاوقاف') {
+        terms.addAll(const ['وقف', 'وقفي', 'وقفيه']);
+      }
+    }
+    return terms.where((term) => term.isNotEmpty).toSet();
   }
 
   String _getCategoryName(String category) {
@@ -673,10 +859,14 @@ class SearchResult {
   final String title;
   final String description;
   final String category;
+  final String route;
+  final List<String> keywords;
 
   SearchResult({
     required this.title,
     required this.description,
     required this.category,
+    this.route = '/home',
+    this.keywords = const <String>[],
   });
 }

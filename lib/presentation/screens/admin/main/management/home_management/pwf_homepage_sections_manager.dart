@@ -279,7 +279,7 @@ class PwfHomepageSectionsManager
           id: '',
           sectionName: def.key,
           settings: const <String, dynamic>{},
-          isActive: true,
+          isActive: _defaultActiveForMissingCatalogKey(def),
           displayOrder: kPwfHomeSections.indexOf(def),
           createdAtIso: nowIso,
           updatedAtIso: nowIso,
@@ -289,6 +289,14 @@ class PwfHomepageSectionsManager
     }
 
     return byKey.values.toList(growable: false);
+  }
+
+  bool _defaultActiveForMissingCatalogKey(PwfHomeSectionDef def) {
+    // Missing catalog rows are shown in the admin manager for discoverability,
+    // but they must not become active public sections merely because the
+    // catalog grew. Pinned shell rows stay active so header/footer controls
+    // remain visible when a scoped page has partial data.
+    return def.pin != PwfHomeSectionPin.none;
   }
 
   bool _shouldPreferRow(HomepageSection current, HomepageSection candidate) {

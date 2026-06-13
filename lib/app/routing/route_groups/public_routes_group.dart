@@ -267,7 +267,10 @@ RouteBase _buildPublicShellRoute() {
       ),
       GoRoute(
         path: AppRoutes.search,
-        builder: (context, state) => const SearchScreen(),
+        builder: (context, state) => SearchScreen(
+          initialQuery: state.uri.queryParameters['q'] ?? '',
+          unitSlug: 'home',
+        ),
       ),
       GoRoute(
         path: AppRoutes.fridaySermon,
@@ -787,7 +790,14 @@ RouteBase _buildPublicShellRoute() {
           ),
           GoRoute(
             path: 'search',
-            builder: (context, state) => const SearchScreen(),
+            builder: (context, state) {
+              final slug =
+                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+              return SearchScreen(
+                initialQuery: state.uri.queryParameters['q'] ?? '',
+                unitSlug: slug,
+              );
+            },
           ),
           GoRoute(
             path: 'chat',

@@ -29,6 +29,71 @@ class HomepageRepository {
       'v_platform_breaking_news_compat_v1';
   static const String _breakingNewsLegacyWriteTable = 'breaking_news';
 
+  static const Map<String, String> _sectionLegacyAliases = <String, String>{
+    'minister': 'pwf_minister_word',
+    'statistics': 'pwf_stats_grid',
+    'breaking_news': 'pwf_breaking_news_marquee',
+    'announcements': 'pwf_announcements',
+    'services': 'pwf_quick_services',
+    'service_catalog': 'pwf_public_services_catalog',
+    'services_catalog': 'pwf_public_services_catalog',
+    'public_services_catalog': 'pwf_public_services_catalog',
+    'media_center_highlights': 'pwf_media_center_highlights',
+    'services_center_highlights': 'pwf_services_center_highlights',
+    'social_posts': 'pwf_social_posts_section',
+    'press_releases': 'pwf_press_releases_section',
+    'official_statements': 'pwf_official_statements_section',
+    'awareness_campaigns': 'pwf_awareness_campaigns_section',
+    'sanctities_observatory': 'pwf_sanctities_observatory_section',
+    'legal_references': 'pwf_legal_references_section',
+    'events': 'pwf_events_section',
+    'pwf_services_catalog': 'pwf_public_services_catalog',
+    'news': 'pwf_news_tabs',
+    'top_bar': 'pwf_top_bar',
+    'pwf_topbar': 'pwf_top_bar',
+    'main_nav': 'pwf_main_nav',
+    'pwf_mainnav': 'pwf_main_nav',
+    'footer': 'pwf_footer',
+  };
+
+  static String _canonicalSectionKey(String raw) {
+    final normalized = raw
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'_+'), '_');
+    return _sectionLegacyAliases[normalized] ?? normalized;
+  }
+
+  static HomepageSection _withCanonicalSectionName(HomepageSection row) {
+    final canonical = _canonicalSectionKey(row.sectionName);
+    if (canonical == row.sectionName) return row;
+    return row.copyWith(sectionName: canonical);
+  }
+
+  static bool _shouldPreferSectionRow(
+    HomepageSection current,
+    HomepageSection candidate,
+  ) {
+    final currentCanonical = current.sectionName ==
+        _canonicalSectionKey(current.sectionName);
+    final candidateCanonical = candidate.sectionName ==
+        _canonicalSectionKey(candidate.sectionName);
+    if (candidateCanonical != currentCanonical) return candidateCanonical;
+
+    if (candidate.isActive != current.isActive) return candidate.isActive;
+
+    final currentOrder = current.displayOrder == 0
+        ? 999999
+        : current.displayOrder;
+    final candidateOrder = candidate.displayOrder == 0
+        ? 999999
+        : candidate.displayOrder;
+    if (candidateOrder != currentOrder) return candidateOrder < currentOrder;
+
+    return candidate.updatedAt.compareTo(current.updatedAt) > 0;
+  }
+
   // ============================================
   // SITE SETTINGS (Single Row)
   // ============================================
@@ -424,17 +489,21 @@ class HomepageRepository {
       Future<List<HomepageSection>> fetchScoped(String? scopedUnitId) async {
         final rows = scopedUnitId == null
             ? await _client
-                  .from(sectionsTable)
+                  .from(_sectionsReadSurface)
                   .select(
                     'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
                   )
                   .isFilter('unit_id', null)
+                  .order('display_order', ascending: true)
+                  .order('section_name', ascending: true)
             : await _client
-                  .from(sectionsTable)
+                  .from(_sectionsReadSurface)
                   .select(
                     'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
                   )
-                  .eq('unit_id', scopedUnitId);
+                  .eq('unit_id', scopedUnitId)
+                  .order('display_order', ascending: true)
+                  .order('section_name', ascending: true);
 
         final nowIso = DateTime.now().toUtc().toIso8601String();
         final out = <HomepageSection>[];
@@ -466,16 +535,15 @@ class HomepageRepository {
 
       final scopedResults = await Future.wait(idsToFetch.map(fetchScoped));
 
-      String normalizeKey(String raw) => raw
-          .trim()
-          .toLowerCase()
-          .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
-          .replaceAll(RegExp(r'_+'), '_');
-
       final merged = <String, HomepageSection>{};
       for (final rows in scopedResults) {
         for (final row in rows) {
-          merged[normalizeKey(row.sectionName)] = row;
+          final canonicalRow = _withCanonicalSectionName(row);
+          final key = canonicalRow.sectionName;
+          final previous = merged[key];
+          if (previous == null || _shouldPreferSectionRow(previous, canonicalRow)) {
+            merged[key] = canonicalRow;
+          }
         }
       }
 

@@ -1,12 +1,20 @@
 // lib/presentation/screens/public/search/mobile_search_screen.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../widgets/common/custom_app_bar.dart';
 
 /// Mobile-optimized Search Screen
 /// Features: Vertical scrolling, mobile-friendly search interface
 class MobileSearchScreen extends StatefulWidget {
-  const MobileSearchScreen({super.key});
+  const MobileSearchScreen({
+    super.key,
+    this.initialQuery = '',
+    this.unitSlug = 'home',
+  });
+
+  final String initialQuery;
+  final String unitSlug;
 
   @override
   State<MobileSearchScreen> createState() => _MobileSearchScreenState();
@@ -27,6 +35,19 @@ class _MobileSearchScreenState extends State<MobileSearchScreen> {
     'activities',
     'documents',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialQuery.trim();
+    if (initial.isNotEmpty) {
+      _searchController.text = initial;
+      _searchQuery = initial;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _performSearch(initial);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -279,9 +300,7 @@ class _MobileSearchScreenState extends State<MobileSearchScreen> {
           ],
         ),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () {
-          // Navigate to result
-        },
+        onTap: () => context.go(result.route),
       ),
     );
   }
@@ -299,36 +318,226 @@ class _MobileSearchScreenState extends State<MobileSearchScreen> {
       _isSearching = true;
       _searchQuery = query;
     });
+    _syncSearchQueryToRoute(query);
 
-    // Simulate search delay
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        setState(() {
-          _searchResults = _getMockResults(query);
-          _isSearching = false;
-        });
-      }
+    // Use the governed local public-route index until a database-backed
+    // public search RPC is approved. Keep a short async boundary so the
+    // loading state remains testable without blocking the UI thread.
+    Future<void>.delayed(const Duration(milliseconds: 120), () {
+      if (!mounted) return;
+      setState(() {
+        _searchResults = _getIndexedResults(query);
+        _isSearching = false;
+      });
     });
   }
 
-  List<SearchResult> _getMockResults(String query) {
+
+  void _syncSearchQueryToRoute(String query) {
+    final trimmed = query.trim();
+    final base = '${_unitBasePath()}/search';
+    final target = trimmed.isEmpty
+        ? base
+        : '$base?${Uri(queryParameters: {'q': trimmed}).query}';
+    if (GoRouterState.of(context).uri.toString() != target) {
+      context.replace(target);
+    }
+  }
+
+  List<SearchResult> _getIndexedResults(String query) {
+    final searchLower = _normalizeSearch(query);
+    final queryTerms = _expandedSearchTerms(searchLower);
+    final allResults = _searchIndex();
+    final scoped = _selectedCategory == 'all'
+        ? allResults
+        : allResults.where((result) => result.category == _selectedCategory);
+    return scoped.where((result) {
+      final haystack = _normalizeSearch(
+        [result.title, result.description, ...result.keywords].join(' '),
+      );
+      return queryTerms.any(haystack.contains);
+    }).toList();
+  }
+
+  List<SearchResult> _searchIndex() {
+    final base = _unitBasePath();
     return [
       SearchResult(
-        title: 'دليل المساجد في فلسطين',
-        description: 'دليل شامل للمساجد في جميع المحافظات الفلسطينية',
-        category: 'mosques',
+        title: 'الصفحة الرئيسية',
+        description: 'الواجهة الرئيسية للوزارة وأقسام الأخبار والخدمات والمعلومات العامة.',
+        category: 'documents',
+        route: base,
+        keywords: const [
+          'الرئيسية',
+          'وزارة',
+          'الأوقاف',
+          'الاوقاف',
+          'وقف',
+          'وقفي',
+          'المنصة',
+          'home',
+        ],
+      ),
+      SearchResult(
+        title: 'مستكشف الوقف',
+        description:
+            'مدخل استكشاف الأوقاف والأصول الوقفية والخرائط والمؤشرات العامة ذات العلاقة.',
+        category: 'documents',
+        route: '/mustakshif',
+        keywords: const [
+          'وقف',
+          'اوقاف',
+          'الأوقاف',
+          'الاوقاف',
+          'وقفي',
+          'وقفية',
+          'وقفيه',
+          'أصل وقفي',
+          'اصل وقفي',
+          'أصول وقفية',
+          'اصول وقفيه',
+          'أراضي وقفية',
+          'اراضي وقفيه',
+          'مستكشف',
+          'خريطة',
+          'خرائط',
+          'تحليل مكاني',
+        ],
+      ),
+      SearchResult(
+        title: 'الأخبار',
+        description: 'آخر أخبار الوزارة والوحدات والمديريات المنشورة للجمهور.',
+        category: 'news',
+        route: '$base/news',
+        keywords: const ['اخبار', 'خبر', 'إعلام', 'المركز الإعلامي'],
+      ),
+      SearchResult(
+        title: 'الإعلانات',
+        description: 'الإعلانات الرسمية والتنبيهات العامة المنشورة على المنصة.',
+        category: 'news',
+        route: '$base/announcements',
+        keywords: const ['اعلانات', 'إعلان', 'تنبيه', 'بلاغ'],
+      ),
+      SearchResult(
+        title: 'الأنشطة والفعاليات',
+        description: 'الأنشطة والفعاليات والبرامج العامة الخاصة بالوزارة والوحدات.',
+        category: 'activities',
+        route: '$base/activities',
+        keywords: const ['نشاط', 'فعاليات', 'برامج', 'events'],
       ),
       SearchResult(
         title: 'الخدمات الإلكترونية',
-        description: 'احصل على الخدمات الحكومية بطريقة سهلة وسريعة',
+        description: 'بوابة الخدمات الإلكترونية وتتبع طلبات الجمهور.',
         category: 'services',
+        route: '$base/services',
+        keywords: const ['خدمات', 'خدمة', 'طلب', 'تتبع', 'معاملة'],
       ),
       SearchResult(
-        title: 'آخر الأخبار',
-        description: 'تابع آخر الأخبار والتحديثات من الوزارة',
+        title: 'المركز الإعلامي',
+        description: 'مركز الأخبار والبيانات والتصريحات والحملات الإعلامية.',
         category: 'news',
+        route: '$base/media-center',
+        keywords: const ['إعلام', 'بيانات', 'تصريحات', 'حملات', 'صور', 'فيديو'],
+      ),
+      SearchResult(
+        title: 'المساجد',
+        description: 'البحث في المساجد والمعلومات العامة ذات العلاقة.',
+        category: 'mosques',
+        route: '$base/mosques',
+        keywords: const ['مسجد', 'مساجد', 'إمام', 'خطيب'],
+      ),
+      SearchResult(
+        title: 'خطب الجمعة',
+        description: 'أرشيف خطب الجمعة والنشرات العامة.',
+        category: 'documents',
+        route: '$base/friday-sermon',
+        keywords: const ['خطبة', 'خطب', 'جمعة', 'خطيب'],
+      ),
+      SearchResult(
+        title: 'الأنظمة والقوانين والتعليمات',
+        description: 'مراجع قانونية وتعليمات ونماذج عامة منشورة للجمهور.',
+        category: 'documents',
+        route: '$base/legal-references',
+        keywords: const [
+          'قانون',
+          'قوانين',
+          'تعليمات',
+          'نظام',
+          'نماذج',
+          'وقف',
+          'أوقاف',
+          'اوقاف',
+        ],
+      ),
+      SearchResult(
+        title: 'الشكاوى والبلاغات',
+        description: 'تقديم الشكاوى والبلاغات العامة عبر المنصة.',
+        category: 'services',
+        route: '$base/complaints',
+        keywords: const ['شكوى', 'شكاوى', 'بلاغ', 'ملاحظة'],
+      ),
+      SearchResult(
+        title: 'كلمة الوزير',
+        description: 'صفحة الوزير والكلمة الرسمية ومعلومات الاتصال المؤسسي.',
+        category: 'documents',
+        route: '$base/minister',
+        keywords: const ['وزير', 'معالي', 'كلمة الوزير'],
+      ),
+      SearchResult(
+        title: 'اتصل بنا',
+        description: 'معلومات التواصل الرسمية مع الوزارة والوحدات.',
+        category: 'services',
+        route: '$base/contact',
+        keywords: const ['اتصال', 'تواصل', 'هاتف', 'عنوان'],
       ),
     ];
+  }
+
+  String _unitBasePath() {
+    final slug = widget.unitSlug.trim().isEmpty
+        ? 'home'
+        : widget.unitSlug.trim().toLowerCase();
+    return slug == 'home' ? '/home' : '/$slug';
+  }
+
+  String _normalizeSearch(String value) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[\u064B-\u065F\u0670]'), '')
+        .replaceAll('ـ', '')
+        .replaceAll('أ', 'ا')
+        .replaceAll('إ', 'ا')
+        .replaceAll('آ', 'ا')
+        .replaceAll('ؤ', 'و')
+        .replaceAll('ئ', 'ي')
+        .replaceAll('ة', 'ه')
+        .replaceAll('ى', 'ي')
+        .replaceAll(RegExp(r'\s+'), ' ');
+  }
+
+  Set<String> _expandedSearchTerms(String normalizedQuery) {
+    final terms = <String>{normalizedQuery};
+    for (final token in normalizedQuery.split(' ')) {
+      final trimmed = token.trim();
+      if (trimmed.isEmpty) continue;
+      terms.add(trimmed);
+      if (trimmed == 'وقف') {
+        terms.addAll(const [
+          'وقف',
+          'وقفي',
+          'وقفيه',
+          'اوقاف',
+          'الاوقاف',
+          'اصول وقفيه',
+          'اراضي وقفيه',
+        ]);
+      }
+      if (trimmed == 'اوقاف' || trimmed == 'الاوقاف') {
+        terms.addAll(const ['وقف', 'وقفي', 'وقفيه']);
+      }
+    }
+    return terms.where((term) => term.isNotEmpty).toSet();
   }
 
   List<String> _getRecentSearches() {
@@ -393,10 +602,14 @@ class SearchResult {
   final String title;
   final String description;
   final String category;
+  final String route;
+  final List<String> keywords;
 
   SearchResult({
     required this.title,
     required this.description,
     required this.category,
+    this.route = '/home',
+    this.keywords = const <String>[],
   });
 }
