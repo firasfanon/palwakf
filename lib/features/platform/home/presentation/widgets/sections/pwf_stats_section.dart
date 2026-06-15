@@ -51,14 +51,10 @@ class PwfStatsSection extends ConsumerWidget {
         ? 'مؤشرات وإحصاءات عامة تعكس أعمال وزارة الأوقاف والشؤون الدينية.'
         : 'مؤشرات تُعرض بحسب الوحدة المختارة داخل نفس الصفحة الديناميكية.';
 
-    return Container(
-      color: PwfHomePalette.primary.withValues(alpha: 0.05),
-      padding: const EdgeInsets.symmetric(vertical: 28),
-      child: PwfSectionContainer(
-        sectionKey: 'PwfStatsSection',
-        verticalPadding: 0,
-        child: Column(
-          children: [
+    return PwfSectionContainer(
+      sectionKey: 'PwfStatsSection',
+      child: Column(
+        children: [
             PwfSectionTitle(title: title, subtitle: subtitle),
             const SizedBox(height: 18),
             Wrap(
@@ -119,8 +115,7 @@ class PwfStatsSection extends ConsumerWidget {
                 ),
               ),
             ],
-          ],
-        ),
+        ],
       ),
     );
   }

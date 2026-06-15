@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -176,16 +177,31 @@ class _HeroSliderBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final slide = slides[index];
 
-    final width = MediaQuery.sizeOf(context).width;
-    final heroHeight = width >= 1400
-        ? 620.0
+    final mediaSize = MediaQuery.sizeOf(context);
+    final width = mediaSize.width;
+    final viewportHeight = mediaSize.height;
+
+    // Platform 12 — Adaptive Hero Fold Closure:
+    // The hero must behave as the visual first-fold block whether the breaking
+    // news strip is active or disabled. Use a viewport-aware target instead of
+    // a fixed section height so hidden sections above/below the hero do not
+    // leave a perceived short fold before the next homepage section.
+    final baseHeroHeight = width >= 1400
+        ? 660.0
         : width >= 1200
-        ? 590.0
+        ? 635.0
         : width >= 992
-        ? 560.0
+        ? 610.0
         : width >= 768
-        ? 500.0
-        : 420.0;
+        ? 540.0
+        : 450.0;
+    final heroExtra = width >= 768 ? 86.0 : 42.0;
+    final firstFoldTarget = width >= 992
+        ? (viewportHeight * 0.80).clamp(690.0, 840.0).toDouble()
+        : width >= 768
+        ? (viewportHeight * 0.68).clamp(540.0, 680.0).toDouble()
+        : (viewportHeight * 0.62).clamp(450.0, 620.0).toDouble();
+    final heroHeight = math.max(baseHeroHeight + heroExtra, firstFoldTarget);
 
     return SizedBox(
       height: heroHeight,
@@ -286,6 +302,11 @@ class _HeroBackground extends StatelessWidget {
       child: PwfPublicImage(
         imageUrl: imageUrl,
         fit: BoxFit.cover,
+        // Lower focal point keeps the visual subject inside the taller hero.
+        // UAT showed several DB-managed images still looked pulled upward when
+        // sections above the hero were disabled; a lower focus reveals more of
+        // the lower half while keeping a full-bleed cover without grey bands.
+        alignment: const Alignment(0, 0.36),
         fallbackColor: Colors.black.withValues(alpha: 0.2),
       ),
     );

@@ -7,6 +7,7 @@ import 'package:waqf/features/platform/home/presentation/sections/pwf_home_secti
 // immediately even if the caller doesn't inject a builders map.
 import '../header/pwf_main_nav.dart';
 import '../header/pwf_top_bar.dart';
+import '../../theme/pwf_home_palette.dart';
 
 import '../pwf_important_links_section.dart';
 
@@ -149,13 +150,22 @@ class PwfHomeSectionsRenderer extends StatelessWidget {
     final ordered = _normalize(sections);
     if (ordered.isEmpty) return const SizedBox.shrink();
 
+    final activeKeys = ordered
+        .where((s) => s.isActive)
+        .map((s) => _canonicalKey(s.sectionName))
+        .toSet();
     final seen = <String>{};
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final s in ordered)
-          if (s.isActive) ..._renderOne(context, s, seen),
+          if (s.isActive &&
+              !pwfShouldSuppressHomeSectionForRuntime(
+                key: s.sectionName,
+                activeKeys: activeKeys,
+              ))
+            ..._renderOne(context, s, seen),
       ],
     );
   }
@@ -167,20 +177,26 @@ class PwfHomeSectionsRenderer extends StatelessWidget {
   ) {
     final raw = s.sectionName;
     final key = _canonicalKey(raw);
+    final rendererKey = pwfHomeSectionRendererKey(key);
 
-    if (!_shouldRenderSection(key)) return const <Widget>[];
+    if (!_shouldRenderSection(rendererKey)) return const <Widget>[];
+    if (!pwfHomeSectionIsRuntimeVisible(key)) return const <Widget>[];
 
-    // Deduplicate: if multiple rows exist (e.g., multiple unit_id results
-    // returned by an "all sections" provider), render each key once.
-    if (!seen.add(key)) return const <Widget>[];
+    // Deduplicate: render each effective renderer once. This is stricter than
+    // key-level dedupe and prevents legacy/canonical or split/unified sections
+    // from reaching the public page twice.
+    if (!seen.add(rendererKey)) return const <Widget>[];
 
-    final child = _buildSection(context, key, s);
+    final child = _buildSection(context, rendererKey, s);
 
     // KeyedSubtree helps stabilize element identity across rebuilds.
     return <Widget>[
       KeyedSubtree(
-        key: ValueKey('home_sec_${unitSlug}_$key'),
-        child: RepaintBoundary(child: child),
+        key: ValueKey('home_sec_${unitSlug}_$rendererKey'),
+        child: ColoredBox(
+          color: PwfHomePalette.surface,
+          child: RepaintBoundary(child: child),
+        ),
       ),
     ];
   }
@@ -227,6 +243,11 @@ class PwfHomeSectionsRenderer extends StatelessWidget {
     final settings = Map<String, dynamic>.from(section.settings);
 
     switch (key) {
+      case 'pwf_breaking_news_marquee':
+        return PwfBreakingNewsMarquee(
+          unitSlug: unitSlug,
+          sectionSettings: settings,
+        );
       case 'pwf_news_tabs':
         return PwfNewsTabs(unitSlug: unitSlug, sectionSettings: settings);
       case 'pwf_news':
@@ -265,6 +286,7 @@ class PwfHomeSectionsRenderer extends StatelessWidget {
         return PwfPublicServicesCatalogSection(
           unitSlug: unitSlug,
           sectionSettings: settings,
+          showEmptyState: true,
         );
       case 'pwf_media_center_highlights':
         return PwfMediaCenterHighlightsSection(

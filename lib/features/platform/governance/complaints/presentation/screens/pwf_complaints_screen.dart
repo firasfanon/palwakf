@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:waqf/features/platform/home/presentation/screens/pwf_web_page_scaffold.dart';
+import 'package:waqf/features/platform/home/presentation/screens/pages/pwf_public_content_shared.dart';
 import '../l10n/pwf_complaints_strings.dart';
 import '../providers/pwf_complaints_providers.dart';
-import '../widgets/pwf_complaints_header.dart';
 import '../widgets/pwf_complaints_tab_scaffold.dart';
 import '../widgets/pwf_public_footer_lite.dart';
 import '../widgets/pwf_public_header_lite.dart';
@@ -99,12 +99,7 @@ class _ComplaintsPageBody extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _ComplaintsHero(s: s),
-                  const SizedBox(height: 18),
-                  PwfComplaintsHeader(
-                    title: s.t('complaints.title'),
-                    subtitle: s.t('complaints.subtitle'),
-                  ),
+                  _ComplaintsHero(s: s, unitSlug: unitSlug),
                   const SizedBox(height: 16),
                   DecoratedBox(
                     decoration: BoxDecoration(
@@ -158,108 +153,20 @@ class _ComplaintsPageBody extends ConsumerWidget {
 }
 
 class _ComplaintsHero extends StatelessWidget {
-  const _ComplaintsHero({required this.s});
+  const _ComplaintsHero({required this.s, required this.unitSlug});
 
   final PwfComplaintsStrings s;
+  final String unitSlug;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.centerRight,
-          end: Alignment.centerLeft,
-          colors: [Color(0xFF0B3A6A), Color(0xFF0F4D7D)],
-        ),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFD4AF37).withValues(alpha: 36),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: const Color(0xFFD4AF37).withValues(alpha: 90),
-              ),
-            ),
-            child: const Text(
-              'الواجهة العامة • الشكاوى والمقترحات',
-              style: TextStyle(
-                color: Color(0xFFFFF4CC),
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            s.t('complaints.title'),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              fontWeight: FontWeight.w800,
-              height: 1.25,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'قناة عامة موثوقة لتلقي الشكاوى والمقترحات والاستفسارات، مع تجربة بصرية منسجمة مع هوية وزارة الأوقاف والشؤون الدينية.',
-            style: const TextStyle(
-              color: Color(0xFFE7EEF7),
-              fontSize: 14,
-              height: 1.8,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: const [
-              _HeroChip(icon: Icons.assignment_rounded, text: 'تقديم شكوى'),
-              _HeroChip(icon: Icons.query_stats_rounded, text: 'تتبع الطلب'),
-              _HeroChip(icon: Icons.tips_and_updates_rounded, text: 'مقترحات'),
-              _HeroChip(icon: Icons.help_outline_rounded, text: 'أسئلة شائعة'),
-            ],
-          ),
-        ],
-      ),
+    return PwfPublicIntroCard(
+      title: s.t('complaints.title'),
+      subtitle:
+          'قناة عامة موثوقة لتلقي الشكاوى والمقترحات والاستفسارات، مع تجربة واضحة ومنسجمة مع هوية وزارة الأوقاف والشؤون الدينية.',
+      icon: Icons.assignment_rounded,
+      unitSlug: unitSlug,
     );
   }
 }
 
-class _HeroChip extends StatelessWidget {
-  const _HeroChip({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 22),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 30)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 18),
-          const SizedBox(width: 8),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

@@ -8,6 +8,7 @@ import 'package:waqf/app/routing/unit_routes.dart';
 import 'package:waqf/presentation/providers/unit_dashboard_preview_providers.dart';
 import 'package:waqf/presentation/providers/homepage_settings_provider.dart';
 import 'package:waqf/data/models/news_article.dart';
+import 'package:waqf/features/platform/public_runtime/presentation/widgets/pwf_public_image_fallback.dart';
 
 import '../../../presentation/theme/pwf_home_palette.dart';
 import '../pwf_section_container.dart';
@@ -54,12 +55,9 @@ class PwfNewsSection extends ConsumerWidget {
     );
     final isHomeScope = unitSlug.trim().toLowerCase() == 'home';
 
-    return Container(
-      width: double.infinity,
-      color: PwfHomePalette.primary.withValues(alpha: 0.05),
-      child: PwfSectionContainer(
-        sectionKey: 'PwfNewsSection',
-        child: Column(
+    return PwfSectionContainer(
+      sectionKey: 'PwfNewsSection',
+      child: Column(
           children: [
             PwfSectionTitle(
               title: isHomeScope ? 'أحدث الأخبار' : 'أخبار الصفحة الحالية',
@@ -90,6 +88,14 @@ class PwfNewsSection extends ConsumerWidget {
                     ? display.homeLimit - 1
                     : 0;
                 final side = items.skip(1).take(sideCount).toList();
+                final complementaryPreview =
+                    complementaryAsync.valueOrNull ?? const <NewsArticle>[];
+                final secondaryMain = isHomeScope && complementaryPreview.isNotEmpty
+                    ? complementaryPreview.first
+                    : null;
+                final complementaryRest = secondaryMain == null
+                    ? complementaryPreview
+                    : complementaryPreview.skip(1).toList(growable: false);
 
                 return Column(
                   children: [
@@ -105,6 +111,13 @@ class PwfNewsSection extends ConsumerWidget {
                                     unitSlug: unitSlug,
                                     article: main,
                                   ),
+                                  if (secondaryMain != null) ...[
+                                    const SizedBox(height: 18),
+                                    _SecondaryMainNewsCard(
+                                      unitSlug: unitSlug,
+                                      article: secondaryMain,
+                                    ),
+                                  ],
                                   const SizedBox(height: 20),
                                   for (final a in side) ...[
                                     _SideNewsCard(
@@ -120,9 +133,20 @@ class PwfNewsSection extends ConsumerWidget {
                                 children: [
                                   Expanded(
                                     flex: 2,
-                                    child: _MainNewsCard(
-                                      unitSlug: unitSlug,
-                                      article: main,
+                                    child: Column(
+                                      children: [
+                                        _MainNewsCard(
+                                          unitSlug: unitSlug,
+                                          article: main,
+                                        ),
+                                        if (secondaryMain != null) ...[
+                                          const SizedBox(height: 20),
+                                          _SecondaryMainNewsCard(
+                                            unitSlug: unitSlug,
+                                            article: secondaryMain,
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ),
                                   const SizedBox(width: 30),
@@ -144,19 +168,12 @@ class PwfNewsSection extends ConsumerWidget {
                       },
                     ),
                     const SizedBox(height: 24),
-                    complementaryAsync.when(
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
-                      data: (complementary) {
-                        if (complementary.isEmpty)
-                          return const SizedBox.shrink();
-                        return _ComplementaryNewsStrip(
-                          unitSlug: unitSlug,
-                          isHomeScope: isHomeScope,
-                          items: complementary,
-                        );
-                      },
-                    ),
+                    if (complementaryRest.isNotEmpty)
+                      _ComplementaryNewsStrip(
+                        unitSlug: unitSlug,
+                        isHomeScope: isHomeScope,
+                        items: complementaryRest,
+                      ),
                     if (display.showViewAll) ...[
                       const SizedBox(height: 30),
                       _ViewAllButton(
@@ -169,8 +186,7 @@ class PwfNewsSection extends ConsumerWidget {
                 );
               },
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -234,7 +250,7 @@ class _MainNewsCard extends StatelessWidget {
                     ? Container(
                         color: PwfHomePalette.primary.withValues(alpha: 0.12),
                       )
-                    : Image.network(img, fit: BoxFit.cover),
+                    : PwfPublicImage(imageUrl: img, fit: BoxFit.cover),
               ),
               Padding(
                 padding: const EdgeInsets.all(25),
@@ -276,6 +292,147 @@ class _MainNewsCard extends StatelessWidget {
   }
 }
 
+class _SecondaryMainNewsCard extends StatelessWidget {
+  const _SecondaryMainNewsCard({required this.unitSlug, required this.article});
+
+  final String unitSlug;
+  final NewsArticle article;
+
+  @override
+  Widget build(BuildContext context) {
+    final published = article.publishedAt ?? article.createdAt;
+    final img = article.imageUrl;
+
+    return PwfHoverable(
+      onTap: () => context.go(UnitRoutes.newsDetail(unitSlug, article.id)),
+      hoverTranslate: const Offset(0, -4),
+      borderRadius: PwfHomeRadii.br16,
+      child: ClipRRect(
+        borderRadius: PwfHomeRadii.br16,
+        child: Container(
+          decoration: BoxDecoration(
+            color: PwfHomePalette.cardBg,
+            border: Border.all(
+              color: PwfHomePalette.secondary.withValues(alpha: 0.18),
+            ),
+            borderRadius: PwfHomeRadii.br16,
+          ),
+          child: LayoutBuilder(
+            builder: (context, c) {
+              final wide = c.maxWidth >= 560;
+              final media = ClipRRect(
+                borderRadius: wide
+                    ? const BorderRadiusDirectional.horizontal(
+                        start: Radius.circular(16),
+                      )
+                    : const BorderRadius.vertical(top: Radius.circular(16)),
+                child: SizedBox(
+                  width: wide ? 190 : double.infinity,
+                  height: wide ? 156 : 150,
+                  child: img == null || img.isEmpty
+                      ? const _NewsThumbnailFallback(
+                          icon: Icons.account_tree_outlined,
+                        )
+                      : PwfPublicImage(imageUrl: img, fit: BoxFit.cover),
+                ),
+              );
+              final content = Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: _SecondaryMainNewsContent(
+                    article: article,
+                    published: published,
+                  ),
+                ),
+              );
+
+              if (!wide) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    media,
+                    Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: _SecondaryMainNewsContent(
+                        article: article,
+                        published: published,
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [media, content],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondaryMainNewsContent extends StatelessWidget {
+  const _SecondaryMainNewsContent({
+    required this.article,
+    required this.published,
+  });
+
+  final NewsArticle article;
+  final DateTime published;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: PwfHomePalette.secondary.withValues(alpha: 0.12),
+            borderRadius: PwfHomeRadii.br30,
+          ),
+          child: Text(
+            'خبر رئيسي من وحدة فرعية',
+            style: GoogleFonts.cairo(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: PwfHomePalette.secondary,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          article.title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.cairo(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: PwfHomePalette.primary,
+            height: 1.35,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          article.excerpt,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.cairo(
+            fontSize: 12.5,
+            color: PwfHomePalette.gray,
+            height: 1.6,
+          ),
+        ),
+        const SizedBox(height: 10),
+        _MetaRow(date: published, views: article.viewCount),
+      ],
+    );
+  }
+}
+
 class _SideNewsCard extends StatelessWidget {
   const _SideNewsCard({required this.unitSlug, required this.article});
   final String unitSlug;
@@ -284,52 +441,107 @@ class _SideNewsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final published = article.publishedAt ?? article.createdAt;
+    final img = article.imageUrl;
 
     return PwfHoverable(
       onTap: () => context.go(UnitRoutes.newsDetail(unitSlug, article.id)),
-      hoverTranslate: const Offset(-5, 0), // matches HTML translateX(-5px)
+      hoverTranslate: const Offset(-5, 0),
       borderRadius: PwfHomeRadii.br16,
       child: ClipRRect(
         borderRadius: PwfHomeRadii.br16,
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: PwfHomePalette.cardBg,
             borderRadius: PwfHomeRadii.br16,
+            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
           ),
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                article.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.cairo(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: PwfHomePalette.primary,
-                  height: 1.3,
+              _NewsThumbnail(imageUrl: img),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      article.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: PwfHomePalette.primary,
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      article.excerpt,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.cairo(
+                        fontSize: 12.5,
+                        color: PwfHomePalette.gray,
+                        height: 1.55,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _MetaRow(date: published, views: article.viewCount),
+                    const SizedBox(height: 4),
+                    _MoreBtn(),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                article.excerpt,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.cairo(
-                  fontSize: 12.5,
-                  color: PwfHomePalette.gray,
-                  height: 1.6,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _MetaRow(date: published, views: article.viewCount),
-              const SizedBox(height: 6),
-              _MoreBtn(),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _NewsThumbnail extends StatelessWidget {
+  const _NewsThumbnail({required this.imageUrl});
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = (imageUrl ?? '').trim();
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: SizedBox(
+        width: 96,
+        height: 86,
+        child: value.isEmpty
+            ? const _NewsThumbnailFallback(icon: Icons.article_outlined)
+            : PwfPublicImage(imageUrl: value, fit: BoxFit.cover),
+      ),
+    );
+  }
+}
+
+class _NewsThumbnailFallback extends StatelessWidget {
+  const _NewsThumbnailFallback({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            PwfHomePalette.primary.withValues(alpha: 0.14),
+            PwfHomePalette.secondary.withValues(alpha: 0.10),
+          ],
+        ),
+      ),
+      child: Icon(icon, color: PwfHomePalette.primary.withValues(alpha: 0.75)),
     );
   }
 }
@@ -500,6 +712,22 @@ class _ComplementaryNewsStrip extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: SizedBox(
+                              height: 104,
+                              width: double.infinity,
+                              child: (item.imageUrl ?? '').trim().isEmpty
+                                  ? const _NewsThumbnailFallback(
+                                      icon: Icons.account_tree_outlined,
+                                    )
+                                  : PwfPublicImage(
+                                      imageUrl: item.imageUrl,
+                                      fit: BoxFit.cover,
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
                           Text(
                             item.title,
                             maxLines: 2,

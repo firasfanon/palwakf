@@ -12,6 +12,8 @@ import '../../providers/pwf_ui_prefs_provider.dart';
 import '../../theme/pwf_theme_tokens.dart';
 import '../pwf_web_page_scaffold.dart';
 import '../../widgets/pwf_section_container.dart';
+import '../../widgets/shared/pwf_home_visual_contract.dart';
+import '../../theme/pwf_home_palette.dart';
 import '../../widgets/pwf_important_links_section.dart';
 import '../../widgets/sections/pwf_eservices_portal_section.dart';
 import '../../widgets/sections/pwf_quick_services_section.dart';

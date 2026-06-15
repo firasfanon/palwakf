@@ -7,6 +7,7 @@ import '../widgets/header/pwf_header.dart';
 import '../widgets/pwf_islamic_patterns_overlay.dart';
 import '../widgets/pwf_scroll_to_top_button.dart';
 import '../widgets/pwf_theme_controls_overlay.dart';
+import '../theme/pwf_home_palette.dart';
 import '../widgets/sections/pwf_footer_section.dart';
 
 /// Web-only page shell that preserves the new HTML identity.
@@ -43,9 +44,25 @@ class PwfWebPageScaffold extends ConsumerStatefulWidget {
 
 class _PwfWebPageScaffoldState extends ConsumerState<PwfWebPageScaffold> {
   final ScrollController _scroll = ScrollController();
+  bool _showScrollTop = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_handleScrollChanged);
+  }
+
+  void _handleScrollChanged() {
+    if (!_scroll.hasClients || !mounted) return;
+    final threshold = MediaQuery.sizeOf(context).height * 0.55;
+    final next = _scroll.offset > threshold;
+    if (next == _showScrollTop) return;
+    setState(() => _showScrollTop = next);
+  }
 
   @override
   void dispose() {
+    _scroll.removeListener(_handleScrollChanged);
     _scroll.dispose();
     super.dispose();
   }
@@ -84,23 +101,34 @@ class _PwfWebPageScaffoldState extends ConsumerState<PwfWebPageScaffold> {
           const PwfThemeControlsOverlay(),
 
           Positioned(
-            // Keep the button above the footer area (especially on
-            // under-construction where content is short).
+            // Hidden on page load; appears after meaningful scroll so public
+            // subpages do not start with a persistent red FAB covering filters.
             bottom: 110,
             right: 26,
-            child: PwfScrollToTopButton(
-              heroTag: 'pwf_scroll_top_${widget.unitSlug}',
-              backgroundColor: const Color(0xFFB22222),
-              foregroundColor: Colors.white,
-              elevation: 10,
-              onPressed: () {
-                if (!_scroll.hasClients) return;
-                _scroll.animateTo(
-                  0,
-                  duration: const Duration(milliseconds: 450),
-                  curve: Curves.easeOutCubic,
-                );
-              },
+            child: IgnorePointer(
+              ignoring: !_showScrollTop,
+              child: AnimatedOpacity(
+                opacity: _showScrollTop ? 1 : 0,
+                duration: const Duration(milliseconds: 180),
+                child: AnimatedScale(
+                  scale: _showScrollTop ? 1 : 0.86,
+                  duration: const Duration(milliseconds: 180),
+                  child: PwfScrollToTopButton(
+                    heroTag: 'pwf_scroll_top_${widget.unitSlug}',
+                    backgroundColor: PwfHomePalette.royalRed,
+                    foregroundColor: Colors.white,
+                    elevation: 10,
+                    onPressed: () {
+                      if (!_scroll.hasClients) return;
+                      _scroll.animateTo(
+                        0,
+                        duration: const Duration(milliseconds: 450),
+                        curve: Curves.easeOutCubic,
+                      );
+                    },
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -156,7 +184,7 @@ class _PwfWebPageScaffoldState extends ConsumerState<PwfWebPageScaffold> {
       child: Scaffold(
         backgroundColor: isDark
             ? const Color(0xFF0B1220)
-            : const Color(0xFFF6F7FB),
+            : PwfHomePalette.surface,
         body: _PwfThemeScope(themeKey: prefs.themeKey, child: body),
       ),
     );

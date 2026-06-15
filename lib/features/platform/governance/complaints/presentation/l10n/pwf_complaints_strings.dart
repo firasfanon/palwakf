@@ -184,7 +184,7 @@ class PwfComplaintsStrings {
     'complaints.dept.general': 'General',
     'complaints.faq.q1': 'How long does it take to respond?',
     'complaints.faq.a1':
-        'Typically within 3–5 business days. Urgent cases may be handled within 24 hours.',
+        'Typically within 3–5 business days. Urgent requests may be handled within 24 hours.',
     'complaints.faq.q2': 'Can I submit anonymously?',
     'complaints.faq.a2':
         'Yes. You can leave the name empty, but providing contact info helps with follow-up.',

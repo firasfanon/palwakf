@@ -122,13 +122,32 @@ class PwfHomepageSectionsManager
   }
 
   void toggleActive(String key, bool value) {
+    final canonicalKey = canonicalPwfHomeSectionKey(key);
+    final nowIso = DateTime.now().toUtc().toIso8601String();
+    final targetFamily = pwfHomeSectionFamilyKey(canonicalKey);
+    final targetMode = pwfHomeSectionFamilyMode(canonicalKey);
+
     final updated = state.draft.map((s) {
-      if (s.sectionName != key) return s;
-      return _copySection(
-        s,
-        isActive: value,
-        updatedAtIso: DateTime.now().toUtc().toIso8601String(),
-      );
+      final sectionKey = canonicalPwfHomeSectionKey(s.sectionName);
+      final sameTarget = sectionKey == canonicalKey;
+      final sameFamily = pwfHomeSectionFamilyKey(sectionKey) == targetFamily;
+
+      if (sameTarget) {
+        return _copySection(s, isActive: value, updatedAtIso: nowIso);
+      }
+
+      // Keep the admin surface in lock-step with runtime duplicate policy:
+      // activating one representative in a preferOne family deactivates its
+      // siblings immediately, so the user never saves a state that the public
+      // renderer will silently suppress later.
+      if (value &&
+          sameFamily &&
+          targetMode == PwfHomeSectionFamilyMode.preferOne &&
+          s.isActive) {
+        return _copySection(s, isActive: false, updatedAtIso: nowIso);
+      }
+
+      return s;
     }).toList();
 
     state = state.copyWith(
@@ -192,7 +211,7 @@ class PwfHomepageSectionsManager
       id: '',
       sectionName: key,
       settings: const <String, dynamic>{},
-      isActive: true,
+      isActive: false,
       displayOrder: state.draft.length,
       createdAtIso: nowIso,
       updatedAtIso: nowIso,
@@ -228,11 +247,16 @@ class PwfHomepageSectionsManager
         throw StateError('تعذر تحديد الوحدة المختارة للحفظ.');
       }
 
-      await _repo.saveSectionsMeta(state.draft, unitId: _currentUnitId);
-      await _repo.deleteSectionsOutsideCatalog(
-        keepSectionNames: state.draft.map((e) => e.sectionName).toSet(),
-        unitId: _currentUnitId,
+      final effectiveDraft = _sortWithPinnedEdges(
+        _enforceSingleActiveSemanticFamilies(state.draft),
       );
+
+      await _repo.saveSectionsMeta(effectiveDraft, unitId: _currentUnitId);
+
+      // Sovereign runtime contract: duplicated/legacy sections are removed from
+      // runtime by the save RPC through deactivation, not physical delete. This
+      // preserves auditability and prevents the admin page from deleting rows
+      // that may belong to another scoped surface.
 
       // Reload from DB to get canonical ordering/values.
       final rows = await _loadSectionsForCurrentUnit();
@@ -288,7 +312,70 @@ class PwfHomepageSectionsManager
       );
     }
 
-    return byKey.values.toList(growable: false);
+    return _enforceSingleActiveSemanticFamilies(
+      byKey.values.toList(growable: false),
+    );
+  }
+
+  List<HomepageSection> _enforceSingleActiveSemanticFamilies(
+    List<HomepageSection> sections,
+  ) {
+    final activeByFamily = <String, HomepageSection>{};
+
+    for (final section in sections) {
+      if (!section.isActive) continue;
+      final key = canonicalPwfHomeSectionKey(section.sectionName);
+      final mode = pwfHomeSectionFamilyMode(key);
+      if (mode != PwfHomeSectionFamilyMode.preferOne) continue;
+
+      final family = pwfHomeSectionFamilyKey(key);
+      final previous = activeByFamily[family];
+      if (previous == null || _shouldPreferSemanticRepresentative(previous, section)) {
+        activeByFamily[family] = section;
+      }
+    }
+
+    if (activeByFamily.isEmpty) return sections;
+
+    final nowIso = DateTime.now().toUtc().toIso8601String();
+    return sections.map((section) {
+      if (!section.isActive) return section;
+
+      final key = canonicalPwfHomeSectionKey(section.sectionName);
+      final mode = pwfHomeSectionFamilyMode(key);
+      if (mode != PwfHomeSectionFamilyMode.preferOne) return section;
+
+      final family = pwfHomeSectionFamilyKey(key);
+      final representative = activeByFamily[family];
+      if (representative == null) return section;
+
+      final representativeKey = canonicalPwfHomeSectionKey(
+        representative.sectionName,
+      );
+      if (representativeKey == key) return section;
+
+      return _copySection(section, isActive: false, updatedAtIso: nowIso);
+    }).toList(growable: false);
+  }
+
+  bool _shouldPreferSemanticRepresentative(
+    HomepageSection current,
+    HomepageSection candidate,
+  ) {
+    final currentPriority = pwfHomeSectionFamilyPriority(current.sectionName);
+    final candidatePriority = pwfHomeSectionFamilyPriority(candidate.sectionName);
+    if (candidatePriority != currentPriority) {
+      return candidatePriority < currentPriority;
+    }
+
+    final currentOrder = current.displayOrder == 0 ? 999999 : current.displayOrder;
+    final candidateOrder = candidate.displayOrder == 0 ? 999999 : candidate.displayOrder;
+    if (candidateOrder != currentOrder) return candidateOrder < currentOrder;
+
+    return canonicalPwfHomeSectionKey(candidate.sectionName).compareTo(
+          canonicalPwfHomeSectionKey(current.sectionName),
+        ) <
+        0;
   }
 
   bool _defaultActiveForMissingCatalogKey(PwfHomeSectionDef def) {
@@ -418,7 +505,7 @@ class PwfHomepageSectionsManager
           : await _orgUnitsRepo.fetchUnitIdBySlug(normalizedSlug);
 
       if (_currentUnitId != null && _currentUnitId!.isNotEmpty) {
-        return _repo.fetchAllSectionsForUnit(
+        return _repo.fetchAllSectionsForAdminUnit(
           unitId: _currentUnitId!,
           homeUnitId: _homeUnitId,
         );
@@ -430,6 +517,6 @@ class PwfHomepageSectionsManager
       );
     }
 
-    return _repo.fetchAllSections();
+    return _repo.fetchAllSectionsForAdmin();
   }
 }

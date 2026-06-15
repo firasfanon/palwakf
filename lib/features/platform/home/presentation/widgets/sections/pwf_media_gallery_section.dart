@@ -6,10 +6,8 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:waqf/app/routing/unit_routes.dart';
-import 'package:waqf/data/models/activity.dart';
 import 'package:waqf/data/models/media_gallery_item.dart';
 import 'package:waqf/presentation/providers/media_gallery_provider.dart';
-import 'package:waqf/presentation/providers/unit_dashboard_preview_providers.dart';
 import 'package:waqf/presentation/providers/homepage_settings_provider.dart';
 import 'package:waqf/features/platform/public_runtime/presentation/widgets/pwf_public_image_fallback.dart';
 
@@ -20,9 +18,10 @@ import 'pwf_content_display_settings.dart';
 
 /// HTML-exact: "معرض الصور والفيديوهات" section.
 ///
-/// - Tabs: Photos / Videos / Events
+/// - Tabs: Photos / Videos.
 /// - Photos/Videos are DB-driven via `media_gallery_items` (unit-scoped).
-/// - Events tab reuses upcoming activities preview as a best-effort match.
+/// - Events/activities are intentionally handled by `PwfActivitiesSection` to
+///   avoid rendering the same semantic content twice on the homepage.
 class PwfMediaGallerySection extends ConsumerStatefulWidget {
   const PwfMediaGallerySection({
     super.key,
@@ -33,7 +32,7 @@ class PwfMediaGallerySection extends ConsumerStatefulWidget {
 
   final String unitSlug;
 
-  /// 0: photos, 1: videos, 2: events.
+  /// 0: photos, 1: videos.
   final int initialTab;
   final Map<String, dynamic>? sectionSettings;
 
@@ -52,8 +51,6 @@ class _PwfMediaGallerySectionState
     final idx = widget.initialTab;
     if (idx == 1) {
       _tab = _GalleryTab.videos;
-    } else if (idx == 2) {
-      _tab = _GalleryTab.events;
     } else {
       _tab = _GalleryTab.photos;
     }
@@ -83,22 +80,12 @@ class _PwfMediaGallerySectionState
       defaultHomeLimit: 4,
     );
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 40),
-      padding: const EdgeInsets.symmetric(vertical: 40),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            PwfHomePalette.primary.withValues(alpha: 0.05),
-            PwfHomePalette.secondary.withValues(alpha: 0.05),
-          ],
-        ),
-      ),
-      child: PwfSectionContainer(
-        sectionKey: 'PwfMediaGallerySection',
-        child: Column(
+    return PwfSectionContainer(
+      sectionKey: 'PwfMediaGallerySection',
+      // The gallery is part of the continuous homepage canvas. Do not wrap it
+      // in an external gradient/margin because hidden neighboring sections make
+      // that wrapper appear as a grey/foreign band above or below the gallery.
+      child: Column(
           children: [
             const PwfSectionTitle(
               title: 'معرض الصور والفيديوهات',
@@ -124,11 +111,6 @@ class _PwfMediaGallerySectionState
                   limit: display.homeLimit,
                   key: const ValueKey('videos'),
                 ),
-                _GalleryTab.events => _EventsGrid(
-                  unitSlug: widget.unitSlug,
-                  limit: display.homeLimit,
-                  key: const ValueKey('events'),
-                ),
               },
             ),
             if (display.showViewAll) ...[
@@ -143,12 +125,11 @@ class _PwfMediaGallerySectionState
             ],
           ],
         ),
-      ),
     );
   }
 }
 
-enum _GalleryTab { photos, videos, events }
+enum _GalleryTab { photos, videos }
 
 class _GalleryTabs extends StatelessWidget {
   const _GalleryTabs({required this.active, required this.onChanged});
@@ -178,11 +159,6 @@ class _GalleryTabs extends StatelessWidget {
             label: 'الفيديوهات',
             active: active == _GalleryTab.videos,
             onTap: () => onChanged(_GalleryTab.videos),
-          ),
-          _TabBtn(
-            label: 'الفعاليات',
-            active: active == _GalleryTab.events,
-            onTap: () => onChanged(_GalleryTab.events),
           ),
         ],
       ),
@@ -398,39 +374,6 @@ int _compareMediaItems(MediaGalleryItem a, MediaGalleryItem b) {
   }
 
   return a.title.compareTo(b.title);
-}
-
-class _EventsGrid extends ConsumerWidget {
-  const _EventsGrid({super.key, required this.unitSlug, required this.limit});
-
-  final String unitSlug;
-  final int limit;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final asyncEvents = ref.watch(
-      unitUpcomingActivitiesPreviewProvider(
-        UnitPreviewParams(unitSlug: unitSlug, limit: limit),
-      ),
-    );
-
-    final items = asyncEvents.maybeWhen(
-      data: (v) => v,
-      orElse: () => const <Activity>[],
-    );
-
-    final cards = items.isNotEmpty
-        ? items
-              .take(limit)
-              .map<_GalleryCardData>((a) => _GalleryCardData.fromActivity(a))
-              .toList(growable: false)
-        : _demoEvents;
-
-    return _GalleryGrid(
-      cards: cards,
-      onTap: (_) => context.go(UnitRoutes.activities(unitSlug)),
-    );
-  }
 }
 
 class _GalleryGrid extends StatelessWidget {
@@ -1048,18 +991,6 @@ class _GalleryCardData {
     );
   }
 
-  static _GalleryCardData fromActivity(Activity a) {
-    return _GalleryCardData(
-      title: a.title,
-      description: a.description,
-      imageUrl: (a.imageUrl ?? '').trim().isEmpty
-          ? _fallbackImage
-          : a.imageUrl!,
-      metaLeft: _fmtDate(a.startDate),
-      metaRight: _activityTypeAr(a.type),
-      isVideo: false,
-    );
-  }
 }
 
 String _fmtDate(DateTime d) {
@@ -1081,26 +1012,6 @@ String _fmtDate(DateTime d) {
   return '${d.day} ${months[d.month] ?? ''} ${d.year}';
 }
 
-String _activityTypeAr(ActivityType t) {
-  switch (t) {
-    case ActivityType.conference:
-      return 'مؤتمرات';
-    case ActivityType.exhibition:
-      return 'معارض';
-    case ActivityType.ceremony:
-      return 'تكريم';
-    case ActivityType.seminar:
-      return 'ندوات';
-    case ActivityType.workshop:
-      return 'ورش عمل';
-    case ActivityType.course:
-      return 'دورات';
-    case ActivityType.competition:
-      return 'مسابقات';
-    case ActivityType.lecture:
-      return 'محاضرات';
-  }
-}
 
 const String _fallbackImage = 'assets/images/hero_banner.png';
 

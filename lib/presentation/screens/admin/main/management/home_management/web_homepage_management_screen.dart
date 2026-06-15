@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../../../app/routing/app_routes.dart';
 import '../../../../../../app/rbac/system_key.dart';
 import '../../../../../../features/platform/home/presentation/widgets/sections/pwf_home_sections_renderer.dart';
+import '../../../../../../presentation/providers/homepage_settings_provider.dart';
 import 'pwf_dynamic_page_governance_registry.dart';
 import 'pwf_home_management_sections.dart';
 import 'pwf_homepage_sections_manager.dart';
@@ -209,7 +210,34 @@ class _WebHomepageManagementScreenState
             const SizedBox(width: 8),
             FilledButton.icon(
               onPressed: (!state.isLoading && state.isDirty && !state.isSaving)
-                  ? manager.save
+                  ? () async {
+                      await manager.save();
+                      if (!context.mounted) return;
+
+                      final latest = ref.read(
+                        pwfHomepageSectionsManagerProvider,
+                      );
+                      if (latest.error == null) {
+                        ref.invalidate(homepageSectionsForUnitProvider('home'));
+                        ref.invalidate(allHomepageSectionsProvider);
+                        final slug = latest.unitSlug.trim().isEmpty
+                            ? 'home'
+                            : latest.unitSlug.trim().toLowerCase();
+                        ref.invalidate(homepageSectionsForUnitProvider(slug));
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              slug == 'home'
+                                  ? 'تم حفظ تغييرات الصفحة الرئيسية. افتح /home للتحقق من الظهور الفعلي.'
+                                  : 'تم حفظ تغييرات صفحة الوحدة $slug. افتح الصفحة العامة للتحقق من الظهور الفعلي.',
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 4),
+                          ),
+                        );
+                      }
+                    }
                   : null,
               icon: state.isSaving
                   ? const SizedBox(
@@ -1133,6 +1161,7 @@ class _WebHomepageManagementScreenState
     }
 
     final availableToAdd = kPwfHomeSections
+        .where((d) => d.adminVisible)
         .where((d) => !state.draft.any((s) => s.sectionName == d.key))
         .toList();
 
@@ -1169,13 +1198,15 @@ class _WebHomepageManagementScreenState
             const SizedBox(height: 8),
             Text(
               scopeSlug == null || scopeSlug == 'home'
-                  ? 'إعادة تنظيم الصفحة حسب الفئات المرجعية: بنية عامة، محتوى، وسائط وخدمات. يمكنك إعادة ترتيب العناصر القابلة للسحب فقط.'
-                  : 'يمكنك إعادة ترتيب أقسام السطح المحدد ومعاينة النتيجة فورًا قبل الحفظ. العناصر المثبتة تبقى في مواضعها السيادية.',
+                  ? 'إدارة الصفحة أصبحت محكومة بعقد تشغيل سيادي: كل قسم له عائلة ومصدر وRenderer واحد. عند وجود تكرار داخل العائلة يُزال التكرار تشغيليًا ويُبقى ممثل واحد فقط.'
+                  : 'يمكنك إعادة ترتيب أقسام السطح المحدد ومعاينة النتيجة فورًا قبل الحفظ. العناصر المثبتة تبقى في مواضعها السيادية، والعائلات الدلالية تمنع التكرار.' ,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.black54,
                 height: 1.4,
               ),
             ),
+            const SizedBox(height: 12),
+            _buildSemanticPolicyNotice(context, state.draft),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -1219,11 +1250,26 @@ class _WebHomepageManagementScreenState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text('${def?.titleEn ?? ''} • $family'),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${pwfHomeSectionOwnerAr(s.sectionName)} • ${pwfHomeSectionSourceKindLabelAr(s.sectionName)}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF475569),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          pwfHomeSectionContractNoteAr(s.sectionName),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF64748B),
+                            height: 1.35,
+                          ),
+                        ),
                         const SizedBox(height: 6),
                         Wrap(
                           spacing: 6,
                           runSpacing: 6,
-                          children: _sectionVisibilityChips(s),
+                          children: _sectionVisibilityChips(s, state.draft),
                         ),
                       ],
                     ),
@@ -1531,10 +1577,93 @@ class _WebHomepageManagementScreenState
     return map;
   }
 
-  List<Widget> _sectionVisibilityChips(dynamic section) {
+  Widget _buildSemanticPolicyNotice(
+    BuildContext context,
+    List<dynamic> sections,
+  ) {
+    final activeByFamily = <String, List<String>>{};
+    for (final s in sections) {
+      if (s.isActive != true) continue;
+      final key = canonicalPwfHomeSectionKey(s.sectionName.toString());
+      final family = pwfHomeSectionFamilyKey(key);
+      final mode = pwfHomeSectionFamilyMode(key);
+      if (mode == PwfHomeSectionFamilyMode.allowMany) continue;
+      activeByFamily.putIfAbsent(family, () => <String>[]).add(key);
+    }
+
+    final overlaps = activeByFamily.entries
+        .where((entry) => entry.value.toSet().length > 1)
+        .toList(growable: false);
+
+    if (overlaps.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE8F5E9),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF2E7D32).withValues(alpha: .18)),
+        ),
+        child: const Text(
+          'لا توجد تداخلات دلالية نشطة ضمن العائلات التي يعالجها التشغيل تلقائيًا.',
+          style: TextStyle(
+            color: Color(0xFF1B5E20),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFF8F00).withValues(alpha: .24)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'تنبيه ضبط سيادي: توجد أقسام نشطة داخل نفس العائلة. عند الحفظ ستُزال حالة التكرار تشغيليًا ويبقى ممثل واحد ضمن عائلته الخاصة.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF7A4B00),
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final entry in overlaps)
+                pwfBuildMiniChip(
+                  label:
+                      '${kPwfHomeSectionFamilyLabelsAr[entry.key] ?? entry.key}: ${entry.value.toSet().join(' / ')}',
+                  color: const Color(0xFFFF8F00),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _sectionVisibilityChips(
+    dynamic section,
+    List<dynamic> allSections,
+  ) {
     final key = section.sectionName.toString();
     final isActive = section.isActive == true;
     final displayOrder = section.displayOrder;
+    final activeKeys = allSections
+        .where((s) => s.isActive == true)
+        .map((s) => s.sectionName.toString())
+        .toSet();
+    final willBeSuppressed = isActive &&
+        pwfShouldSuppressHomeSectionForRuntime(
+          key: key,
+          activeKeys: activeKeys,
+        );
     final chips = <Widget>[
       pwfBuildMiniChip(
         label: isActive ? 'ظاهر من DB' : 'مخفي من DB',
@@ -1544,6 +1673,25 @@ class _WebHomepageManagementScreenState
         label: 'ترتيب $displayOrder',
         color: const Color(0xFF1565C0),
       ),
+      pwfBuildMiniChip(
+        label: pwfHomeSectionFamilyModeLabelAr(key),
+        color: const Color(0xFF6A1B9A),
+      ),
+      pwfBuildMiniChip(
+        label: pwfHomeSectionSourceKindLabelAr(key),
+        color: const Color(0xFF0F766E),
+      ),
+      pwfBuildMiniChip(
+        label: pwfHomeSectionCanRenderEmptyState(key)
+            ? 'يعرض حالة فارغة'
+            : 'لا يعرض فراغًا',
+        color: const Color(0xFF475569),
+      ),
+      if (willBeSuppressed)
+        pwfBuildMiniChip(
+          label: 'مخفى تشغيليًا بسبب عائلة مكررة',
+          color: const Color(0xFFFF8F00),
+        ),
     ];
 
     if (key == 'pwf_public_services_catalog') {
@@ -1566,32 +1714,7 @@ class _WebHomepageManagementScreenState
     return chips;
   }
 
-  String _sectionFamilyLabel(String key) {
-    if (key == 'pwf_top_bar' || key == 'pwf_main_nav' || key == 'pwf_footer') {
-      return 'البنية / القالب العام';
-    }
-    if (key.contains('hero') ||
-        key.contains('breaking') ||
-        key.contains('minister')) {
-      return 'الهوية والسيادة';
-    }
-    if (key.contains('news') ||
-        key.contains('announcements') ||
-        key.contains('activities') ||
-        key.contains('sermons')) {
-      return 'المحتوى العام';
-    }
-    if (key.contains('media')) {
-      return 'الوسائط';
-    }
-    if (key.contains('links') ||
-        key.contains('services') ||
-        key.contains('prayer') ||
-        key.contains('map')) {
-      return 'الخدمات والربط';
-    }
-    return 'أقسام أخرى';
-  }
+  String _sectionFamilyLabel(String key) => pwfHomeSectionFamilyLabelAr(key);
 
   Widget pwfBuildMiniChip({required String label, required Color color}) {
     return Container(

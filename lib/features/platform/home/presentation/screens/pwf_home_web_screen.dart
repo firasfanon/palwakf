@@ -6,6 +6,7 @@ import '../widgets/pwf_theme_controls_overlay.dart';
 import '../widgets/pwf_scroll_to_top_button.dart';
 import '../widgets/header/pwf_header.dart';
 import '../providers/pwf_ui_prefs_provider.dart';
+import '../theme/pwf_home_palette.dart';
 
 import '../widgets/sections/pwf_home_sections_renderer.dart';
 import '../widgets/sections/pwf_login_modal.dart';
@@ -23,6 +24,7 @@ class PwfHomeWebScreen extends ConsumerStatefulWidget {
 
 class _PwfHomeWebScreenState extends ConsumerState<PwfHomeWebScreen> {
   final ScrollController _scroll = ScrollController();
+  bool _showScrollToTop = false;
 
   // Web-first-paint stabilization: force a safe rebuild once when sections
   // become available, matching the effect of manually re-navigating to /home.
@@ -31,9 +33,24 @@ class _PwfHomeWebScreenState extends ConsumerState<PwfHomeWebScreen> {
   bool _stabilizePending = false;
 
   @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_updateScrollToTopVisibility);
+  }
+
+  @override
   void dispose() {
+    _scroll.removeListener(_updateScrollToTopVisibility);
     _scroll.dispose();
     super.dispose();
+  }
+
+  void _updateScrollToTopVisibility() {
+    if (!_scroll.hasClients) return;
+    final threshold = (_scroll.position.viewportDimension * 0.5).clamp(240.0, 520.0);
+    final shouldShow = _scroll.offset > threshold;
+    if (shouldShow == _showScrollToTop) return;
+    setState(() => _showScrollToTop = shouldShow);
   }
 
   void _scrollToTop() {
@@ -95,7 +112,7 @@ class _PwfHomeWebScreenState extends ConsumerState<PwfHomeWebScreen> {
               ? const Color(0xFFF6F0DF)
               : (prefs.themeKey == PwfThemeKey.dark
                     ? const Color(0xFF0B1220)
-                    : const Color(0xFFF6F7FB)),
+                    : PwfHomePalette.surface),
           body: Stack(
             children: [
               Positioned.fill(
@@ -183,12 +200,24 @@ class _PwfHomeWebScreenState extends ConsumerState<PwfHomeWebScreen> {
               Positioned(
                 bottom: 110,
                 right: 26,
-                child: PwfScrollToTopButton(
-                  heroTag: 'pwf_scroll_top_${widget.unitSlug}',
-                  backgroundColor: const Color(0xFFB22222),
-                  foregroundColor: Colors.white,
-                  elevation: 10,
-                  onPressed: _scrollToTop,
+                child: AnimatedScale(
+                  scale: _showScrollToTop ? 1 : 0.82,
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  child: AnimatedOpacity(
+                    opacity: _showScrollToTop ? 1 : 0,
+                    duration: const Duration(milliseconds: 180),
+                    child: IgnorePointer(
+                      ignoring: !_showScrollToTop,
+                      child: PwfScrollToTopButton(
+                        heroTag: 'pwf_scroll_top_${widget.unitSlug}',
+                        backgroundColor: const Color(0xFFB22222),
+                        foregroundColor: Colors.white,
+                        elevation: 10,
+                        onPressed: _scrollToTop,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],

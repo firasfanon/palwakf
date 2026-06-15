@@ -19,6 +19,10 @@ class HomepageRepository {
       'v_platform_homepage_sections_compat_v1';
   static const String _sectionsLegacyWriteTable = 'homepage_sections';
   static const String sectionsTable = _sectionsLegacyWriteTable;
+  static const String _sectionsAdminStateRpc =
+      'rpc_homepage_sections_admin_state_v1';
+  static const String _sectionsRuntimeRpc = 'rpc_homepage_sections_runtime_v1';
+  static const String _sectionsSaveRpc = 'rpc_homepage_sections_save_state_v1';
   static const String _siteSettingsReadSurface =
       'v_platform_site_settings_compat_v1';
   static const String _siteSettingsLegacyWriteTable = 'site_settings';
@@ -47,6 +51,19 @@ class HomepageRepository {
     'sanctities_observatory': 'pwf_sanctities_observatory_section',
     'legal_references': 'pwf_legal_references_section',
     'events': 'pwf_events_section',
+    'events_section': 'pwf_events_section',
+    'home_events': 'pwf_events_section',
+    'activities': 'pwf_activities',
+    'activity': 'pwf_activities',
+    'home_activities': 'pwf_activities',
+    'gallery': 'pwf_media_gallery',
+    'media_gallery': 'pwf_media_gallery',
+    'photo_gallery': 'pwf_media_gallery_images',
+    'photos_gallery': 'pwf_media_gallery_images',
+    'image_gallery': 'pwf_media_gallery_images',
+    'images_gallery': 'pwf_media_gallery_images',
+    'video_gallery': 'pwf_media_gallery_videos',
+    'videos_gallery': 'pwf_media_gallery_videos',
     'pwf_services_catalog': 'pwf_public_services_catalog',
     'news': 'pwf_news_tabs',
     'top_bar': 'pwf_top_bar',
@@ -71,17 +88,65 @@ class HomepageRepository {
     return row.copyWith(sectionName: canonical);
   }
 
+  static int _sectionScopeRank(
+    HomepageSection row, {
+    required String unitId,
+    required String globalUnitId,
+    String? homeUnitId,
+  }) {
+    final raw = row.unitId?.trim();
+    final normalizedUnitId = unitId.trim();
+    final normalizedHomeUnitId = homeUnitId?.trim();
+
+    // The admin surface `/admin/home-management` writes scoped rows. Runtime
+    // must therefore let the most specific scoped row win even when older
+    // fallback/global rows are still active. Otherwise hiding or reordering a
+    // section in the admin screen can be defeated by a global/home fallback row.
+    if (raw != null && raw.isNotEmpty) {
+      if (normalizedUnitId.isNotEmpty && raw == normalizedUnitId) return 40;
+      if (normalizedHomeUnitId != null &&
+          normalizedHomeUnitId.isNotEmpty &&
+          raw == normalizedHomeUnitId) {
+        return 30;
+      }
+      if (raw == globalUnitId) return 20;
+      return 0;
+    }
+
+    // Old unscoped public rows are the weakest fallback.
+    return 10;
+  }
+
   static bool _shouldPreferSectionRow(
     HomepageSection current,
-    HomepageSection candidate,
-  ) {
+    HomepageSection candidate, {
+    required String unitId,
+    required String globalUnitId,
+    String? homeUnitId,
+  }) {
+    final currentRank = _sectionScopeRank(
+      current,
+      unitId: unitId,
+      homeUnitId: homeUnitId,
+      globalUnitId: globalUnitId,
+    );
+    final candidateRank = _sectionScopeRank(
+      candidate,
+      unitId: unitId,
+      homeUnitId: homeUnitId,
+      globalUnitId: globalUnitId,
+    );
+    if (candidateRank != currentRank) return candidateRank > currentRank;
+
     final currentCanonical = current.sectionName ==
         _canonicalSectionKey(current.sectionName);
     final candidateCanonical = candidate.sectionName ==
         _canonicalSectionKey(candidate.sectionName);
     if (candidateCanonical != currentCanonical) return candidateCanonical;
 
-    if (candidate.isActive != current.isActive) return candidate.isActive;
+    // Do NOT prefer active rows here. Active/inactive is exactly what the admin
+    // manager controls; scope specificity above must decide which row owns the
+    // visible state.
 
     final currentOrder = current.displayOrder == 0
         ? 999999
@@ -479,12 +544,250 @@ class HomepageRepository {
     return out;
   }
 
+  List<HomepageSection> _parseHomepageSectionRows(
+    List<dynamic> rows, {
+    required String logPrefix,
+  }) {
+    // Admin and runtime reads share the same sanitizer. The admin read uses the
+    // preserved write table so hidden/scoped rows are still visible to the
+    // management screen after save. Runtime reads continue through the public
+    // compatibility surface.
+    final nowIso = DateTime.now().toUtc().toIso8601String();
+    final out = <HomepageSection>[];
+    for (final raw in rows) {
+      final m = Map<String, dynamic>.from(raw as Map);
+      m['settings'] ??= const <String, dynamic>{};
+      m['is_active'] ??= true;
+      m['display_order'] ??= 0;
+      m['created_at'] ??= nowIso;
+      m['updated_at'] ??= nowIso;
+      try {
+        out.add(HomepageSection.fromJson(m));
+      } catch (e) {
+        log('Skipping invalid $logPrefix homepage_sections row: $e');
+      }
+    }
+    return out;
+  }
+
+  Future<List<HomepageSection>?> _fetchSectionsViaRpc(
+    String rpcName, {
+    String? unitId,
+    String? homeUnitId,
+    required String logPrefix,
+  }) async {
+    try {
+      final params = <String, dynamic>{
+        'p_unit_id': unitId,
+        'p_home_unit_id': homeUnitId,
+      };
+      final rows = await _client.rpc(rpcName, params: params);
+      if (rows is! List) return const <HomepageSection>[];
+      return _parseHomepageSectionRows(rows, logPrefix: logPrefix);
+    } on PostgrestException catch (e) {
+      // 42883 = undefined_function. Keep the app usable until the sovereign RPC
+      // SQL is applied in the target environment.
+      if (e.code == '42883' || e.code == 'PGRST202' || e.code == 'PGRST204') {
+        log('Homepage RPC $rpcName unavailable, falling back: ${e.message}');
+        return null;
+      }
+      rethrow;
+    } catch (e) {
+      log('Homepage RPC $rpcName failed, falling back: $e');
+      return null;
+    }
+  }
+
+  Future<bool> _saveSectionsViaRpc(
+    List<Map<String, dynamic>> sections, {
+    String? unitId,
+  }) async {
+    try {
+      await _client.rpc(
+        _sectionsSaveRpc,
+        params: <String, dynamic>{
+          'p_unit_id': unitId,
+          'p_sections': sections,
+          'p_prune_duplicates': true,
+        },
+      );
+      return true;
+    } on PostgrestException catch (e) {
+      if (e.code == '42883' || e.code == 'PGRST202' || e.code == 'PGRST204') {
+        log('Homepage save RPC unavailable, falling back: ${e.message}');
+        return false;
+      }
+      rethrow;
+    } catch (e) {
+      log('Homepage save RPC failed, falling back: $e');
+      return false;
+    }
+  }
+
+  Future<List<HomepageSection>> fetchAllSectionsForAdmin() async {
+    final rows = await _client
+        .from(_sectionsLegacyWriteTable)
+        .select(
+          'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
+        )
+        .order('display_order', ascending: true)
+        .order('section_name', ascending: true);
+
+    return _parseHomepageSectionRows(
+      rows as List<dynamic>,
+      logPrefix: 'admin',
+    );
+  }
+
+
+  List<HomepageSection> _mergeAndSortSectionsByScope(
+    List<HomepageSection> rows, {
+    required String unitId,
+    required String globalUnitId,
+    String? homeUnitId,
+  }) {
+    final merged = <String, HomepageSection>{};
+    for (final row in rows) {
+      final canonicalRow = _withCanonicalSectionName(row);
+      final key = canonicalRow.sectionName;
+      final previous = merged[key];
+      if (previous == null ||
+          _shouldPreferSectionRow(
+            previous,
+            canonicalRow,
+            unitId: unitId,
+            homeUnitId: homeUnitId,
+            globalUnitId: globalUnitId,
+          )) {
+        merged[key] = canonicalRow;
+      }
+    }
+
+    final result = merged.values.toList();
+    result.sort((a, b) {
+      final aOrder = a.displayOrder == 0 ? 999999 : a.displayOrder;
+      final bOrder = b.displayOrder == 0 ? 999999 : b.displayOrder;
+      final c = aOrder.compareTo(bOrder);
+      if (c != 0) return c;
+      return a.sectionName.compareTo(b.sectionName);
+    });
+    return result;
+  }
+
+  Future<List<HomepageSection>> fetchAllSectionsForAdminUnit({
+    required String unitId,
+    String? homeUnitId,
+  }) async {
+    try {
+      const globalUnitId = '11111111-1111-1111-1111-111111111111';
+
+      final rpcRows = await _fetchSectionsViaRpc(
+        _sectionsAdminStateRpc,
+        unitId: unitId,
+        homeUnitId: homeUnitId,
+        logPrefix: 'admin rpc',
+      );
+      if (rpcRows != null) {
+        return _mergeAndSortSectionsByScope(
+          rpcRows,
+          unitId: unitId,
+          homeUnitId: homeUnitId,
+          globalUnitId: globalUnitId,
+        );
+      }
+
+      Future<List<HomepageSection>> fetchScoped(String? scopedUnitId) async {
+        final rows = scopedUnitId == null
+            ? await _client
+                  .from(_sectionsLegacyWriteTable)
+                  .select(
+                    'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
+                  )
+                  .isFilter('unit_id', null)
+                  .order('display_order', ascending: true)
+                  .order('section_name', ascending: true)
+            : await _client
+                  .from(_sectionsLegacyWriteTable)
+                  .select(
+                    'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
+                  )
+                  .eq('unit_id', scopedUnitId)
+                  .order('display_order', ascending: true)
+                  .order('section_name', ascending: true);
+
+        return _parseHomepageSectionRows(
+          rows as List<dynamic>,
+          logPrefix: 'admin scoped',
+        );
+      }
+
+      final idsToFetch = <String?>[null, globalUnitId];
+      if (homeUnitId != null &&
+          homeUnitId.isNotEmpty &&
+          homeUnitId != globalUnitId) {
+        idsToFetch.add(homeUnitId);
+      }
+      if (unitId.isNotEmpty && unitId != globalUnitId && unitId != homeUnitId) {
+        idsToFetch.add(unitId);
+      }
+
+      final scopedResults = await Future.wait(idsToFetch.map(fetchScoped));
+
+      final merged = <String, HomepageSection>{};
+      for (final rows in scopedResults) {
+        for (final row in rows) {
+          final canonicalRow = _withCanonicalSectionName(row);
+          final key = canonicalRow.sectionName;
+          final previous = merged[key];
+          if (previous == null ||
+              _shouldPreferSectionRow(
+                previous,
+                canonicalRow,
+                unitId: unitId,
+                homeUnitId: homeUnitId,
+                globalUnitId: globalUnitId,
+              )) {
+            merged[key] = canonicalRow;
+          }
+        }
+      }
+
+      final result = merged.values.toList();
+      result.sort((a, b) {
+        final aOrder = a.displayOrder == 0 ? 999999 : a.displayOrder;
+        final bOrder = b.displayOrder == 0 ? 999999 : b.displayOrder;
+        final c = aOrder.compareTo(bOrder);
+        if (c != 0) return c;
+        return a.sectionName.compareTo(b.sectionName);
+      });
+      return result;
+    } catch (e) {
+      log('Error fetching admin unit-aware homepage sections, falling back: $e');
+      return fetchAllSectionsForAdmin();
+    }
+  }
+
   Future<List<HomepageSection>> fetchAllSectionsForUnit({
     required String unitId,
     String? homeUnitId,
   }) async {
     try {
       const globalUnitId = '11111111-1111-1111-1111-111111111111';
+
+      final rpcRows = await _fetchSectionsViaRpc(
+        _sectionsRuntimeRpc,
+        unitId: unitId,
+        homeUnitId: homeUnitId,
+        logPrefix: 'runtime rpc',
+      );
+      if (rpcRows != null) {
+        return _mergeAndSortSectionsByScope(
+          rpcRows,
+          unitId: unitId,
+          homeUnitId: homeUnitId,
+          globalUnitId: globalUnitId,
+        );
+      }
 
       Future<List<HomepageSection>> fetchScoped(String? scopedUnitId) async {
         final rows = scopedUnitId == null
@@ -535,13 +838,65 @@ class HomepageRepository {
 
       final scopedResults = await Future.wait(idsToFetch.map(fetchScoped));
 
+      // Runtime uses the public compatibility view as the canonical read surface,
+      // but /admin/home-management currently persists to the preserved write table
+      // until owner-write RPCs are approved. Some compatibility views may not
+      // expose newly activated/inactive scoped rows immediately. Overlaying the
+      // admin write-surface rows keeps /home aligned with admin choices while
+      // preserving the compatibility-view base and failing open if RLS/grants deny
+      // direct table reads.
+      try {
+        Future<List<HomepageSection>> fetchAdminOverlayScoped(
+          String? scopedUnitId,
+        ) async {
+          final rows = scopedUnitId == null
+              ? await _client
+                    .from(_sectionsLegacyWriteTable)
+                    .select(
+                      'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
+                    )
+                    .isFilter('unit_id', null)
+                    .order('display_order', ascending: true)
+                    .order('section_name', ascending: true)
+              : await _client
+                    .from(_sectionsLegacyWriteTable)
+                    .select(
+                      'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
+                    )
+                    .eq('unit_id', scopedUnitId)
+                    .order('display_order', ascending: true)
+                    .order('section_name', ascending: true);
+
+          return _parseHomepageSectionRows(
+            rows as List<dynamic>,
+            logPrefix: 'runtime admin overlay',
+          );
+        }
+
+        final overlayResults = await Future.wait(
+          idsToFetch.map(fetchAdminOverlayScoped),
+        );
+        scopedResults.addAll(overlayResults);
+      } catch (e) {
+        log(
+          'Homepage runtime admin-write overlay unavailable; using compatibility view only: $e',
+        );
+      }
+
       final merged = <String, HomepageSection>{};
       for (final rows in scopedResults) {
         for (final row in rows) {
           final canonicalRow = _withCanonicalSectionName(row);
           final key = canonicalRow.sectionName;
           final previous = merged[key];
-          if (previous == null || _shouldPreferSectionRow(previous, canonicalRow)) {
+          if (previous == null ||
+              _shouldPreferSectionRow(
+                previous,
+                canonicalRow,
+                unitId: unitId,
+                homeUnitId: homeUnitId,
+                globalUnitId: globalUnitId,
+              )) {
             merged[key] = canonicalRow;
           }
         }
@@ -559,6 +914,133 @@ class HomepageRepository {
     } catch (e) {
       log('Error fetching unit-aware homepage sections, falling back: $e');
       return fetchAllSections();
+    }
+  }
+
+  Future<Map<String, dynamic>?> _findSectionRowForWrite({
+    required String sectionName,
+    String? unitId,
+    String? preferredId,
+  }) async {
+    final canonical = _canonicalSectionKey(sectionName);
+
+    Future<Map<String, dynamic>?> firstRow(dynamic query) async {
+      final rows = await query;
+      for (final raw in (rows as List<dynamic>)) {
+        return Map<String, dynamic>.from(raw as Map);
+      }
+      return null;
+    }
+
+    // Prefer the canonical write row first. Previous versions could update the
+    // latest legacy alias row while the canonical row stayed inactive, causing
+    // the switch in /admin/home-management to revert after save/reload.
+    final exact = unitId == null
+        ? await firstRow(
+            _client
+                .from(_sectionsLegacyWriteTable)
+                .select('id, section_name, unit_id, updated_at')
+                .eq('section_name', canonical)
+                .isFilter('unit_id', null)
+                .order('updated_at', ascending: false)
+                .limit(1),
+          )
+        : await firstRow(
+            _client
+                .from(_sectionsLegacyWriteTable)
+                .select('id, section_name, unit_id, updated_at')
+                .eq('section_name', canonical)
+                .eq('unit_id', unitId)
+                .order('updated_at', ascending: false)
+                .limit(1),
+          );
+    if (exact != null) return exact;
+
+    final normalizedPreferredId = preferredId?.trim();
+    if (normalizedPreferredId != null && normalizedPreferredId.isNotEmpty) {
+      final byId = await firstRow(
+        _client
+            .from(_sectionsLegacyWriteTable)
+            .select('id, section_name, unit_id, updated_at')
+            .eq('id', normalizedPreferredId)
+            .limit(1),
+      );
+      if (byId != null) return byId;
+    }
+
+    final aliases = <String>{sectionName, canonical};
+    _sectionLegacyAliases.forEach((legacy, mapped) {
+      if (mapped == canonical) aliases.add(legacy);
+    });
+    aliases.removeWhere((e) => e.trim().isEmpty || e == canonical);
+
+    if (aliases.isEmpty) return null;
+
+    return unitId == null
+        ? firstRow(
+            _client
+                .from(_sectionsLegacyWriteTable)
+                .select('id, section_name, unit_id, updated_at')
+                .inFilter('section_name', aliases.toList(growable: false))
+                .isFilter('unit_id', null)
+                .order('updated_at', ascending: false)
+                .limit(1),
+          )
+        : firstRow(
+            _client
+                .from(_sectionsLegacyWriteTable)
+                .select('id, section_name, unit_id, updated_at')
+                .inFilter('section_name', aliases.toList(growable: false))
+                .eq('unit_id', unitId)
+                .order('updated_at', ascending: false)
+                .limit(1),
+          );
+  }
+
+  bool _isUniqueViolation(Object e) {
+    return e is PostgrestException && e.code == '23505';
+  }
+
+  Future<void> _insertOrUpdateSectionForWrite(
+    Map<String, dynamic> payload, {
+    required String sectionName,
+    required String? unitId,
+    String? preferredId,
+  }) async {
+    final writePayload = Map<String, dynamic>.from(payload)..remove('id');
+    final existing = await _findSectionRowForWrite(
+      sectionName: sectionName,
+      unitId: unitId,
+      preferredId: preferredId,
+    );
+    final existingId = (existing?['id'] ?? '').toString();
+    if (existingId.isNotEmpty) {
+      await _client
+          .from(_sectionsLegacyWriteTable)
+          .update(writePayload)
+          .eq('id', existingId);
+      return;
+    }
+
+    try {
+      await _client.from(_sectionsLegacyWriteTable).insert(writePayload);
+    } catch (e) {
+      // The admin screen must remain aligned with public runtime even when the
+      // public compatibility view does not expose an inactive/scoped row that
+      // already exists in the write table. A unique constraint violation means
+      // the row is present; retry as update by write-surface key.
+      if (!_isUniqueViolation(e)) rethrow;
+      final duplicate = await _findSectionRowForWrite(
+        sectionName: sectionName,
+        unitId: unitId,
+        preferredId: preferredId,
+      );
+      final duplicateId = (duplicate?['id'] ?? '').toString();
+      if (duplicateId.isEmpty) rethrow;
+      await _client
+          .from(_sectionsLegacyWriteTable)
+          .update(writePayload)
+          .eq('id', duplicateId);
     }
   }
 
@@ -591,7 +1073,9 @@ class HomepageRepository {
 
   /// Save homepage sections meta (order/active/settings) in one pass.
   ///
-  /// Uses upsert on `section_name` (the stable unique key).
+  /// Uses guarded update-then-insert against the write table so inactive/scoped
+  /// rows hidden from the public compatibility view do not cause duplicate-key
+  /// failures in `/admin/home-management`.
   Future<void> saveSectionsMeta(
     List<HomepageSection> sections, {
     String? unitId,
@@ -604,37 +1088,33 @@ class HomepageRepository {
         ? null
         : unitId!.trim();
 
+    final payloads = <Map<String, dynamic>>[];
     for (final s in sections) {
-      final payload = <String, dynamic>{
-        'section_name': s.sectionName,
+      final canonicalSectionName = _canonicalSectionKey(s.sectionName);
+      payloads.add(<String, dynamic>{
+        'id': s.id,
+        'section_name': canonicalSectionName,
         'settings': s.settings,
         'is_active': s.isActive,
         'display_order': s.displayOrder,
         'updated_at': now,
         'updated_by': userId,
         'unit_id': normalizedUnitId,
-      };
+      });
+    }
 
-      final existing = normalizedUnitId == null
-          ? await _client
-                .from(_sectionsReadSurface)
-                .select('id')
-                .eq('section_name', s.sectionName)
-                .isFilter('unit_id', null)
-                .maybeSingle()
-          : await _client
-                .from(_sectionsReadSurface)
-                .select('id')
-                .eq('section_name', s.sectionName)
-                .eq('unit_id', normalizedUnitId)
-                .maybeSingle();
+    if (await _saveSectionsViaRpc(payloads, unitId: normalizedUnitId)) {
+      return;
+    }
 
-      final existingId = (existing?['id'] ?? '').toString();
-      if (existingId.isNotEmpty) {
-        await _client.from(sectionsTable).update(payload).eq('id', existingId);
-      } else {
-        await _client.from(sectionsTable).insert(payload);
-      }
+    for (final payload in payloads) {
+      final canonicalSectionName = payload['section_name'].toString();
+      await _insertOrUpdateSectionForWrite(
+        payload,
+        sectionName: canonicalSectionName,
+        unitId: normalizedUnitId,
+        preferredId: payload['id']?.toString(),
+      );
     }
   }
 

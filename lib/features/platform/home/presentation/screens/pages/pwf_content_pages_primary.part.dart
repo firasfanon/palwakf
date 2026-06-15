@@ -13,34 +13,48 @@ class PwfAboutWebScreen extends ConsumerWidget {
       pageSlug: 'about',
       title: isAr ? 'عن الوزارة' : 'About the Ministry',
       subtitle: isAr
-          ? 'نبذة تعريفية ورسالة الوزارة وأهدافها الأساسية'
-          : 'Overview, mission, and core objectives',
+          ? 'تعريف مؤسسي موجز بدور وزارة الأوقاف والشؤون الدينية ونطاق عملها العام.'
+          : 'A concise institutional overview of the Ministry of Awqaf and Religious Affairs and its public mandate.',
       sections: [
         _PwfContentSection(
-          heading: isAr ? 'نبذة' : 'Overview',
+          heading: isAr ? 'نبذة عن الوزارة' : 'Overview',
           body: isAr
-              ? 'تتولى وزارة الأوقاف والشؤون الدينية في دولة فلسطين إدارة شؤون الأوقاف، وخدمة المساجد، وتنظيم أعمال الزكاة والصدقات، والإشراف على التعليم الشرعي والوعظ والإرشاد، وتطوير الخدمات الدينية وفق الأنظمة والقوانين النافذة.'
-              : 'The Ministry of Awqaf and Religious Affairs in the State of Palestine manages awqaf assets, supports mosques, organizes zakat and charity work, oversees religious education and guidance, and develops religious services in accordance with applicable laws and regulations.',
+              ? 'وزارة الأوقاف والشؤون الدينية في دولة فلسطين هي الجهة المختصة بمتابعة شؤون الأوقاف والمساجد والخدمات الدينية العامة ضمن إطار قانوني ومؤسسي منظم. تعمل الوزارة من خلال وحداتها ومديرياتها على حماية المال الوقفي، وتنظيم شؤون المساجد، وتطوير الخدمات المقدمة للجمهور، وتعزيز الإدارة الرشيدة والشفافية في إدارة مواردها ومجالات عملها.'
+              : 'The Ministry of Awqaf and Religious Affairs in the State of Palestine oversees awqaf, mosques, and public religious services within a regulated institutional framework. Through its departments and directorates, the ministry works to protect awqaf assets, organize mosque affairs, improve public services, and strengthen governance and transparency.',
         ),
         _PwfContentSection(
-          heading: isAr ? 'الأهداف' : 'Objectives',
+          heading: isAr ? 'مجالات العمل المؤسسي' : 'Institutional work areas',
           bullets: isAr
               ? const [
-                  'حماية الأوقاف وتنميتها وتعظيم منفعتها العامة.',
-                  'خدمة المساجد وتطوير إدارتها وصيانتها.',
-                  'تطوير منظومة التعليم الشرعي والوعظ والإرشاد.',
-                  'تعزيز الشفافية والتحول الرقمي في خدمات الوزارة.',
+                  'حماية الأوقاف وتنظيم بياناتها ومتابعة استثمارها بما يحقق المنفعة العامة.',
+                  'خدمة المساجد والمصليات ومتابعة احتياجاتها الإدارية والفنية.',
+                  'تنظيم الخطاب الديني والوعظ والإرشاد والتعليم الشرعي ضمن الأطر الرسمية.',
+                  'تطوير الخدمات العامة والإلكترونية وربطها بالمديريات والوحدات المختصة.',
+                  'تعزيز التوثيق والأرشفة والرقابة المؤسسية على الإجراءات والقرارات.',
                 ]
               : const [
-                  'Protect and develop awqaf assets and maximize public benefit.',
-                  'Support mosques and improve their management and maintenance.',
-                  'Advance religious education, guidance, and outreach.',
-                  'Strengthen transparency and digital transformation of services.',
+                  'Protect awqaf assets, organize their records, and support their public benefit.',
+                  'Support mosques and prayer spaces through administrative and operational follow-up.',
+                  'Organize religious guidance, preaching, and related educational work through official channels.',
+                  'Improve public and digital services with directorate and unit integration.',
+                  'Strengthen documentation, archiving, and institutional oversight.',
                 ],
         ),
+        _PwfContentSection(
+          heading: isAr ? 'التحول الرقمي' : 'Digital transformation',
+          body: isAr
+              ? 'تأتي منصة PalWakf كمسار رقمي تدريجي لتوحيد البيانات والخدمات والصفحات العامة والأنظمة التشغيلية للوزارة، مع الحفاظ على الفصل بين المحتوى العام، والخدمات، والأوقاف، والمهام، والقضايا، والأنظمة المساندة.'
+              : 'PalWakf provides a gradual digital track to unify data, public pages, services, and operational systems while preserving clear boundaries between public content, services, awqaf operations, tasks, legal affairs, and supporting systems.',
+        ),
+        _PwfContentSection(
+          heading: isAr ? 'المديريات والوحدات' : 'Directorates and units',
+          body: isAr
+              ? 'تعرض المنصة صفحات الوزارة والمديريات ضمن نفس الهوية البصرية، مع احترام نطاق كل وحدة تنظيمية ومصدر بياناتها وصلاحياتها. لذلك تبقى الصفحة العامة مرجعًا مركزيًا، بينما تحتفظ صفحات الوحدات بسياقها المحلي عند النشر والإدارة.'
+              : 'The platform presents ministry and directorate pages under one visual identity while respecting each organizational unit, data scope, and permissions. The public homepage remains the central reference, while unit pages keep their local publishing context.',
+        ),
       ],
-      primaryActionLabel: isAr ? 'تواصل معنا' : 'Contact us',
-      primaryActionPath: '/media-center',
+      primaryActionLabel: isAr ? 'الرؤية والرسالة' : 'Vision & Mission',
+      primaryActionPath: '/vision-mission',
     );
   }
 }
@@ -71,7 +85,7 @@ class PwfMinisterMessageWebScreen extends ConsumerWidget {
           heading: isAr ? 'أولويات' : 'Priorities',
           bullets: isAr
               ? const [
-                  'حوكمة إدارة الأوقاف وتوثيقها وتحديث بياناتها.',
+                  'تنظيم إدارة الأوقاف وتوثيقها وتحديث بياناتها.',
                   'تطوير خدمات المواطنين والبوابات الإلكترونية.',
                   'تمكين المديريات وتعزيز التكامل بين الأنظمة.',
                 ]
@@ -101,41 +115,59 @@ class PwfVisionMissionWebScreen extends ConsumerWidget {
       pageSlug: 'vision-mission',
       title: isAr ? 'الرؤية والرسالة' : 'Vision & Mission',
       subtitle: isAr
-          ? 'إطار العمل المؤسسي والقيم الحاكمة'
-          : 'Institutional framework and guiding values',
+          ? 'إطار مؤسسي يوضح اتجاه العمل والقيم الحاكمة لتطوير الخدمات والأوقاف.'
+          : 'An institutional framework for service development, awqaf stewardship, and governing values.',
       sections: [
         _PwfContentSection(
           heading: isAr ? 'الرؤية' : 'Vision',
           body: isAr
-              ? 'أوقافٌ مُستدامة وخدماتٌ دينية رائدة تُعزّز التنمية المجتمعية وتحفظ الهوية.'
-              : 'Sustainable awqaf and leading religious services that enhance community development and preserve identity.',
+              ? 'أوقاف مصونة ومستدامة، وخدمات دينية ومؤسسية موثوقة، ومنظومة رقمية تساعد الوزارة والمديريات على خدمة المجتمع بكفاءة وشفافية.'
+              : 'Protected and sustainable awqaf, trusted religious and institutional services, and a digital ecosystem that helps the ministry and directorates serve society efficiently and transparently.',
         ),
         _PwfContentSection(
           heading: isAr ? 'الرسالة' : 'Mission',
           body: isAr
-              ? 'إدارة الأوقاف وتنميتها بكفاءة وشفافية، ودعم المساجد والأنشطة الدينية، وتطوير الخدمات للمواطنين بالتكامل مع المديريات والجهات الشريكة.'
-              : 'Manage and develop awqaf efficiently and transparently, support mosques and religious activities, and improve citizen services in coordination with directorates and partners.',
+              ? 'إدارة الأوقاف وشؤون المساجد والخدمات الدينية العامة وفق قواعد الإدارة الرشيدة والشفافية، وتطوير قنوات الخدمة والتوثيق والرقابة بما يسهّل وصول الجمهور إلى الخدمات ويحفظ المال الوقفي والهوية المؤسسية.'
+              : 'Manage awqaf, mosque affairs, and public religious services through governance and transparency, while improving service channels, documentation, and oversight to preserve awqaf assets and institutional identity.',
         ),
         _PwfContentSection(
-          heading: isAr ? 'القيم' : 'Values',
+          heading: isAr ? 'محاور العمل' : 'Work pillars',
           bullets: isAr
               ? const [
-                  'الأمانة',
-                  'الشفافية',
-                  'العدالة',
-                  'الخدمة العامة',
-                  'الاحترافية',
+                  'تنظيم بيانات الأوقاف وربطها بالملفات المؤسسية الرسمية.',
+                  'تطوير الخدمات العامة والإلكترونية مع تتبع واضح للطلبات والمعاملات.',
+                  'تعزيز إدارة المحتوى الرسمي دون خلط بين الأخبار والإعلانات والأنشطة والفعاليات.',
+                  'رفع جودة التنسيق بين الوزارة والمديريات ضمن نظام صلاحيات واضح.',
+                  'تفعيل الأرشفة والتوثيق وربطها بالمراجع الرسمية والمساعد المعرفي.',
                 ]
               : const [
-                  'Trust',
-                  'Transparency',
-                  'Fairness',
-                  'Public service',
-                  'Professionalism',
+                  'Organize awqaf data and connect it with official institutional records.',
+                  'Improve public and electronic services with clear request tracking.',
+                  'Manage official content without mixing news, announcements, activities, and events.',
+                  'Strengthen ministry-directorate coordination through clear permissions.',
+                  'Activate documentation and archiving linked to official references and the knowledge assistant.',
+                ],
+        ),
+        _PwfContentSection(
+          heading: isAr ? 'القيم الحاكمة' : 'Governing values',
+          bullets: isAr
+              ? const [
+                  'الأمانة في إدارة الوقف والموارد العامة.',
+                  'الشفافية في الإجراءات والخدمات والنشر.',
+                  'العدالة في الوصول إلى الخدمات والتعامل مع الجمهور.',
+                  'المسؤولية المؤسسية والتدقيق القابل للتتبع.',
+                  'الاحترافية في الإدارة والتحول الرقمي.',
+                ]
+              : const [
+                  'Trust in managing awqaf and public resources.',
+                  'Transparency in procedures, services, and publishing.',
+                  'Fair access to services and public interaction.',
+                  'Institutional accountability with traceable audit records.',
+                  'Professional administration and digital transformation.',
                 ],
         ),
       ],
-      primaryActionLabel: isAr ? 'عن الوزارة' : 'About',
+      primaryActionLabel: isAr ? 'عن الوزارة' : 'About the Ministry',
       primaryActionPath: '/about',
     );
   }
@@ -164,13 +196,13 @@ class PwfOrgStructureWebScreen extends ConsumerWidget {
                   ? 'الهيكل التنظيمي للوزارة'
                   : 'Ministry organizational structure',
               subtitle: isAr
-                  ? 'عرض حي للوحدات والمديريات المستخرجة من قاعدة البيانات السيادية للمنصة.'
-                  : 'A live view of units and directorates loaded from the platform sovereign database.',
+                  ? 'عرض منظم للوحدات والمديريات التابعة للوزارة.'
+                  : 'A structured view of the ministry units and directorates.',
               icon: Icons.account_tree_outlined,
               unitSlug: unitSlug,
               note: isAr
-                  ? 'تعتمد هذه الصفحة على بيانات الوحدات التنظيمية الفعلية داخل المنصة، وتُحدَّث تلقائيًا مع تحديث مرجع الوحدات.'
-                  : 'This page is backed by the actual organizational units reference and updates automatically.',
+                  ? 'تعرض هذه الصفحة الوحدات والمديريات المتاحة للزائر ضمن ترتيب واضح.'
+                  : 'This page presents the available units and directorates in a clear structure.',
             ),
             const SizedBox(height: 18),
             unitsAsync.when(
@@ -480,7 +512,7 @@ class _PwfPublicRequestEntrySection extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'مسار عام أولي يربط دليل الخدمات بسجل النماذج ورقم المتابعة، مع بقاء الحفظ والإرسال الفعلي مؤجلًا إلى حين اعتماد نموذج البيانات وRLS/RPC.',
+              'مسار عام يربط دليل الخدمات بالنماذج ورقم المتابعة بطريقة مبسطة للمستخدم.',
               style: TextStyle(color: Color(0xFF64748B), height: 1.65),
             ),
           ],

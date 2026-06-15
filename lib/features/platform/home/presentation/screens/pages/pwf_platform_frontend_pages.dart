@@ -11,6 +11,8 @@ import 'package:waqf/features/platform/media_center/presentation/providers/pwf_p
 
 import '../pwf_web_page_scaffold.dart';
 import '../../widgets/pwf_section_container.dart';
+import '../../widgets/shared/pwf_home_visual_contract.dart';
+import '../../theme/pwf_home_palette.dart';
 
 class PwfMediaCenterPublicHubScreen extends StatelessWidget {
   const PwfMediaCenterPublicHubScreen({super.key, required this.unitSlug});
@@ -43,8 +45,8 @@ class PwfMediaCenterPublicHubScreen extends StatelessWidget {
           icon: Icons.event_available_outlined,
         ),
         PwfFrontendMetric(
-          label: 'حوكمة',
-          value: 'نشر بمراجعة',
+          label: 'موثوقية',
+          value: 'مراجعة نشر',
           icon: Icons.verified_user_outlined,
         ),
       ],
@@ -109,12 +111,12 @@ class PwfMediaCenterPublicHubScreen extends StatelessWidget {
         PwfFrontendInfoBlock(
           title: 'قاعدة النشر',
           body:
-              'كل محتوى منشور يجب أن يحمل نطاقًا واضحًا: وزارة، وحدة، أو نظام مرتبط، مع حالة نشر وأثر تدقيق.',
+              'كل محتوى منشور يظهر ضمن تصنيف واضح يساعد الزائر على معرفة مصدره ومجاله.',
         ),
         PwfFrontendInfoBlock(
           title: 'الفصل المعتمد',
           body:
-              'الاجتماعيات والأنشطة والفعاليات تبقى داخل المركز الإعلامي، ولا تُنقل إلى مركز الخدمات.',
+              'تبقى الأخبار والأنشطة والفعاليات والمواد الاجتماعية ضمن مسار إعلامي واضح لا يختلط بمسارات الخدمات.',
         ),
       ],
     );
@@ -147,12 +149,12 @@ class PwfLegalReferencesPublicScreen extends StatelessWidget {
           icon: Icons.rule_folder_outlined,
         ),
         PwfFrontendMetric(
-          label: 'نطاق العرض',
+          label: 'فئة العرض',
           value: 'عام / داخلي',
           icon: Icons.visibility_outlined,
         ),
         PwfFrontendMetric(
-          label: 'مصدر ملفات',
+          label: 'المراجع المرفقة',
           value: 'مركز الوثائق',
           icon: Icons.folder_copy_outlined,
         ),
@@ -194,7 +196,7 @@ class PwfLegalReferencesPublicScreen extends StatelessWidget {
         PwfFrontendHubCard(
           title: 'الأسئلة المرجعية',
           description:
-              'إجابات مختصرة قابلة للربط لاحقًا بالمساعد الداخلي مع الاستشهاد بالمصدر.',
+              'إجابات مختصرة تساعد الزائر على الوصول إلى المعلومة أو الصفحة المناسبة.',
           route: AppRoutes.legalReferences,
           icon: Icons.help_outline_rounded,
         ),
@@ -206,9 +208,9 @@ class PwfLegalReferencesPublicScreen extends StatelessWidget {
               'هذه الصفحة مرجع حكومي رسمي يخدم الجمهور والموظفين والوحدات، ولا تُدار كخبر أو إعلان.',
         ),
         PwfFrontendInfoBlock(
-          title: 'الربط المستقبلي',
+          title: 'التكامل مع الصفحات والخدمات',
           body:
-              'يرتبط هذا القسم بمركز الوثائق كمصدر ملفات، وبالمساعد الداخلي للإجابات المستندة إلى الاستشهادات.',
+              'تُعرض المراجع والملفات المرفقة بطريقة منظمة لتسهيل الوصول إليها عند الحاجة.',
         ),
       ],
     );
@@ -244,13 +246,13 @@ class PwfSanctitiesObservatoryPublicScreen extends StatelessWidget {
           icon: Icons.fact_check_outlined,
         ),
         PwfFrontendMetric(
-          label: 'ربط قانوني',
-          value: 'cases',
+          label: 'مرجعية قانونية',
+          value: 'مرجعية قانونية',
           icon: Icons.gavel_outlined,
         ),
         PwfFrontendMetric(
-          label: 'تحليل مكاني',
-          value: 'mustakshif',
+          label: 'خرائط توضيحية',
+          value: 'خرائط توضيحية',
           icon: Icons.map_outlined,
         ),
       ],
@@ -304,7 +306,7 @@ class PwfSanctitiesObservatoryPublicScreen extends StatelessWidget {
         PwfFrontendInfoBlock(
           title: 'حدود السيادة',
           body:
-              'mustakshif للتحليل المكاني فقط، وwaqf_assets يصبح رابطًا سياديًا عند اكتماله لاحقًا.',
+              'يعرض المرصد المعلومات المكانية والوثائقية ضمن نطاقها المخصص دون خلطها مع مسارات الخدمات أو الأخبار.',
         ),
       ],
     );
@@ -422,7 +424,7 @@ class _PwfMediaFamilySpec {
         PwfFrontendInfoBlock(
           title: 'النطاق',
           body:
-              'يمكن أن يكون المحتوى مركزيًا أو مخصصًا للوحدة عبر unitSlug ضمن نفس renderer.',
+              'يمكن أن يكون المحتوى مركزيًا أو مخصصًا للوحدة ضمن نفس أسلوب العرض.',
         ),
       ],
     ),
@@ -459,7 +461,7 @@ class _PwfMediaFamilySpec {
         ),
         PwfFrontendHubCard(
           title: 'بيانات الوحدات',
-          description: 'بيانات نطاقية تظهر عبر unitSlug عند اعتمادها.',
+          description: 'بيانات صادرة عن المديريات والوحدات ضمن التصنيف المناسب.',
           route: AppRoutes.pressReleases,
           icon: Icons.business_outlined,
         ),
@@ -477,8 +479,8 @@ class _PwfMediaFamilySpec {
               'البيانات الصحفية لا تختلط بالأخبار القصيرة أو الإعلانات الخدمية.',
         ),
         PwfFrontendInfoBlock(
-          title: 'الحوكمة',
-          body: 'النشر النهائي يحتاج مراجعة إعلامية وصلاحية نشر مناسبة.',
+          title: 'آلية النشر',
+          body: 'ينشر المحتوى بعد تدقيقه واعتماده من الجهة المختصة.',
         ),
       ],
     ),
@@ -744,13 +746,14 @@ class _PwfPublicRequestEntryScreenState
       title: 'تقديم طلب خدمة',
       showTitleSection: true,
       child: PwfSectionContainer(
+        sectionKey: 'PwfPublicRequestEntryScreen',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _PublicServiceHero(
               title: 'تقديم طلب خدمة',
               subtitle:
-                  'واجهة عامة backend-first موصولة بمركز الخدمات الإنتاجي. تستخدم RPCs عند توفرها، وتمنع fallback الوهمي عند وجود backend فعلي بلا بيانات.',
+                  'واجهة عامة لتقديم الطلبات ومتابعتها بطريقة واضحة، مع عرض الحالة للمستخدم دون تفاصيل تقنية.',
               eyebrow: 'مركز الخدمات / الطلبات والنماذج',
               icon: Icons.assignment_outlined,
               primaryLabel: 'تتبع طلب',
@@ -758,13 +761,13 @@ class _PwfPublicRequestEntryScreenState
               secondaryLabel: 'دليل الخدمات',
               secondaryRoute: AppRoutes.services,
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 12),
             _PublicRequestAdapterStatusCard(
               loadingForms: _loadingForms,
               forms: _forms,
               adapterSource: _adapterSource,
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
             _PublicRequestStepper(currentStep: _trackingNo == null ? 1 : 2),
             const SizedBox(height: 18),
             LayoutBuilder(
@@ -814,7 +817,7 @@ class _PwfPublicRequestEntryScreenState
             const _PublicServiceGovernanceNote(
               title: 'حدود هذه الدفعة',
               body:
-                  'بعد نجاح SQL UAT أصبحت الواجهة تستهدف backend الإنتاجي أولًا. يظهر fallback فقط عند غياب الدوال أو الجداول، أما الحالات الفارغة فتُعرض كحالة بيانات حقيقية.',
+                  'سيتم عرض النماذج المتاحة وحالاتها الفعلية للمستخدم بشكل واضح ومباشر عند توفرها.',
             ),
           ],
         ),
@@ -871,13 +874,14 @@ class _PwfPublicRequestTrackingScreenState
       title: 'تتبع طلب خدمة',
       showTitleSection: true,
       child: PwfSectionContainer(
+        sectionKey: 'PwfPublicRequestTrackingScreen',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _PublicServiceHero(
               title: 'تتبع طلب خدمة',
               subtitle:
-                  'واجهة تتبع backend-first تعرض الحالة العامة دون كشف بيانات حساسة. رقم المتابعة يجب أن يكون صادرًا من طلب حقيقي أو اختبار UAT معتمد.',
+                  'أدخل رقم المتابعة الصادر بعد تقديم الطلب للاطلاع على الحالة العامة والخطوة التالية دون كشف بيانات حساسة.',
               eyebrow: 'مركز الخدمات / الاستعلامات والمتابعة',
               icon: Icons.manage_search_outlined,
               primaryLabel: 'تقديم طلب جديد',
@@ -900,7 +904,7 @@ class _PwfPublicRequestTrackingScreenState
             const _PublicServiceGovernanceNote(
               title: 'سياسة التتبع المقترحة',
               body:
-                  'يجب ألا يكشف رقم المتابعة بيانات شخصية حساسة. عند الربط الإنتاجي يعرض النظام الحالة العامة والجهة المسؤولة والخطوة التالية فقط، مع تحقق إضافي عند عرض التفاصيل.',
+                  'يعرض رقم المتابعة الحالة العامة للطلب والجهة المسؤولة والخطوة التالية، مع الحفاظ على خصوصية بيانات مقدم الطلب.',
             ),
           ],
         ),
@@ -933,14 +937,14 @@ class _PublicServiceHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: AlignmentDirectional.topStart,
           end: AlignmentDirectional.bottomEnd,
           colors: [Color(0xFF0B3A70), Color(0xFF145DA0)],
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -971,7 +975,7 @@ class _PublicServiceHero extends StatelessWidget {
                   height: 1.7,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
@@ -1009,14 +1013,14 @@ class _PublicServiceHero extends StatelessWidget {
             ],
           );
           final iconBox = Container(
-            width: 96,
-            height: 96,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(22),
               border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
             ),
-            child: Icon(icon, color: const Color(0xFFFDE68A), size: 48),
+            child: Icon(icon, color: const Color(0xFFFDE68A), size: 36),
           );
           if (compact) return content;
           return Row(
@@ -1045,39 +1049,25 @@ class _PublicRequestAdapterStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rpcBacked = forms.any((form) => form.rpcBacked);
-    final source = loadingForms
-        ? 'جارٍ فحص RPC'
-        : rpcBacked
-        ? 'النماذج من RPC'
-        : 'نماذج fallback محلية';
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
+    final availableForms = forms.length;
+    return PwfVisualCard(
+      padding: const EdgeInsets.all(14),
       child: Wrap(
         spacing: 10,
         runSpacing: 10,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           _PublicStatusChip(
-            label: source,
-            icon: rpcBacked ? Icons.cloud_done : Icons.cloud_off,
-          ),
-          _PublicStatusChip(
-            label: 'عدد النماذج: ${forms.length}',
+            label: loadingForms ? 'جارٍ تحميل النماذج' : 'النماذج المتاحة: $availableForms',
             icon: Icons.description_outlined,
           ),
           _PublicStatusChip(
-            label: adapterSource ?? 'لم يتم إرسال طلب بعد',
-            icon: Icons.sync_alt_rounded,
+            label: availableForms > 0 ? 'جاهز لاستقبال الطلب' : 'اختر الخدمة المناسبة',
+            icon: availableForms > 0 ? Icons.check_circle_outline : Icons.touch_app_outlined,
           ),
           const Text(
-            'هذه البطاقة تجعل حالة الربط واضحة: backend-first بعد Mega M/M1، وfallback يظهر فقط عند غياب عقود SQL لا عند عدم وجود بيانات.',
-            style: TextStyle(color: Color(0xFF64748B), height: 1.5),
+            'اختر النموذج المناسب وأدخل بيانات التواصل الأساسية، ثم احتفظ برقم المتابعة عند إنشاء الطلب.',
+            style: TextStyle(color: Color(0xFF475569), height: 1.55, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -1354,7 +1344,7 @@ class _PublicNoFormsAvailableNotice extends StatelessWidget {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              'لا توجد نماذج خدمات مفعّلة حاليًا في backend. لا يمكن إرسال طلب جديد قبل تفعيل نموذج واحد على الأقل.',
+              'لا توجد نماذج خدمات متاحة حاليًا. سيتم تفعيل إمكانية التقديم عند نشر النماذج الرسمية.',
               style: TextStyle(
                 color: Color(0xFF92400E),
                 fontWeight: FontWeight.w800,
@@ -1444,12 +1434,8 @@ class _PublicRequestSidePanel extends StatelessWidget {
               _PublicInfoRow(label: 'النموذج', value: form),
               if (selectedForm != null) ...[
                 _PublicInfoRow(
-                  label: 'مفتاح النموذج',
-                  value: selectedForm!.formKey,
-                ),
-                _PublicInfoRow(
-                  label: 'مصدر النموذج',
-                  value: selectedForm!.rpcBacked ? 'RPC' : 'Fallback',
+                  label: 'النموذج المختار',
+                  value: selectedForm!.titleAr,
                 ),
               ],
               const Divider(height: 24),
@@ -1460,7 +1446,7 @@ class _PublicRequestSidePanel extends StatelessWidget {
                 )
               else ...[
                 Text(
-                  adapterSource ?? 'مصدر غير محدد',
+                  'تم إنشاء طلبك وحفظ رقم المتابعة.',
                   style: const TextStyle(
                     color: Color(0xFF64748B),
                     fontWeight: FontWeight.w800,
@@ -1630,8 +1616,8 @@ class _PublicTrackingResultCard extends StatelessWidget {
             runSpacing: 8,
             children: [
               _PublicStatusChip(
-                label: result.sourceLabelAr,
-                icon: result.rpcBacked ? Icons.cloud_done : Icons.cloud_off,
+                label: 'نتيجة التتبع',
+                icon: Icons.verified_outlined,
               ),
               _PublicStatusChip(
                 label: 'الحالة: ${result.status}',
@@ -1716,43 +1702,10 @@ class _PublicServiceGovernanceNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFDE68A)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.info_outline_rounded, color: Color(0xFF92400E)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF92400E),
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  body,
-                  style: const TextStyle(
-                    color: Color(0xFF78350F),
-                    height: 1.55,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    // Public Subpages Visual System Rework:
+    // Technical governance details are not part of the citizen-facing surface.
+    // They remain documented in admin/runbooks, not rendered in public pages.
+    return const SizedBox.shrink();
   }
 }
 
@@ -1824,7 +1777,7 @@ class PwfEventsPublicScreen extends StatelessWidget {
         PwfFrontendInfoBlock(
           title: 'النطاق',
           body:
-              'يمكن عرض فعاليات الوزارة أو الوحدة من نفس البنية الديناميكية عبر unitSlug.',
+              'يمكن عرض فعاليات الوزارة أو الوحدة ضمن نفس أسلوب العرض الموحد.',
         ),
       ],
     );
@@ -1870,6 +1823,7 @@ class PwfPlatformFrontendHubPage extends ConsumerWidget {
       title: title,
       showTitleSection: true,
       child: PwfSectionContainer(
+        sectionKey: 'PwfPlatformFrontendHubPage',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -1887,9 +1841,9 @@ class PwfPlatformFrontendHubPage extends ConsumerWidget {
             _FrontendMetricStrip(metrics: metrics),
             const SizedBox(height: 22),
             _FrontendSectionTitle(
-              title: 'المداخل التشغيلية',
+              title: 'مداخل الصفحة',
               subtitle:
-                  'بطاقات عامة قابلة للربط لاحقًا بمصادر CMS/RPC دون تغيير تجربة المستخدم.',
+                  'اختصارات واضحة للوصول إلى المحتوى والخدمات المرتبطة بهذه الصفحة.',
             ),
             const SizedBox(height: 14),
             _FrontendCardsGrid(cards: cards),
@@ -1906,9 +1860,9 @@ class PwfPlatformFrontendHubPage extends ConsumerWidget {
             ],
             const SizedBox(height: 22),
             _FrontendSectionTitle(
-              title: 'ملاحظات الحوكمة',
+              title: 'معلومات مساعدة',
               subtitle:
-                  'تعرض للزائر بصياغة مختصرة، بينما تبقى التفاصيل الإدارية داخل لوحة التحكم.',
+                  'تعريفات مختصرة تساعد الزائر على فهم نطاق الصفحة ومحتواها.',
             ),
             const SizedBox(height: 14),
             _FrontendInfoGrid(infoBlocks: infoBlocks),
@@ -1962,7 +1916,7 @@ class PwfPlatformCenterContentDetailScreen extends ConsumerWidget {
               return const _FrontendDataNote(
                 title: 'المحتوى غير متاح',
                 body:
-                    'قد يكون العنصر غير منشور، أو لا يطابق نطاق الوحدة، أو لم يتم تطبيق RPC التفصيلي بعد.',
+                    'قد يكون العنصر غير منشور حاليًا أو لا يطابق نطاق الصفحة المطلوبة.',
               );
             }
             final body = item.body.trim().isNotEmpty ? item.body : item.summary;
@@ -2035,9 +1989,9 @@ class PwfPlatformCenterContentDetailScreen extends ConsumerWidget {
                 ],
                 const SizedBox(height: 18),
                 const _FrontendDataNote(
-                  title: 'حاكمية النشر',
+                  title: 'ملاحظة نشر',
                   body:
-                      'تظهر هذه الصفحة للعناصر المنشورة فقط عبر public.v_platform_center_content أو RPC تفصيلي آمن، ولا تعرض المسودات العامة.',
+                      'تظهر هذه الصفحة للعناصر المنشورة والمعتمدة للعرض العام فقط.',
                 ),
               ],
             );
@@ -2067,7 +2021,7 @@ class _PublishedContentPanel extends ConsumerWidget {
           return const _FrontendDataNote(
             title: 'لا توجد عناصر منشورة بعد',
             body:
-                'يعتمد الظهور هنا على عناصر منشورة من مصدر البيانات الرسمي أو RPC wrapper المعتمد.',
+                'ستظهر هنا العناصر المنشورة عند توفر محتوى عام لهذه الصفحة.',
           );
         }
         return Column(
@@ -2076,8 +2030,8 @@ class _PublishedContentPanel extends ConsumerWidget {
             _FrontendSectionTitle(
               title: 'أحدث العناصر المنشورة',
               subtitle: items.any((item) => item.isFallback)
-                  ? 'بيانات fallback تشغيلية إلى حين تفعيل RPC/Views، ولا تُعامل كمحتوى إنتاجي نهائي.'
-                  : 'محتوى منشور من مصدر البيانات الرسمي لهذا القسم.',
+                  ? 'نماذج محتوى أولية إلى حين نشر عناصر رسمية إضافية.'
+                  : 'أحدث محتوى منشور لهذا القسم.',
             ),
             const SizedBox(height: 14),
             LayoutBuilder(
@@ -2145,11 +2099,6 @@ class _PublishedContentCard extends StatelessWidget {
                   label: _publicStatusLabel(item.status),
                   icon: Icons.verified_outlined,
                 ),
-                if (item.isFallback)
-                  const _FrontendMiniPill(
-                    label: 'fallback',
-                    icon: Icons.info_outline,
-                  ),
               ],
             ),
             const SizedBox(height: 10),
@@ -2378,109 +2327,95 @@ class _FrontendHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(26),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: AlignmentDirectional.topStart,
-          end: AlignmentDirectional.bottomEnd,
-          colors: [Color(0xFF0B3A70), Color(0xFF145DA0)],
-        ),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 28,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 760;
-          final textPanel = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 7,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 760;
+        final iconPanel = PwfVisualIconTile(
+          icon: icon,
+          color: PwfHomePalette.secondary,
+          backgroundColor: Colors.white.withValues(alpha: 0.12),
+          size: compact ? 54 : 68,
+        );
+        final textPanel = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                PwfVisualChip(
+                  label: eyebrow,
+                  icon: Icons.verified_outlined,
+                  color: PwfHomePalette.secondary,
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: const Color(0xFFEAB308).withValues(alpha: 0.38),
-                  ),
-                ),
-                child: Text(
-                  eyebrow,
-                  style: const TextStyle(
-                    color: Color(0xFFFDE68A),
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                title,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  height: 1.25,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.92),
-                  height: 1.75,
-                ),
-              ),
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  _FrontendHeroButton(
-                    label: primaryLabel,
-                    route: primaryRoute,
-                    primary: true,
-                  ),
-                  _FrontendHeroButton(
-                    label: secondaryLabel,
-                    route: secondaryRoute,
-                    primary: false,
-                  ),
-                ],
-              ),
-            ],
-          );
-
-          final iconPanel = Container(
-            width: 118,
-            height: 118,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+              ],
             ),
-            child: Icon(icon, color: const Color(0xFFFDE68A), size: 56),
-          );
+            const SizedBox(height: 18),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    height: 1.22,
+                    fontSize: compact ? 26 : 30,
+                  ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    height: 1.7,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 18),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _FrontendHeroButton(
+                  label: primaryLabel,
+                  route: primaryRoute,
+                  primary: true,
+                ),
+                _FrontendHeroButton(
+                  label: secondaryLabel,
+                  route: secondaryRoute,
+                  primary: false,
+                ),
+              ],
+            ),
+          ],
+        );
 
-          return compact
-              ? textPanel
+        return Container(
+          width: double.infinity,
+          constraints: BoxConstraints(minHeight: compact ? 126 : 144),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 20 : 26,
+            vertical: compact ? 18 : 22,
+          ),
+          decoration: BoxDecoration(
+            gradient: PwfHomeVisualContract.sovereignGradient(),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [PwfHomeVisualContract.elevatedCardShadow],
+          ),
+          child: compact
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [iconPanel, const SizedBox(height: 16), textPanel],
+                )
               : Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(child: textPanel),
-                    const SizedBox(width: 24),
+                    const SizedBox(width: 18),
                     iconPanel,
                   ],
-                );
-        },
-      ),
+                ),
+        );
+      },
     );
   }
 }
@@ -2506,7 +2441,7 @@ class _FrontendHeroButton extends StatelessWidget {
       label: Text(label),
       style: FilledButton.styleFrom(
         backgroundColor: primary
-            ? const Color(0xFFEAB308)
+            ? PwfHomePalette.secondary
             : Colors.white.withValues(alpha: 0.12),
         foregroundColor: primary ? const Color(0xFF0B1220) : Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -2523,30 +2458,13 @@ class _FrontendMetricStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final columns = width >= 900
-            ? 3
-            : width >= 620
-            ? 2
-            : 1;
-        const spacing = 12.0;
-        final itemWidth = columns == 1
-            ? width
-            : (width - (columns - 1) * spacing) / columns;
-        return Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          children: [
-            for (final item in metrics)
-              SizedBox(
-                width: itemWidth,
-                child: _FrontendMetricCard(metric: item),
-              ),
-          ],
-        );
-      },
+    return PwfVisualResponsiveGrid(
+      desktopColumns: 3,
+      tabletColumns: 2,
+      minCardWidth: 240,
+      children: [
+        for (final item in metrics) _FrontendMetricCard(metric: item),
+      ],
     );
   }
 }
@@ -2558,23 +2476,14 @@ class _FrontendMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return PwfVisualCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFFB22222).withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(metric.icon, color: const Color(0xFFB22222)),
+          PwfVisualIconTile(
+            icon: metric.icon,
+            color: PwfHomePalette.royalRed,
+            size: 46,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -2584,7 +2493,7 @@ class _FrontendMetricCard extends StatelessWidget {
                 Text(
                   metric.label,
                   style: const TextStyle(
-                    color: Color(0xFF64748B),
+                    color: PwfHomePalette.textSecondary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -2593,9 +2502,7 @@ class _FrontendMetricCard extends StatelessWidget {
                   metric.value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: PwfHomeVisualContract.cardTitleStyle(context),
                 ),
               ],
             ),
@@ -2617,16 +2524,11 @@ class _FrontendSectionTitle extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          subtitle,
-          style: const TextStyle(color: Color(0xFF64748B), height: 1.6),
+        Text(title, style: PwfHomeVisualContract.sectionTitleStyle(context)),
+        const SizedBox(height: 4),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 820),
+          child: Text(subtitle, style: PwfHomeVisualContract.sectionSubtitleStyle(context)),
         ),
       ],
     );
@@ -2640,32 +2542,13 @@ class _FrontendCardsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final columns = width >= 1120
-            ? 4
-            : width >= 820
-            ? 3
-            : width >= 560
-            ? 2
-            : 1;
-        const spacing = 14.0;
-        final cardWidth = columns == 1
-            ? width
-            : (width - (columns - 1) * spacing) / columns;
-        return Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          children: [
-            for (final card in cards)
-              SizedBox(
-                width: cardWidth,
-                child: _FrontendActionCard(card: card),
-              ),
-          ],
-        );
-      },
+    return PwfVisualResponsiveGrid(
+      desktopColumns: 4,
+      tabletColumns: 2,
+      minCardWidth: 260,
+      children: [
+        for (final card in cards) _FrontendActionCard(card: card),
+      ],
     );
   }
 }
@@ -2677,64 +2560,57 @@ class _FrontendActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        onTap: () => context.go(card.route),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 204),
-          child: Ink(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(card.icon, color: const Color(0xFFB22222), size: 30),
-                const SizedBox(height: 12),
-                Text(
-                  card.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  card.description,
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF64748B),
-                    height: 1.55,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'فتح الصفحة',
-                      style: TextStyle(
-                        color: Color(0xFF0B3A70),
-                        fontWeight: FontWeight.w900,
-                      ),
+    return PwfVisualCard(
+      onTap: () => context.go(card.route),
+      showAccentRail: true,
+      padding: const EdgeInsetsDirectional.fromSTEB(22, 20, 20, 20),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 142),
+        child: Padding(
+          padding: const EdgeInsetsDirectional.only(start: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              PwfVisualIconTile(
+                icon: card.icon,
+                color: PwfHomePalette.royalRed,
+                size: 50,
+              ),
+              const SizedBox(height: 14),
+              Text(
+                card.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: PwfHomeVisualContract.cardTitleStyle(context),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                card.description,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                style: PwfHomeVisualContract.cardBodyStyle(context),
+              ),
+              const SizedBox(height: 14),
+              const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'فتح الصفحة',
+                    style: TextStyle(
+                      color: PwfHomePalette.primary,
+                      fontWeight: FontWeight.w900,
                     ),
-                    SizedBox(width: 6),
-                    Icon(
-                      Icons.arrow_back_rounded,
-                      color: Color(0xFF0B3A70),
-                      size: 18,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                  SizedBox(width: 6),
+                  Icon(
+                    Icons.arrow_back_rounded,
+                    color: PwfHomePalette.primary,
+                    size: 18,
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -2778,17 +2654,13 @@ class _FrontendInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return PwfVisualCard(
+      backgroundColor: const Color(0xFFF8FAFC),
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline_rounded, color: Color(0xFF0B3A70)),
+          const Icon(Icons.info_outline_rounded, color: PwfHomePalette.primary),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -2803,7 +2675,7 @@ class _FrontendInfoCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   block.body,
-                  style: const TextStyle(color: Color(0xFF64748B), height: 1.6),
+                  style: PwfHomeVisualContract.cardBodyStyle(context),
                 ),
               ],
             ),

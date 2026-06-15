@@ -1157,3 +1157,494 @@ production-not-approved
 - No service-role usage.
 - No `waqf_assets` mutation.
 - Android runtime UAT remains deferred.
+
+## 2026-06-13 — Platform 12 Footer Overflow + Flutter Test Harness Closure Mega Batch
+
+### Evidence accepted
+
+- `flutter analyze` completed with `No issues found`.
+- `flutter test` failed because `test/widget_test.dart` still imported `package:palwakf/main.dart` and expected a default `MyApp` counter application.
+- `flutter run -d chrome` launched successfully, loaded environment variables, initialized storage and Supabase, and rendered the app.
+- The remaining runtime layout error is from `WebFooter`, not `WebAppBar`:
+
+```text
+A RenderFlex overflowed by 29 pixels on the right.
+Row:file:///C:/Users/DELL/StudioProjects/palwakf/lib/presentation/widgets/web/web_footer.dart:123:13
+constraints: BoxConstraints(0.0<=w<=645.0, 0.0<=h<=Infinity)
+```
+
+### Fixed / hardened
+
+- Reworked `WebFooter` to use responsive `LayoutBuilder` behavior.
+- Replaced the fixed bottom copyright/action `Row` with compact stacked layout under constrained width and `Expanded/Flexible` layout at wider widths.
+- Wrapped privacy/terms buttons using `Wrap`.
+- Added section wrapping/stacking for narrow footer widths.
+- Replaced stale Flutter template `widget_test.dart` with a neutral test-harness guard.
+
+### Added
+
+```text
+docs/platform12/PLATFORM12_FOOTER_OVERFLOW_TEST_HARNESS_CLOSURE_MEGA_BATCH_2026_06_13.md
+docs/platform12/UAT_FOOTER_OVERFLOW_TEST_HARNESS_CLOSURE_2026_06_13.md
+docs/platform12/error_records/ERROR_RECORD_FOOTER_OVERFLOW_AND_STALE_WIDGET_TEST_2026_06_13.md
+docs/platform12/evidence/search_waqf_footer_overflow_devtools_2026_06_13.png
+docs/platform12/evidence/flutter_analyze_test_run_footer_overflow_log_2026_06_13.txt
+ARTIFACT_MANIFEST_platform12_footer_overflow_test_harness_closure_mega_batch_2026_06_13.json
+```
+
+### Current status
+
+```text
+platform12-footer-overflow-test-harness-closure-mega-batch-prepared
+flutter-analyze-clean-accepted-from-user-evidence
+flutter-test-stale-template-failure-accepted-and-remediated
+webfooter-constrained-width-overflow-hardened
+search-waqf-results-confirmed-by-user-evidence
+homepage-sections-source-decision-preserved
+semantic-family-policy-decision-required
+android-runtime-uat-deferred
+no-sql-executed
+no-service-role
+production-not-approved
+```
+
+### Preserved
+
+- No SQL executed.
+- No public base table mutation.
+- No service-role usage.
+- No `waqf_assets` mutation.
+- Android runtime UAT remains deferred.
+
+## 2026-06-13 — Platform 12 Home Page Section Polish + Semantic Runtime Policy Mega Batch
+
+### Scope
+
+Continued homepage and section refinement after search, WebAppBar, WebFooter, and test-harness closure.
+
+### Fixed / hardened
+
+- Added semantic-family metadata to the canonical homepage section catalog.
+- Added runtime family policy for close substitutes:
+  - `pwf_news_tabs` supersedes `pwf_news` when both are active.
+  - `pwf_eservices_portal` supersedes `pwf_quick_services` when both are active.
+  - `pwf_important_links` supersedes `pwf_quick_links_grid` when both are active.
+  - `pwf_media_gallery` supersedes split image/video gallery sections only when the unified gallery is active.
+- `PwfHomeSectionsRenderer` now applies the semantic policy before rendering, without mutating DB rows.
+- Admin homepage section management now exposes semantic-family policy warnings and chips.
+- Added semantic policy contract tests.
+- Added read-only SQL diagnostic preview for runtime policy decisions.
+
+### Added
+
+```text
+docs/platform12/PLATFORM12_HOME_PAGE_SECTION_POLISH_SEMANTIC_POLICY_MEGA_BATCH_2026_06_13.md
+docs/platform12/UAT_HOME_PAGE_SECTION_POLISH_SEMANTIC_POLICY_2026_06_13.md
+docs/platform12/error_records/ERROR_RECORD_HOME_SEMANTIC_SECTION_OVERLAP_2026_06_13.md
+sql_sandbox/platform12_home_sections_semantic_policy_audit_read_only/01_home_sections_semantic_policy_runtime_preview.sql
+test/features/platform/home/pwf_home_sections_semantic_policy_test.dart
+ARTIFACT_MANIFEST_platform12_home_page_section_polish_semantic_policy_mega_batch_2026_06_13.json
+```
+
+### Current status
+
+```text
+platform12-home-page-section-polish-semantic-policy-mega-batch-prepared
+semantic-family-runtime-policy-added
+homepage-runtime-section-overlap-reduced-without-sql
+admin-section-policy-visibility-added
+semantic-policy-contract-test-added
+footer-overflow-prior-closure-preserved
+android-runtime-uat-deferred
+no-sql-executed
+no-service-role
+production-not-approved
+```
+
+### Preserved
+
+- No SQL executed.
+- No public base table mutation.
+- No service-role usage.
+- No `waqf_assets` mutation.
+- Android runtime UAT remains deferred.
+
+## 2026-06-13 — Platform 12 Gallery + Activities Duplicate Closure Mega Batch
+
+### Scope
+
+Closed the remaining semantic repetition reported by the user on the public homepage for:
+
+- Media gallery / image gallery.
+- Activities / standalone events.
+
+### Fixed / hardened
+
+- Changed `media_gallery_family` runtime policy from partial unified-supersedes behavior to one-representative rendering.
+- Kept priority order: `pwf_media_gallery` → `pwf_media_gallery_images` → `pwf_media_gallery_videos`.
+- Merged activities and events into `activities_events_family`.
+- Kept `pwf_activities` as the preferred canonical homepage representative over `pwf_events_section`.
+- Removed the Events tab from `PwfMediaGallerySection`; gallery now displays visual media only: photos and videos.
+- Expanded legacy/canonical aliases for gallery, image gallery, video gallery, activities, and events section keys.
+- Updated the read-only SQL semantic policy preview to reflect the new one-representative rules.
+- Expanded semantic policy contract tests to cover gallery split suppression and activities/events suppression.
+
+### Added
+
+```text
+docs/platform12/PLATFORM12_GALLERY_ACTIVITIES_DUPLICATE_CLOSURE_MEGA_BATCH_2026_06_13.md
+docs/platform12/UAT_GALLERY_ACTIVITIES_DUPLICATE_CLOSURE_2026_06_13.md
+docs/platform12/error_records/ERROR_RECORD_GALLERY_ACTIVITIES_DUPLICATE_2026_06_13.md
+ARTIFACT_MANIFEST_platform12_gallery_activities_duplicate_closure_mega_batch_2026_06_13.json
+```
+
+### Current status
+
+```text
+platform12-gallery-activities-duplicate-closure-mega-batch-prepared
+media-gallery-one-representative-runtime-policy-added
+activities-events-one-representative-runtime-policy-added
+gallery-events-tab-removed-to-avoid-semantic-duplication
+semantic-policy-contract-tests-expanded
+homepage-sections-source-decision-preserved
+footer-overflow-prior-closure-preserved
+android-runtime-uat-deferred
+no-sql-executed
+no-service-role
+production-not-approved
+```
+
+### Preserved
+
+- No SQL executed.
+- No public base table mutation.
+- No service-role usage.
+- No `waqf_assets` mutation.
+- Android runtime UAT remains deferred.
+
+## 2026-06-13 — Platform 12 Media Gallery Compile Boundary Closure Mega Batch
+
+### Scope
+
+Closed a Flutter web compile blocker reported after the gallery/activities duplicate-closure Mega Batch.
+
+### Evidence accepted
+
+Chrome runtime failed while compiling `PwfMediaGallerySection` because stale activity helpers remained after removing the gallery events tab:
+
+```text
+Type 'Activity' not found.
+Type 'ActivityType' not found.
+```
+
+### Fixed / hardened
+
+- Removed stale `_GalleryCardData.fromActivity(Activity a)` from the compiled media gallery section.
+- Removed stale `_activityTypeAr(ActivityType t)` from the compiled media gallery section.
+- Preserved the gallery content boundary as visual media only: photos/videos.
+- Kept activities/events under the activities section and outside the gallery tabs.
+- Updated the legacy/mirror gallery surface for consistency.
+- Added a source-boundary contract test to prevent reintroducing activity/event dependencies into `PwfMediaGallerySection`.
+
+### Added
+
+```text
+docs/platform12/PLATFORM12_MEDIA_GALLERY_COMPILE_BOUNDARY_CLOSURE_MEGA_BATCH_2026_06_13.md
+docs/platform12/UAT_MEDIA_GALLERY_COMPILE_BOUNDARY_CLOSURE_2026_06_13.md
+docs/platform12/error_records/ERROR_RECORD_MEDIA_GALLERY_ACTIVITY_STALE_REFERENCE_2026_06_13.md
+test/features/platform/home/pwf_media_gallery_source_boundary_test.dart
+ARTIFACT_MANIFEST_platform12_media_gallery_compile_boundary_closure_mega_batch_2026_06_13.json
+```
+
+### Current status
+
+```text
+platform12-media-gallery-compile-boundary-closure-mega-batch-prepared
+media-gallery-stale-activity-references-removed
+media-gallery-visual-media-only-boundary-preserved
+activities-events-section-ownership-preserved
+source-boundary-contract-test-added
+homepage-sections-source-decision-preserved
+android-runtime-uat-deferred
+no-sql-executed
+no-service-role
+production-not-approved
+```
+
+### Preserved
+
+- No SQL executed.
+- No public base table mutation.
+- No service-role usage.
+- No `waqf_assets` mutation.
+- Android runtime UAT remains deferred.
+
+
+## 2026-06-13 — Platform 12 Home Management Runtime Alignment Mega Batch
+
+### Scope
+
+Aligned the public home page runtime with `/admin/home-management` so section hide/show and repositioning are not overridden by global/unscoped fallback rows.
+
+### Cause accepted
+
+The homepage runtime merged multiple scopes but could prefer an active fallback/global row over a more specific admin-scoped inactive row. This made admin changes appear unreliable. Semantic `preferOne` families could also be saved with multiple active representatives even though the renderer later suppressed siblings.
+
+### Implemented
+
+- Added scope-specific row precedence in `HomepageRepository.fetchAllSectionsForUnit`:
+  current unit → home unit → global sentinel → unscoped legacy.
+- Removed active-row preference from effective row selection.
+- Added admin-side semantic family enforcement in `PwfHomepageSectionsManager`.
+- Activating one representative in a `preferOne` family now deactivates siblings immediately.
+- New sections added from the admin catalog are inactive by default until explicitly enabled.
+- Added a source-contract test for admin/runtime alignment.
+
+### Added
+
+```text
+docs/platform12/PLATFORM12_HOME_MANAGEMENT_RUNTIME_ALIGNMENT_MEGA_BATCH_2026_06_13.md
+docs/platform12/UAT_HOME_MANAGEMENT_RUNTIME_ALIGNMENT_2026_06_13.md
+docs/platform12/error_records/ERROR_RECORD_HOME_MANAGEMENT_RUNTIME_SCOPE_MERGE_MISMATCH_2026_06_13.md
+test/features/platform/home/pwf_home_admin_runtime_alignment_contract_test.dart
+ARTIFACT_MANIFEST_platform12_home_management_runtime_alignment_mega_batch_2026_06_13.json
+```
+
+### Current status
+
+```text
+platform12-home-management-runtime-alignment-mega-batch-prepared
+runtime-section-scope-precedence-hardened
+admin-home-management-hide-order-active-state-now-wins-over-global-fallbacks
+admin-semantic-family-single-active-enforcement-added
+new-admin-catalog-section-default-inactive
+home-management-runtime-alignment-contract-test-added
+android-runtime-uat-deferred
+no-sql-executed
+no-service-role
+production-not-approved
+```
+
+### Preserved
+
+- No SQL executed.
+- No public base table mutation.
+- No service-role usage.
+- No `waqf_assets` mutation.
+- Android runtime UAT remains deferred.
+
+## 2026-06-13 — Platform 12 Home Management Unique Scope Write Closure Mega Batch
+
+### Scope
+
+Closed the `/admin/home-management` duplicate-key failure reported from browser evidence:
+
+```text
+PostgrestException(message: duplicate key value violates unique constraint "ux_homepage_sections_scope", code: 23505)
+```
+
+### Cause accepted
+
+The admin surface was checking existing homepage section rows through `public.v_platform_homepage_sections_compat_v1` before inserting into `public.homepage_sections`. The compatibility view is a runtime read surface and may not expose every inactive/scoped row present in the preserved write table. The insert could therefore collide with the unique scope constraint.
+
+### Implemented
+
+- Hardened `HomepageRepository.saveSectionsMeta` with write-surface conflict detection.
+- Added guarded insert-or-update behavior and 23505 retry-as-update fallback.
+- Canonicalized section names before admin writes.
+- Expanded legacy/canonical aliases for activities/events/gallery families.
+- Hardened `PwfUnitPagesRepository` section writes against the same duplicate-scope failure.
+- Added source contract test for the admin unique-scope write rule.
+- Added read-only SQL diagnostics for exact/canonical scope duplicates.
+
+### Added
+
+```text
+docs/platform12/PLATFORM12_HOME_MANAGEMENT_UNIQUE_SCOPE_WRITE_CLOSURE_MEGA_BATCH_2026_06_13.md
+docs/platform12/UAT_HOME_MANAGEMENT_UNIQUE_SCOPE_WRITE_CLOSURE_2026_06_13.md
+docs/platform12/error_records/ERROR_RECORD_HOME_MANAGEMENT_UNIQUE_SCOPE_DUPLICATE_KEY_2026_06_13.md
+docs/platform12/evidence/admin_home_management_duplicate_key_ux_homepage_sections_scope_2026_06_13.png
+sql_sandbox/platform12_home_management_unique_scope_write_diagnostics_read_only/01_homepage_sections_unique_scope_diagnostics_read_only.sql
+test/features/platform/home/pwf_home_admin_unique_scope_write_contract_test.dart
+ARTIFACT_MANIFEST_platform12_home_management_unique_scope_write_closure_mega_batch_2026_06_13.json
+```
+
+### Current status
+
+```text
+platform12-home-management-unique-scope-write-closure-mega-batch-prepared
+admin-home-management-23505-duplicate-scope-evidence-accepted
+write-surface-conflict-detection-hardened
+compat-view-runtime-read-preserved
+admin-legacy-write-surface-preserved-until-owner-rpc-approval
+home-management-runtime-alignment-preserved
+android-runtime-uat-deferred
+no-sql-executed
+no-service-role
+production-not-approved
+```
+
+### Preserved
+
+- No SQL executed.
+- No public base table schema change.
+- No service-role usage.
+- No `waqf_assets` mutation.
+- Android runtime UAT remains deferred.
+
+## 2026-06-13 — Platform 12 — Home Management Toggle Persistence Closure Mega Batch
+
+- Accepted browser evidence that a section enabled in `/admin/home-management` can revert to inactive immediately after Save.
+- Root cause: the admin manager still reloaded from the public compatibility/runtime read surface, while the write path targets preserved `public.homepage_sections`. Inactive/scoped write rows can be omitted or overridden by compatibility/readback behavior.
+- Added admin-only write-surface readback methods in `HomepageRepository`:
+  - `fetchAllSectionsForAdmin()`
+  - `fetchAllSectionsForAdminUnit(...)`
+- Repointed `PwfHomepageSectionsManager` load/reload to the admin write-surface readback, while preserving runtime reads through `public.v_platform_homepage_sections_compat_v1` for the public homepage.
+- Hardened write conflict lookup to prefer canonical `section_name` rows before legacy aliases. This prevents toggling a canonical section while the write path updates a legacy alias row and leaves the canonical row inactive.
+- Added contract test `pwf_home_admin_write_surface_readback_contract_test.dart`.
+- Added read-only SQL diagnostics for toggle/readback mismatches.
+- No SQL executed. No service-role usage. Production not approved.
+
+## 2026-06-13 — Platform 12 — Home Management Save Feedback + Runtime Visibility Closure Mega Batch
+
+- Accepted operator evidence that a section can be enabled and saved in `/admin/home-management` without a confirmation message, then remain visible in the admin panel but absent from `/home`.
+- Added explicit save confirmation feedback in the admin screen after a successful save.
+- Invalidated homepage runtime providers after save so `/home` does not keep stale section metadata in the Riverpod cache.
+- Preserved `public.v_platform_homepage_sections_compat_v1` as the base runtime read surface while adding a fail-open overlay from the preserved admin write surface `public.homepage_sections` until owner-write/read RPC closure is approved.
+- Made DB-enabled `pwf_public_services_catalog` visibly render an empty-state block from homepage runtime when its data source is empty, preventing silent disappearance of an enabled section.
+- Added contract test `test/features/platform/home/pwf_home_admin_runtime_visibility_contract_test.dart`.
+- Added read-only SQL diagnostics for write-active rows missing from the runtime compatibility view.
+- No SQL executed. No service-role usage. Production not approved.
+
+## 2026-06-13 — Platform 12 — Homepage Management Sovereign Runtime Contract Mega Batch
+
+- Accepted the architectural decision to stop incremental UI remediation and move to a sovereign runtime contract for `/admin/home-management` and `/home`.
+- Added RPC-first repository integration for homepage section admin state, save state, and runtime state. Fallback is preserved only until SQL is applied in the target environment.
+- Added `rpc_homepage_sections_registry_v1`, `rpc_homepage_sections_admin_state_v1`, `rpc_homepage_sections_save_state_v1`, and `rpc_homepage_sections_runtime_v1` SQL definitions under guarded `sql_apply`.
+- Added a governed section registry inside Flutter: every section now has a family, source kind, owner label, renderer key, and contract note.
+- Isolated breaking news as its own sovereign alerts family so it no longer disappears inside normal news. Enabled breaking news now renders a governed empty state when no items are published.
+- Kept media gallery ownership limited to photos/videos and kept activities/events inside their own family.
+- Removed physical delete from the admin save path; duplicate representatives are removed from runtime by deactivation through the save RPC design.
+- Added admin chips showing section family, source, owner, empty-state capability, and contract notes.
+- Added contract test `test/features/platform/home/pwf_homepage_sovereign_runtime_contract_test.dart`.
+- SQL prepared, not executed. No service-role usage. Production not approved. Android runtime UAT remains deferred.
+
+## 2026-06-13 — Platform 12 — Homepage Visual Contract Alignment Mega Batch
+
+- Accepted the requirement to unify the visual formatting of all homepage sections according to the platform governing contract.
+- Added a centralized visual system for public homepage sections in `PwfHomeVisualContract`.
+- Added reusable visual primitives: `PwfVisualCard`, `PwfVisualIconTile`, `PwfVisualChip`, `PwfVisualEmptyState`, and `PwfVisualResponsiveGrid`.
+- Repointed `PwfSectionContainer` to the centralized section background and spacing policy.
+- Repointed `PwfSectionTitle` to the centralized typography/divider/subtitle scale using the approved blue/gold/royal-red identity.
+- Wrapped breaking news in the common homepage section container while preserving its independent sovereign-alert family and without merging it with general news.
+- Added contract test `test/features/platform/home/pwf_home_visual_contract_test.dart`.
+- Preserved the Homepage Management Sovereign Runtime Contract and did not alter admin/runtime visibility semantics.
+- No SQL executed. No service-role usage. Production not approved. Android runtime UAT remains deferred.
+
+## 2026-06-13 — Platform 12 — Public Subpages Visual Contract + About/Vision Development Mega Batch
+
+- Accepted the requirement to extend the homepage visual contract to all public subpages opened from the homepage/navigation surface.
+- Reused `PwfHomeVisualContract` and its reusable primitives across public content pages, platform frontend hub pages, and static placeholder pages.
+- Developed `/about` with a richer institutional ministry overview, work areas, digital transformation narrative, and ministry/directorate unit relationship.
+- Developed `/vision-mission` with clear vision, mission, work pillars, and governing values aligned with PalWakf governance language.
+- Reworked `_PwfContentPage` into a unified subpage visual pattern: sovereign hero, responsive visual grid, visual section cards, and governed actions.
+- Reworked platform frontend hub cards, metrics, section titles, and info blocks to use centralized visual primitives and the approved blue/gold/royal-red identity.
+- Reworked static placeholder pages to show governed empty states instead of unmanaged ad-hoc cards.
+- Added contract test `test/features/platform/home/pwf_home_subpages_visual_contract_test.dart`.
+- Preserved the Homepage Management Sovereign Runtime Contract and did not alter admin/runtime visibility semantics.
+- No SQL executed. No service-role usage. Production not approved. Android runtime UAT remains deferred.
+
+## 2026-06-13 — Platform 12 — Homepage First Fold Visual Refinement Mega Batch
+
+- Accepted operator requirements for targeted homepage visual refinements after the sovereign runtime contract and visual contract alignment batches.
+- Reworked `PwfBreakingNewsMarquee` into a full-width sovereign alert strip aligned with the hero first-fold surface instead of a detached section card.
+- Hardened `PwfPublicImage` so network and local fallback images expand to the full allocated box with `SizedBox.expand`, explicit width/height, and `BoxFit.cover`, preventing gray bands below hero imagery.
+- Tightened `PwfHomeVisualContract.sectionBackground` to use one continuous homepage background surface, reducing visible orphan bands when sections are disabled/reordered from `/admin/home-management`.
+- Removed redundant outer spacing from minister word and e-services sections where `PwfSectionContainer` already owns page rhythm.
+- Enhanced `PwfNewsSection` with a second featured complementary/subordinate-unit news card below the primary story when data exists.
+- Added thumbnails/fallback thumbnails to side news cards and complementary news cards.
+- Reworked e-services governance chips into a one-line horizontally scrollable governance row instead of multi-row wrapping.
+- Made the scroll-to-top button hidden on first load and visible only after scrolling beyond approximately half the first viewport.
+- Added `test/features/platform/home/pwf_homepage_first_fold_visual_refinement_test.dart`.
+- No SQL executed. No service-role usage. Production not approved. Android runtime UAT remains deferred.
+
+## 2026-06-15 — Platform 12 — Homepage Surface Continuity + Hero Height Closure Mega Batch
+
+- Accepted user evidence that the hero image felt vertically pulled upward and that the hero needs an additional first-fold height allowance matching the supplied 54px evidence strip.
+- Increased and rebalanced `PwfHeroSliderSection` height with a desktop `54px` extension, a controlled mobile/tablet extension, and a viewport-aware first-fold target.
+- Adjusted hero image focal alignment to reduce the visual impression that the image is pulled upward while preserving `BoxFit.cover`.
+- Repointed the public homepage light-mode canvas and section background contract to `PwfHomePalette.surface` to prevent orphan grey bands between sections.
+- Removed the extra blue-tinted outer background from `PwfStatsSection`; `PwfSectionContainer` now owns the statistics section surface and rhythm.
+- Preserved the scroll-to-top threshold behavior, sovereign homepage management runtime contract, and RPC-first strategy.
+- Added `test/features/platform/home/pwf_homepage_surface_continuity_hero_height_test.dart` and adjusted the visual contract test to match the current breaking-news semantics label.
+- No SQL executed. No service-role usage. Production not approved. Android runtime UAT remains deferred.
+
+
+## 2026-06-15 — Platform 12 — Homepage Adaptive Hero + Surface Band Closure Mega Batch
+
+- Accepted retest evidence that the hero still felt visually pulled upward and that disabling the breaking-news strip requires the hero to flex as the true first-fold block before lower homepage sections.
+- Increased the desktop first-fold target to `viewportHeight * 0.80`, raised the hero allowance to `86px` on desktop and `42px` on narrow layouts, and rebalanced base hero heights.
+- Lowered the hero image focal point to `Alignment(0, 0.36)` so DB-managed hero images reveal more of the lower visual field while preserving full-bleed `BoxFit.cover` with no grey image gaps.
+- Removed the external gradient/margin wrapper from `PwfMediaGallerySection`; the gallery now participates directly in the shared `PwfSectionContainer` canvas and no longer leaves grey/foreign bands above or below when neighboring sections are hidden.
+- Wrapped runtime-rendered homepage sections in a white sovereign section slot inside `PwfHomeSectionsRenderer` to prevent transparent or legacy outer wrappers from exposing non-contract page backgrounds.
+- Expanded `pwf_homepage_surface_continuity_hero_height_test.dart` to guard adaptive first-fold height, lowered focal point, gallery no-band behavior, and renderer surface-slot behavior.
+- No SQL executed. No service-role usage. Production not approved. Android runtime UAT remains deferred.
+
+## 2026-06-15 — Platform 12 — Public Subpages Unified Visual Polish Mega Batch
+
+- Accepted operator evidence that homepage-derived public subpages still appeared visually mixed after homepage visual alignment: inconsistent hero widths, card rhythm, typography, static placeholders, and always-visible scroll utility.
+- Reworked `PwfPublicIntroCard` into a full-width responsive sovereign public-subpage hero using `PwfHomeVisualContract`, `PwfVisualIconTile`, and `PwfVisualChip`.
+- Reworked public stats, surface cards, badges, loading states, and empty states to use the centralized visual primitives instead of legacy/ad-hoc wrappers.
+- Updated `PwfWebPageScaffold` so the light-mode page canvas uses `PwfHomePalette.surface` and scroll-to-top is hidden on first load until the user scrolls beyond roughly 55% of the viewport.
+- Reworked platform frontend hub hero/action cards to use one reusable visual rhythm while preserving each page's content family and actions.
+- Reworked static placeholder pages to use the same public intro and governed empty-state pattern rather than a standalone card-only layout.
+- Rebalanced CMS/static subpage hero height and icon treatment to match the public subpage contract.
+- Added contract test `test/features/platform/home/pwf_public_subpages_unified_visual_polish_test.dart`.
+- No SQL executed. No service-role usage. Production not approved. Android runtime UAT remains deferred.
+
+## 2026-06-15 — Platform 12 — Public Subpages Visual System Rework Mega Batch
+
+- Accepted operator decision to stop page-by-page visual polishing and rework public subpages through one shared visual system.
+- Added compact public-subpage spacing in `PwfHomeVisualContract` and routed public subpage sections through that density in `PwfSectionContainer`.
+- Reworked `PwfPublicIntroCard` into a smaller masthead-style citizen-facing page header with stronger contrast and reduced title-box height.
+- Added filtering for technical notes in public intro cards so RPC/RLS/fallback/source/governance details are not rendered in the public citizen surface.
+- Reworked public stats cards and surface cards into denser shared visual primitives.
+- Reworded public services request status from technical RPC/fallback/backend language into citizen-facing status language.
+- Collapsed public service governance notes and platform center governance strips from public page rendering; governance remains in admin docs/runbooks.
+- Reworded visible platform frontend labels from technical governance language into public UX language.
+- Added `test/features/platform/home/pwf_public_subpages_visual_system_rework_test.dart`.
+- No SQL executed. No service-role usage. Production not approved. Android runtime UAT remains deferred.
+
+## 2026-06-15 — Platform 12 — Public Subpages Analyze/Test Contract Closure Mega Batch
+
+- Accepted local `flutter analyze` and `flutter test` evidence after the public-subpages visual-system rework.
+- Fixed invalid `FontWeight.w650` usages in `PwfHomeVisualContract` by using valid Flutter font weights while preserving stronger public text contrast.
+- Added a centralized `alertAccent` token in `PwfHomeVisualContract` mapped to `PwfHomePalette.royalRed` so the blue/gold/royal-red visual identity remains present in the contract.
+- Removed the unused `_ContentCard` class from `pwf_static_pages.dart` after the static pages moved to the shared public intro/empty-state pattern.
+- Removed an unnecessary duplicate-row type check in `pwf_unit_pages_repository.dart`.
+- Rebased stale contract tests to the compact public-subpage masthead heights and current guarded write-surface lookup wording.
+- No SQL executed. No service-role usage. Production not approved. Android runtime UAT remains deferred.
+
+## 2026-06-15 — Platform 12 — Public Governance Residue + Test Harness Closure Mega Batch
+
+- Accepted local evidence that public subpages still exposed residual technical governance language after the visual-system rework and that the local suite still had one unused import warning plus a stale Flutter template test failure.
+- Removed remaining citizen-facing technical labels from public subpages: `SQL UAT`, `backend-first`, visible `fallback` badges, `unitSlug` renderer wording, and public references to `waqf_assets` in homepage-derived public content.
+- Removed the unused `PwfHomePalette` import from `pwf_static_pages.dart` to close the last local `flutter analyze` warning.
+- Replaced the stale root `test/widget_test.dart` template binding with a neutral harness test that does not import an obsolete package name or `MyApp`.
+- Added `test/features/platform/home/pwf_public_governance_residue_closure_test.dart` to prevent re-exposing technical governance residue in public pages and to guard the stale widget-test closure.
+- Public technical governance remains allowed in admin screens, runbooks, diagnostics, and SQL/RPC design files, but not in citizen-facing pages.
+- No SQL executed. No service-role usage. Production not approved. Android runtime UAT remains deferred.
+
+
+## 2026-06-16 — Platform 12 — Public Subpages Full Visual Audit + Governance Residue Closure Mega Batch
+
+- Accepted new browser evidence that several public subpages still needed full visual refinement and that governance/source metadata was still visible on `/home/chat`, `/home/zakat`, and related public tools.
+- Reworked `PwfPublicInteractiveToolShell` so public interactive pages no longer render route/source/readiness banners; technical binding remains internal documentation only.
+- Hardened `PwfPublicIntroCard` to suppress governance/developer notes and replace technical subtitles with citizen-facing fallback copy when needed.
+- Reduced public-subpage vertical density and masthead heights to make better use of the space below the platform toolbar.
+- Reworded Zakat public page and calculator status copy from wrapper/fallback/PWF-SIS language into public-friendly guidance.
+- Reworded the public chatbot top notice so it explains the current page context without showing source allowlists or source contracts.
+- Rebuilt the complaints page header to use the shared public masthead and removed the second oversized dark header block.
+- Reworded public frontend hub labels and service-tracking status chips so technical source labels are not shown to visitors.
+- Updated contract tests for the denser masthead system and added coverage for interactive public tools hiding source/governance residue.
+- No SQL executed. No service-role usage. Production not approved. Android runtime UAT remains deferred.

@@ -46,15 +46,19 @@ class PwfPublicImage extends StatelessWidget {
       );
     }
 
-    return Image.network(
-      value,
-      fit: fit,
-      alignment: alignment,
-      errorBuilder: (_, __, ___) => _LocalFallbackImage(
-        assetPath: fallbackAsset,
+    return SizedBox.expand(
+      child: Image.network(
+        value,
+        width: double.infinity,
+        height: double.infinity,
         fit: fit,
         alignment: alignment,
-        fallbackColor: fallbackColor,
+        errorBuilder: (_, __, ___) => _LocalFallbackImage(
+          assetPath: fallbackAsset,
+          fit: fit,
+          alignment: alignment,
+          fallbackColor: fallbackColor,
+        ),
       ),
     );
   }
@@ -92,20 +96,24 @@ class _LocalFallbackImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      assetPath,
-      fit: fit,
-      alignment: alignment,
-      errorBuilder: (_, __, ___) => DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              fallbackColor,
-              fallbackColor.withValues(alpha: 0.82),
-              const Color(0xFF0A1E3A),
-            ],
+    return SizedBox.expand(
+      child: Image.asset(
+        assetPath,
+        width: double.infinity,
+        height: double.infinity,
+        fit: fit,
+        alignment: alignment,
+        errorBuilder: (_, __, ___) => DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: [
+                fallbackColor,
+                fallbackColor.withValues(alpha: 0.82),
+                const Color(0xFF0A1E3A),
+              ],
+            ),
           ),
         ),
       ),

@@ -41,20 +41,14 @@ class PwfEServicesPortalSection extends ConsumerWidget {
 
     final isMobile = MediaQuery.sizeOf(context).width < 700;
 
-    return Container(
-      margin: EdgeInsets.only(bottom: isMobile ? 22 : 40),
-      padding: EdgeInsets.symmetric(vertical: isMobile ? 22 : 40),
-      child: PwfSectionContainer(
-        sectionKey: 'PwfEServicesPortalSection',
-        child: Column(
+    return PwfSectionContainer(
+      sectionKey: 'PwfEServicesPortalSection',
+      child: Column(
           children: [
             PwfSectionTitle(title: settings.title, subtitle: settings.subtitle),
             const SizedBox(height: 8),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 10,
-              runSpacing: 10,
-              children: [
+            _GovernanceMetaRow(
+              chips: [
                 _metaChip(
                   label: scopeLabel,
                   icon: normalizedSlug == 'home'
@@ -84,8 +78,30 @@ class PwfEServicesPortalSection extends ConsumerWidget {
               itemCount: items.length,
               itemBuilder: (_, i) => _PwfEServiceCard(item: items[i]),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GovernanceMetaRow extends StatelessWidget {
+  const _GovernanceMetaRow({required this.chips});
+
+  final List<Widget> chips;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      reverse: true,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (int i = 0; i < chips.length; i++) ...[
+            if (i > 0) const SizedBox(width: 10),
+            chips[i],
           ],
-        ),
+        ],
       ),
     );
   }
@@ -100,12 +116,14 @@ Widget _metaChip({required String label, required IconData icon}) {
       border: Border.all(color: PwfHomePalette.border),
     ),
     child: Row(
-      mainAxisSize: MainAxisSize.max,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 16, color: PwfHomePalette.primary),
         const SizedBox(width: 8),
         Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: GoogleFonts.cairo(
             fontSize: 12.5,
             fontWeight: FontWeight.w700,

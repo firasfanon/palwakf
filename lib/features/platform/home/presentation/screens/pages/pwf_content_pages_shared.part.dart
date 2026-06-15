@@ -148,43 +148,40 @@ class _PwfContentPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeKey = ref.watch(pwfUiPrefsProvider).themeKey;
-    final t = PwfThemeTokens.forKey(themeKey);
+    final isAr =
+        Localizations.localeOf(context).languageCode.toLowerCase() == 'ar';
 
     return PwfWebPageScaffold(
       unitSlug: unitSlug,
       title: title,
       showTitleSection: true,
       child: PwfSectionContainer(
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
-          decoration: BoxDecoration(
-            color: t.cardBg,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: t.cardBorder),
-            boxShadow: t.cardShadow,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: t.mutedText,
-                  height: 1.7,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 16),
-              for (final s in sections) ...[
-                _SectionBlock(section: s),
-                const SizedBox(height: 14),
+        sectionKey: 'public-subpage-$unitSlug',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _PwfSubpageHero(
+              title: title,
+              subtitle: subtitle,
+              eyebrow: isAr ? 'صفحة تعريفية رسمية' : 'Official public page',
+              icon: _subpageIconForTitle(title),
+            ),
+            const SizedBox(height: 22),
+            PwfVisualResponsiveGrid(
+              desktopColumns: sections.length <= 2 ? 2 : 3,
+              tabletColumns: 2,
+              minCardWidth: 300,
+              children: [
+                for (final s in sections) _SectionBlock(section: s),
               ],
-              const SizedBox(height: 10),
-              Wrap(
+            ),
+            const SizedBox(height: 22),
+            PwfVisualCard(
+              padding: const EdgeInsets.all(18),
+              child: Wrap(
                 spacing: 10,
                 runSpacing: 10,
+                alignment: WrapAlignment.start,
                 children: [
                   _ActionButton(
                     label: primaryActionLabel,
@@ -192,24 +189,115 @@ class _PwfContentPage extends ConsumerWidget {
                     onTap: () => context.go(primaryActionPath),
                   ),
                   _ActionButton(
-                    label:
-                        Localizations.localeOf(
-                              context,
-                            ).languageCode.toLowerCase() ==
-                            'ar'
-                        ? 'آخر الأخبار'
-                        : 'Latest News',
+                    label: isAr ? 'آخر الأخبار' : 'Latest News',
                     filled: false,
                     onTap: () => context.go('/home/news'),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+class _PwfSubpageHero extends StatelessWidget {
+  const _PwfSubpageHero({
+    required this.title,
+    required this.subtitle,
+    required this.eyebrow,
+    required this.icon,
+  });
+
+  final String title;
+  final String subtitle;
+  final String eyebrow;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 220),
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        gradient: PwfHomeVisualContract.sovereignGradient(),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: const [PwfHomeVisualContract.elevatedCardShadow],
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 720;
+          final text = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              PwfVisualChip(
+                label: eyebrow,
+                icon: Icons.verified_outlined,
+                color: PwfHomePalette.secondary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  height: 1.25,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.92),
+                  height: 1.75,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          );
+          final iconBox = Container(
+            width: 112,
+            height: 112,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+            ),
+            child: Icon(icon, color: PwfHomePalette.secondary, size: 54),
+          );
+          if (compact) return text;
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(child: text),
+              const SizedBox(width: 24),
+              iconBox,
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+IconData _subpageIconForTitle(String title) {
+  final normalized = title.toLowerCase();
+  if (normalized.contains('رؤية') || normalized.contains('vision')) {
+    return Icons.visibility_outlined;
+  }
+  if (normalized.contains('وزارة') || normalized.contains('ministry')) {
+    return Icons.account_balance_outlined;
+  }
+  if (normalized.contains('وزير') || normalized.contains('minister')) {
+    return Icons.record_voice_over_outlined;
+  }
+  if (normalized.contains('هيكل') || normalized.contains('structure')) {
+    return Icons.account_tree_outlined;
+  }
+  return Icons.article_outlined;
 }
 
 class _PwfContentSection {
@@ -220,63 +308,75 @@ class _PwfContentSection {
   final List<String>? bullets;
 }
 
-class _SectionBlock extends ConsumerWidget {
+class _SectionBlock extends StatelessWidget {
   const _SectionBlock({required this.section});
   final _PwfContentSection section;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final themeKey = ref.watch(pwfUiPrefsProvider).themeKey;
-    final t = PwfThemeTokens.forKey(themeKey);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          section.heading,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 8),
-        if (section.body != null && section.body!.trim().isNotEmpty)
-          Text(
-            section.body!,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(height: 1.75),
-          ),
-        if (section.bullets != null && section.bullets!.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          for (final b in section.bullets!)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(top: 7),
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: t.accent,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+  Widget build(BuildContext context) {
+    return PwfVisualCard(
+      showAccentRail: true,
+      padding: const EdgeInsetsDirectional.fromSTEB(24, 22, 24, 22),
+      child: Padding(
+        padding: const EdgeInsetsDirectional.only(start: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const PwfVisualIconTile(
+                  icon: Icons.done_all_outlined,
+                  color: PwfHomePalette.royalRed,
+                  size: 44,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    section.heading,
+                    style: PwfHomeVisualContract.cardTitleStyle(context),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      b,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(height: 1.7),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-        ],
-      ],
+            if (section.body != null && section.body!.trim().isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Text(
+                section.body!,
+                style: PwfHomeVisualContract.cardBodyStyle(context),
+              ),
+            ],
+            if (section.bullets != null && section.bullets!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              for (final b in section.bullets!)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 9),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(top: 8),
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: PwfHomePalette.secondary,
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          b,
+                          style: PwfHomeVisualContract.cardBodyStyle(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

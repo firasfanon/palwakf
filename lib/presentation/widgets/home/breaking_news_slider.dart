@@ -11,8 +11,15 @@ import '../../../data/repositories/homepage_repository.dart'
 /// Follows DRY and OOP principles
 class BreakingNewsSlider extends ConsumerStatefulWidget {
   final String unitSlug;
+  final bool forceEnabled;
+  final bool showEmptyState;
 
-  const BreakingNewsSlider({super.key, this.unitSlug = 'home'});
+  const BreakingNewsSlider({
+    super.key,
+    this.unitSlug = 'home',
+    this.forceEnabled = false,
+    this.showEmptyState = false,
+  });
 
   @override
   ConsumerState<BreakingNewsSlider> createState() => _BreakingNewsSliderState();
@@ -85,8 +92,14 @@ class _BreakingNewsSliderState extends ConsumerState<BreakingNewsSlider>
         final settings =
             settingsState.settings ?? const BreakingNewsSectionSettings();
 
-        if (items.isEmpty || !settings.enabled) {
+        final enabled = settings.enabled || widget.forceEnabled;
+        if (!enabled) {
           return const SizedBox.shrink();
+        }
+        if (items.isEmpty) {
+          return widget.showEmptyState
+              ? const _BreakingNewsEmptyState()
+              : const SizedBox.shrink();
         }
 
         return _BreakingNewsBar(
@@ -100,6 +113,39 @@ class _BreakingNewsSliderState extends ConsumerState<BreakingNewsSlider>
       },
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+
+
+class _BreakingNewsEmptyState extends StatelessWidget {
+  const _BreakingNewsEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      decoration: BoxDecoration(
+        color: AppConstants.error.withValues(alpha: 0.08),
+        border: Border(
+          bottom: BorderSide(color: AppConstants.error.withValues(alpha: 0.18)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.campaign, color: AppConstants.error, size: 22),
+          const SizedBox(width: 10),
+          Text(
+            'الأخبار العاجلة مفعّلة ولا توجد عناصر منشورة حاليًا',
+            style: TextStyle(
+              color: AppConstants.error,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

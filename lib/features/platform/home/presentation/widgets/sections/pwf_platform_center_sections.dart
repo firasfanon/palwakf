@@ -191,7 +191,7 @@ class _PwfPlatformCenterSection extends ConsumerWidget {
         unitSlug.trim().isNotEmpty && unitSlug.trim().toLowerCase() != 'home';
     final title = isUnit ? '${spec.title} — صفحة الوحدة' : spec.title;
     final subtitle = isUnit
-        ? '${spec.unitSubtitle} يتم العرض ضمن نفس renderer وبنطاق unitSlug = $unitSlug.'
+        ? spec.unitSubtitle
         : spec.subtitle;
 
     return PwfSectionContainer(
@@ -404,11 +404,9 @@ class _HomepagePublishedItemCard extends StatelessWidget {
               runSpacing: 8,
               children: [
                 _Pill(icon: Icons.apartment_outlined, label: item.ownerName),
-                _Pill(
-                  icon: item.isFallback
-                      ? Icons.info_outline
-                      : Icons.verified_outlined,
-                  label: item.isFallback ? 'fallback' : 'منشور',
+                const _Pill(
+                  icon: Icons.verified_outlined,
+                  label: 'منشور',
                 ),
               ],
             ),
@@ -495,33 +493,9 @@ class _SectionGovernanceStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: PwfHomePalette.primary.withValues(alpha: 0.045),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: PwfHomePalette.primary.withValues(alpha: 0.11),
-        ),
-      ),
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          _Pill(icon: Icons.view_quilt_outlined, label: spec.sectionKey),
-          _Pill(icon: Icons.storage_outlined, label: spec.dataContract),
-          _Pill(
-            icon: Icons.account_tree_outlined,
-            label: unitSlug == 'home' ? 'نطاق مركزي' : 'نطاق وحدة: $unitSlug',
-          ),
-          _Pill(
-            icon: Icons.tune_outlined,
-            label: 'الإظهار والترتيب من homepage_sections',
-          ),
-        ],
-      ),
-    );
+    // Governance metadata remains available in admin/docs. Public pages should
+    // not expose source keys, data contracts, or homepage_sections internals.
+    return const SizedBox.shrink();
   }
 }
 
@@ -776,7 +750,7 @@ class _Specs {
     title: 'مرصد حماية المقدسات',
     subtitle:
         'مرصد موثق للوقائع والانتهاكات على المقدسات والأماكن الوقفية مع مراجعة وأدلة.',
-    unitSubtitle: 'وقائع أو مؤشرات مرتبطة بنطاق الوحدة مع بقاء الحوكمة مركزية.',
+    unitSubtitle: 'وقائع أو مؤشرات مرتبطة بنطاق الوحدة ومرتبطة بملفاتها العامة.',
     dataContract: 'public.sanctities_observatory + document_intelligence links',
     cards: [
       _CenterCardSpec(

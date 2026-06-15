@@ -8,7 +8,6 @@ import '../../../assistant_core/data/models/quick_action_item.dart';
 import '../../../assistant_core/presentation/theme/chat_palette.dart';
 import '../../../assistant_core/data/services/chat_route_context_service.dart';
 import '../../../assistant_core/presentation/widgets/chat_shell.dart';
-import '../../../internal_assistant/data/services/assistant_knowledge_governance_service.dart';
 import 'package:waqf/features/platform/public_runtime/presentation/widgets/pwf_public_interactive_tool_shell.dart';
 import '../i18n/public_chatbot_i18n.dart';
 import '../providers/public_chatbot_provider.dart';
@@ -32,8 +31,6 @@ class PublicChatbotPage extends ConsumerStatefulWidget {
 }
 
 class _PublicChatbotPageState extends ConsumerState<PublicChatbotPage> {
-  final _governance = const AssistantKnowledgeGovernanceService();
-
   @override
   void initState() {
     super.initState();
@@ -78,17 +75,6 @@ class _PublicChatbotPageState extends ConsumerState<PublicChatbotPage> {
       GoRouterState.of(context).uri.toString(),
       fallbackUnitSlug: widget.unitId,
     );
-    final scopeLabel = _governance.scopeLabelArForRoute(
-      isInternal: false,
-      routeContext: routeContext,
-    );
-    final allowedSources = _governance.publicSources(
-      routeContext: routeContext,
-    );
-    final sourcesPreview = allowedSources
-        .take(3)
-        .map((e) => i18n.isArabic ? e.labelAr : e.labelEn)
-        .join(' • ');
 
     final topContent = Container(
       padding: const EdgeInsets.all(14),
@@ -105,10 +91,8 @@ class _PublicChatbotPageState extends ConsumerState<PublicChatbotPage> {
           Expanded(
             child: Text(
               i18n.isArabic
-                  ? 'نطاق هذا الشات: $scopeLabel فقط. الصفحة الحالية: ${routeContext.pageLabelAr}. المصادر المسموح بها: ${allowedSources.length}.'
-                        '${sourcesPreview.isEmpty ? '' : ' أبرزها: $sourcesPreview'}'
-                  : 'This chatbot scope is $scopeLabel only. Current page: ${routeContext.pageLabelEn}. '
-                        'Allowed sources: ${allowedSources.length}${sourcesPreview.isEmpty ? '' : '. Main sources: $sourcesPreview'}.',
+                  ? 'أنت الآن في صفحة ${routeContext.pageLabelAr}. اسأل عن الخدمات والمعلومات العامة المرتبطة بهذه الصفحة، وسأوجهك إلى المسار المناسب عند الحاجة.'
+                  : 'You are now on ${routeContext.pageLabelEn}. Ask about public information or services related to this page.',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -145,7 +129,7 @@ class _PublicChatbotPageState extends ConsumerState<PublicChatbotPage> {
         canonicalRoute: '/home/chat',
         title: i18n.pageTitle,
         subtitle:
-            'مساعد عام يجيب فقط من المصادر الرسمية المسموحة ضمن نطاق الصفحة الحالية، مع إظهار عقد المصدر قبل المحادثة.',
+            'مساعد عام يجيب عن الأسئلة الشائعة ويوجهك إلى الصفحات والخدمات المناسبة داخل الموقع.',
         icon: Icons.support_agent_rounded,
         child: chatShell,
       );

@@ -34,22 +34,9 @@ class PwfMinisterWordSection extends ConsumerWidget {
       orElse: () => _PwfMinisterVM.fallback,
     );
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [
-            PwfHomePalette.primary.withValues(alpha: 0.05),
-            PwfHomePalette.secondary.withValues(alpha: 0.05),
-          ],
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 36),
-      child: PwfSectionContainer(
-        sectionKey: 'PwfMinisterWordSection',
-        verticalPadding: 0,
-        child: LayoutBuilder(
+    return PwfSectionContainer(
+      sectionKey: 'PwfMinisterWordSection',
+      child: LayoutBuilder(
           builder: (context, c) {
             final wide = c.maxWidth >= 900;
             final image = _MinisterImage(url: data.imageUrl);
@@ -85,7 +72,6 @@ class PwfMinisterWordSection extends ConsumerWidget {
               ],
             );
           },
-        ),
       ),
     );
   }

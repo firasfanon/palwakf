@@ -205,8 +205,12 @@ class PwfUnitPagesRepository {
           .eq('id', existingPageId);
     }
 
+    // Use the write table for conflict detection. The public compatibility
+    // view can be runtime-scoped or omit inactive rows, which makes an admin
+    // insert attempt collide with ux_homepage_sections_scope even though the
+    // pre-read looked empty.
     final existingSectionsRows = await _client
-        .from(_sectionsReadSurface)
+        .from(_sectionsLegacyWriteTable)
         .select('id,section_name,settings,display_order')
         .eq('unit_id', draft.unitId)
         .inFilter(
@@ -240,7 +244,25 @@ class PwfUnitPagesRepository {
       };
       final existingId = (existing?['id'] ?? '').toString().trim();
       if (existingId.isEmpty) {
-        await _client.from(_sectionsLegacyWriteTable).insert(sectionPayload);
+        try {
+          await _client.from(_sectionsLegacyWriteTable).insert(sectionPayload);
+        } catch (e) {
+          if (e is! PostgrestException || e.code != '23505') rethrow;
+          final duplicateRows = await _client
+              .from(_sectionsLegacyWriteTable)
+              .select('id')
+              .eq('unit_id', draft.unitId)
+              .eq('section_name', option.key)
+              .limit(1);
+          final duplicateId = duplicateRows.isNotEmpty
+              ? ((duplicateRows.first as Map)['id'] ?? '').toString()
+              : '';
+          if (duplicateId.isEmpty) rethrow;
+          await _client
+              .from(_sectionsLegacyWriteTable)
+              .update(sectionPayload)
+              .eq('id', duplicateId);
+        }
       } else {
         await _client
             .from(_sectionsLegacyWriteTable)

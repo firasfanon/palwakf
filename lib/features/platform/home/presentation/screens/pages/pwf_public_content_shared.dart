@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:waqf/presentation/providers/unit_context_provider.dart';
 
 import '../../theme/pwf_home_palette.dart';
-import '../../widgets/pwf_hover_card.dart';
+import '../../widgets/shared/pwf_home_visual_contract.dart';
 
 String pwfFormatArabicDate(DateTime? dt) {
   if (dt == null) return 'غير محدد';
@@ -56,6 +56,53 @@ String pwfResolveScopeLabel({
 String pwfScopeLabel(String unitSlug) =>
     pwfResolveScopeLabel(unitSlug: unitSlug);
 
+/// Returns true when a string belongs to operator/developer governance rather
+/// than to citizen-facing copy. Public pages must not expose these labels.
+bool pwfIsTechnicalPublicNote(String? value) {
+  final text = (value ?? '').trim();
+  if (text.isEmpty) return false;
+  final lowered = text.toLowerCase();
+  return lowered.contains('rpc') ||
+      lowered.contains('rls') ||
+      lowered.contains('sql') ||
+      lowered.contains('uat') ||
+      lowered.contains('fallback') ||
+      lowered.contains('backend') ||
+      lowered.contains('wrapper') ||
+      lowered.contains('allowlist') ||
+      lowered.contains('source rows') ||
+      lowered.contains('owner schema') ||
+      lowered.contains('schema') ||
+      lowered.contains('unitSlug'.toLowerCase()) ||
+      lowered.contains('pwf-sis') ||
+      lowered.contains('waqf_assets') ||
+      lowered.contains('mustakshif') ||
+      lowered.contains('cases') ||
+      lowered.contains('assistant/') ||
+      lowered.contains('public.v_') ||
+      lowered.contains('public.') ||
+      lowered.contains('zakat.public') ||
+      lowered.contains('billing_system') ||
+      lowered.contains('platform_services') ||
+      lowered.contains('مصدر البيانات') ||
+      lowered.contains('المسار الرسمي') ||
+      lowered.contains('المصادر المسموح') ||
+      lowered.contains('عقد المصدر') ||
+      lowered.contains('حالة الجاهزية') ||
+      lowered.contains('بوابة الاعتماد') ||
+      lowered.contains('الربط التشغيلي') ||
+      lowered.contains('قاعدة البيانات') ||
+      lowered.contains('السيادية') ||
+      lowered.contains('المالك') ||
+      lowered.contains('حوكمة');
+}
+
+String pwfPublicCopyOrFallback(String value, String fallback) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return fallback;
+  return pwfIsTechnicalPublicNote(trimmed) ? fallback : trimmed;
+}
+
 class PwfPublicIntroCard extends ConsumerWidget {
   const PwfPublicIntroCard({
     super.key,
@@ -74,143 +121,80 @@ class PwfPublicIntroCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isHome = unitSlug.toLowerCase() == 'home';
     final unit = ref.watch(orgUnitBySlugProvider(unitSlug)).valueOrNull;
     final scopeLabel = pwfResolveScopeLabel(unitSlug: unitSlug, unit: unit);
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            PwfHomePalette.primary,
-            PwfHomePalette.primary.withValues(alpha: 0.90),
-          ],
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-        ),
-        borderRadius: PwfHomeRadii.br20,
-        boxShadow: const [
-          BoxShadow(
-            color: PwfHomePalette.shadow,
-            blurRadius: 20,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.12),
-                  ),
-                ),
-                child: Icon(icon, color: Colors.white, size: 26),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: PwfHomePalette.secondary.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  isHome ? 'محتوى الصفحة الرئيسية' : 'محتوى صفحة الوحدة',
-                  style: GoogleFonts.cairo(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  scopeLabel,
-                  style: GoogleFonts.cairo(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Text(
-            title,
-            style: GoogleFonts.cairo(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 780;
+        final iconBox = PwfVisualIconTile(
+          icon: icon,
+          color: PwfHomePalette.secondary,
+          backgroundColor: Colors.white.withValues(alpha: 0.12),
+          size: compact ? 44 : 52,
+        );
+        final badges = Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            PwfVisualChip(
+              label: scopeLabel,
+              icon: Icons.apartment_outlined,
               color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              height: 1.2,
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            subtitle,
-            style: GoogleFonts.cairo(
-              color: Colors.white.withValues(alpha: 0.88),
-              fontSize: 14.5,
-              height: 1.7,
+          ],
+        );
+        final publicSubtitle = pwfPublicCopyOrFallback(
+          subtitle,
+          'صفحة عامة ضمن الموقع الرسمي، تعرض المعلومات والخدمات بصياغة واضحة للجمهور.',
+        );
+        // Platform 12: public mastheads do not render governance/developer notes.
+        final text = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            badges,
+            const SizedBox(height: 6),
+            Text(
+              title,
+              style: PwfHomeVisualContract.onDarkTitleStyle(context),
             ),
-          ),
-          if (note?.trim().isNotEmpty == true) ...[
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 2),
-                    child: Icon(
-                      Icons.info_outline,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      note!,
-                      style: GoogleFonts.cairo(
-                        color: Colors.white.withValues(alpha: 0.90),
-                        fontSize: 13,
-                        height: 1.6,
-                      ),
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 920),
+              child: Text(
+                publicSubtitle,
+                style: PwfHomeVisualContract.onDarkBodyStyle(context),
               ),
             ),
           ],
-        ],
-      ),
+        );
+
+        return Container(
+          width: double.infinity,
+          constraints: BoxConstraints(minHeight: compact ? 108 : 126),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 16 : 20,
+            vertical: compact ? 14 : 18,
+          ),
+          decoration: BoxDecoration(
+            gradient: PwfHomeVisualContract.sovereignGradient(),
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: const [PwfHomeVisualContract.elevatedCardShadow],
+          ),
+          child: compact
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [iconBox, const SizedBox(height: 12), text],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(child: text),
+                    const SizedBox(width: 14),
+                    iconBox,
+                  ],
+                ),
+        );
+      },
     );
   }
 }
@@ -222,64 +206,52 @@ class PwfStatsWrap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, c) {
-        final w = c.maxWidth;
-        final cols = w >= 1100 ? 4 : (w >= 740 ? 2 : 1);
-        const spacing = 14.0;
-        final cardW = (w - (spacing * (cols - 1))) / cols;
-
-        return Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          children: [
-            for (final item in items)
-              SizedBox(
-                width: cardW,
-                child: PwfSurfaceCard(
-                  child: Row(
+    return PwfVisualResponsiveGrid(
+      desktopColumns: 4,
+      tabletColumns: 2,
+      minCardWidth: 220,
+      children: [
+        for (final item in items)
+          PwfVisualCard(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                PwfVisualIconTile(icon: item.icon, color: item.color, size: 42),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          color: item.color.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(14),
+                      Text(
+                        '${item.value}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.cairo(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: PwfHomePalette.primary,
+                          height: 1.15,
                         ),
-                        child: Icon(item.icon, color: item.color, size: 22),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${item.value}',
-                              style: GoogleFonts.cairo(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                color: PwfHomePalette.primary,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              item.label,
-                              style: GoogleFonts.cairo(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: PwfHomePalette.textSecondary,
-                              ),
-                            ),
-                          ],
+                      const SizedBox(height: 4),
+                      Text(
+                        item.label,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.cairo(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: PwfHomePalette.textSecondary,
+                          height: 1.35,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-          ],
-        );
-      },
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
@@ -306,8 +278,8 @@ class PwfSurfaceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PwfHoverCard(
-      padding: padding ?? const EdgeInsets.all(18),
+    return PwfVisualCard(
+      padding: padding ?? const EdgeInsets.all(16),
       child: child,
     );
   }
@@ -329,31 +301,7 @@ class PwfMetaBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: backgroundColor ?? color.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.12)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 6),
-          ],
-          Text(
-            label,
-            style: GoogleFonts.cairo(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
+    return PwfVisualChip(label: label, icon: icon, color: color);
   }
 }
 
@@ -450,7 +398,7 @@ class PwfLoadingBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PwfSurfaceCard(
+    return PwfVisualCard(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Column(
@@ -459,7 +407,7 @@ class PwfLoadingBlock extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               message,
-              style: GoogleFonts.cairo(color: PwfHomePalette.textSecondary),
+              style: PwfHomeVisualContract.cardBodyStyle(context),
             ),
           ],
         ),
@@ -482,38 +430,10 @@ class PwfEmptyBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PwfSurfaceCard(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 38,
-              color: PwfHomePalette.textSecondary.withValues(alpha: 0.70),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              title,
-              style: GoogleFonts.cairo(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: PwfHomePalette.primary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.cairo(
-                fontSize: 13.5,
-                height: 1.7,
-                color: PwfHomePalette.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return PwfVisualEmptyState(
+      title: title,
+      message: message,
+      icon: icon,
     );
   }
 }

@@ -933,20 +933,20 @@ class _ZakatOfficialConfigStrip extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               const PwfMetaBadge(
-                label: 'أداة زكاة ضمن PWF-SIS',
+                label: 'أداة حساب إرشادية',
                 icon: Icons.verified_outlined,
                 color: PwfHomePalette.primary,
               ),
               PwfMetaBadge(
                 label: reference.isOfficialRuntimeSource
-                    ? 'مصدر إعداد رسمي مفعّل'
-                    : 'Fallback محلي بانتظار wrapper',
+                    ? 'إعدادات منشورة'
+                    : 'إعدادات تقديرية',
                 icon: reference.isOfficialRuntimeSource
                     ? Icons.verified_user_outlined
                     : Icons.info_outline,
                 color: reference.isOfficialRuntimeSource
                     ? const Color(0xFF15803D)
-                    : PwfHomePalette.royalRed,
+                    : PwfHomePalette.secondary,
               ),
               PwfMetaBadge(
                 label:
@@ -961,12 +961,11 @@ class _ZakatOfficialConfigStrip extends StatelessWidget {
           Text(
             configState.when(
               data: (config) => reference.isOfficialRuntimeSource
-                  ? 'تعتمد هذه الصفحة مصدر إعداد رسمي من ${config.source}. ${config.notesAr ?? ''}'
-                  : 'تعتمد هذه الصفحة fallback محليًا لأن wrapper الرسمي لم يكتمل تطبيقه في هذه البيئة: ${PwfZakatOfficialConfigContract.currentSource}.',
-              loading: () =>
-                  'جاري فحص مصدر إعداد الزكاة الرسمي: ${PwfZakatOfficialConfigContract.currentSource}.',
+                  ? 'تعتمد الحاسبة على إعدادات منشورة لاحتساب تقدير أولي للزكاة. ${config.notesAr ?? ''}'
+                  : 'تستخدم الحاسبة إعدادات تقديرية واضحة للجمهور إلى حين اكتمال ربط الإعدادات المنشورة.',
+              loading: () => 'جاري تجهيز إعدادات الحاسبة...',
               error: (_, __) =>
-                  'تعذر قراءة wrapper الرسمي؛ تم تشغيل fallback المحلي مع بقاء بوابة الاعتماد معلنة.',
+                  'تعذر تحميل الإعدادات المنشورة؛ يمكنك استخدام القيم التقديرية الظاهرة في الصفحة.',
             ),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: PwfHomePalette.textSecondary,
