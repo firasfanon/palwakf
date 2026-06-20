@@ -2,6 +2,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/pwf_platform_center_content_item.dart';
 import 'package:waqf/core/database/pwf_database_owner_surfaces.dart';
+import 'package:waqf/core/public_runtime/pwf_public_runtime_read_exception.dart';
+import 'package:waqf/core/public_runtime/pwf_public_media_runtime_gateway.dart';
 
 class PwfPlatformCenterContentRepository {
   const PwfPlatformCenterContentRepository(this._client);
@@ -49,67 +51,56 @@ class PwfPlatformCenterContentRepository {
     PwfPlatformCenterContentQuery query,
   ) async {
     try {
-      final response = await _client
-          .from(PwfDatabaseOwnerSurfaces.vPlatformCenterContent)
-          .select(
-            'id,family_key,title_ar,summary_ar,owner_name,scope_type,workflow_status,public_route,published_at,document_url',
-          )
-          .eq('family_key', query.normalizedFamilyKey)
-          .order('published_at', ascending: false)
-          .limit(query.limit);
-      final rows = _normalizeRows(response);
-      return rows
+      final response = await PwfPublicMediaRuntimeGateway(_client).fetchFeed(
+        unitRef: query.unitSlug.trim().isEmpty ? 'home' : query.unitSlug.trim(),
+        familyKey: query.normalizedFamilyKey,
+        limit: query.limit,
+      );
+      return response
           .map(PwfPlatformCenterContentItem.fromJson)
+          .where((item) => item.isPublished)
           .take(query.limit)
           .toList(growable: false);
-    } on PostgrestException catch (error) {
-      if (!_isMissingBackend(error.message)) rethrow;
+    } on PwfPublicRuntimeReadException {
+      rethrow;
+    } on Object catch (error) {
+      throw PwfPublicRuntimeReadException.fromError(
+        error,
+        surface: PwfDatabaseOwnerSurfaces.publicMediaRuntimeFeedRpcV2,
+        operation: 'media-center-public-list',
+      );
     }
-
-    return PwfPlatformCenterContentItem.fallbackItems(query);
   }
 
+  /// Public details are always resolved by the scoped RPC. Do not scan a feed
+  /// page or return locally fabricated content when the server rejects scope.
   Future<PwfPlatformCenterContentItem?> fetchItemById({
     required String id,
     required String familyKey,
     required String unitSlug,
   }) async {
-    if (_enableOperationalRpcReads) {
-      try {
-        final response = await _client.rpc(
-          'pwf_platform_center_content_get',
-          params: <String, dynamic>{
-            'p_id': id,
-            'p_family_key': familyKey.trim().replaceAll('-', '_'),
-            'p_unit_slug': unitSlug.trim().isEmpty ? 'home' : unitSlug.trim(),
-          },
-        );
-        final rows = _normalizeRows(response);
-        if (rows.isNotEmpty)
-          return PwfPlatformCenterContentItem.fromJson(rows.first);
-        if (response is Map && response.isNotEmpty) {
-          return PwfPlatformCenterContentItem.fromJson(
-            response.map((key, value) => MapEntry(key.toString(), value)),
-          );
-        }
-      } on PostgrestException catch (error) {
-        if (!_isMissingBackend(error.message)) rethrow;
-      }
+    final safeId = id.trim();
+    if (safeId.isEmpty) return null;
+    try {
+      final response = await PwfPublicMediaRuntimeGateway(_client).fetchDetail(
+        unitRef: unitSlug.trim().isEmpty ? 'home' : unitSlug.trim(),
+        contentId: safeId,
+        familyKey: familyKey.trim().replaceAll('-', '_'),
+      );
+      if (response.isEmpty) return null;
+      final item = PwfPlatformCenterContentItem.fromJson(response.first);
+      return item.isPublished ? item : null;
+    } on PwfPublicRuntimeReadException {
+      rethrow;
+    } on Object catch (error) {
+      throw PwfPublicRuntimeReadException.fromError(
+        error,
+        surface: PwfDatabaseOwnerSurfaces.publicMediaRuntimeDetailRpcV2,
+        operation: 'media-center-public-detail',
+      );
     }
-
-    final fallbackList = await fetchItems(
-      PwfPlatformCenterContentQuery(
-        familyKey: familyKey,
-        unitSlug: unitSlug,
-        publishedOnly: true,
-        limit: 50,
-      ),
-    );
-    for (final item in fallbackList) {
-      if (item.id == id) return item;
-    }
-    return null;
   }
+
 
   Future<PwfPlatformCenterContentWriteResult> createDraft(
     PwfPlatformCenterContentDraft draft,

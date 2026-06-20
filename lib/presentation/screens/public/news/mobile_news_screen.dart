@@ -63,7 +63,7 @@ class _MobileNewsScreenState extends ConsumerState<MobileNewsScreen> {
                         onTap: () {
                           // GoRouter: pass the article through `extra`
                           context.push(
-                            UnitRoutes.newsDetail(widget.unitSlug, article.id),
+                            UnitRoutes.newsDetail(widget.unitSlug, article.publicDetailId),
                             extra: article,
                           );
                         },

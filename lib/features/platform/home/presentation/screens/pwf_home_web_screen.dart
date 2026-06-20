@@ -12,6 +12,7 @@ import '../widgets/sections/pwf_home_sections_renderer.dart';
 import '../widgets/sections/pwf_login_modal.dart';
 import '../widgets/sections/pwf_footer_section.dart';
 import 'package:waqf/presentation/providers/homepage_settings_provider.dart';
+import 'package:waqf/features/platform/home/presentation/widgets/shared/pwf_public_safe_error.dart';
 
 class PwfHomeWebScreen extends ConsumerStatefulWidget {
   const PwfHomeWebScreen({super.key, this.unitSlug = 'home'});
@@ -182,7 +183,18 @@ class _PwfHomeWebScreenState extends ConsumerState<PwfHomeWebScreen> {
                                   error: (err, st) => <Widget>[
                                     Padding(
                                       padding: const EdgeInsets.all(16),
-                                      child: Text('Home sections error: $err'),
+                                      child: SizedBox(
+                                        height: 260,
+                                        child: PwfPublicSafeErrorPanel(
+                                          title: 'تعذر تحميل أقسام الصفحة',
+                                          error: err,
+                                          onRetry: () => ref.invalidate(
+                                            homepageSectionsForUnitProvider(
+                                              widget.unitSlug,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                     const PwfLoginModal(),
                                     // Fail-open footer on error so layout stays stable.

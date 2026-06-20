@@ -1694,7 +1694,19 @@ String _homepageSectionKey(String familyKey) {
 
 String _dataContract(String familyKey) {
   final normalized = familyKey.trim().replaceAll('-', '_');
-  return 'platform_content.center_content_items(family_key=$normalized) عبر public.pwf_platform_center_content_* و public.v_platform_center_content';
+  switch (normalized) {
+    case 'news':
+      return 'media_center.v_unit_public_news_runtime_v1 — legacy quarantine للـ public.news_articles';
+    case 'announcements':
+      return 'media_center.v_unit_public_announcements_runtime_v1 — legacy quarantine للـ public.announcements';
+    case 'activities':
+    case 'events':
+      return 'media_center.v_unit_public_activities_runtime_v1 — legacy quarantine للجداول العامة القديمة';
+    case 'social_posts':
+      return 'media_center.v_unit_public_social_posts_runtime_v1 — legacy quarantine للجداول العامة القديمة';
+    default:
+      return 'media_center.v_unit_public_content_runtime_v1(family_key=$normalized) — legacy quarantine للجداول العامة القديمة';
+  }
 }
 
 class MediaCenterOperationalPage extends StatelessWidget {
@@ -2169,7 +2181,7 @@ class MediaCenterGovernanceInfo {
     rationale:
         'إطار عام يجمع الخدمات الإعلامية دون توحيد طبيعتها الوظيفية أو إلغاء الفروق بين الأخبار، الإعلانات، الأنشطة، الوسائط، العاجل، الخطب، والسلايدر.',
     dataSource:
-        'مصادر قائمة: news_articles, announcements, activities, media_gallery_items, breaking_news, friday_sermons, hero_slides.',
+        'مصادر سيادية مباشرة: media_center.content_items و core.org_units و owner-schema runtime views؛ public.* محفوظ كـ legacy evidence فقط وليس مسار تشغيل.',
     publishingScope:
         'الوزارة تظهر على الصفحة الرئيسية، والوحدة تظهر في صفحة الوحدة، مع إبراز مختصر متبادل دون نقل ملكية المحتوى.',
     owner:
@@ -2187,7 +2199,7 @@ class MediaCenterGovernanceInfo {
       adminRoute: AppRoutes.adminMediaCenterNews,
       rationale:
           'إدارة الأخبار الرسمية للوزارة والوحدات مع منع خلط خبر الوحدة بخبر الوزارة إلا عبر اعتماد مركزي.',
-      dataSource: 'public.news_articles.',
+      dataSource: 'media_center.content_items → media_center.v_unit_public_news_runtime_v1.',
       publishingScope:
           'home لأخبار الوزارة، وslug لأخبار الوحدة، مع إمكانية إبراز مختصر وفق قرار تحريري.',
       owner: 'الإعلام المركزي ومديرو الوحدات حسب نطاق الخبر.',
@@ -2203,7 +2215,7 @@ class MediaCenterGovernanceInfo {
       adminRoute: AppRoutes.adminMediaCenterAnnouncements,
       rationale:
           'الإعلان مادة رسمية أو تشغيلية مرتبطة بزمن وأولوية، وليست خبرًا سرديًا.',
-      dataSource: 'public.announcements.',
+      dataSource: 'media_center.content_items → media_center.v_unit_public_announcements_runtime_v1.',
       publishingScope:
           'إعلانات الوزارة تظهر في المسار العام، وإعلانات الوحدة تظهر داخل صفحة الوحدة أو حسب الصلاحية.',
       owner: 'الإعلام المركزي أو مدير الوحدة حسب نطاق الإعلان.',
@@ -2219,7 +2231,7 @@ class MediaCenterGovernanceInfo {
       adminRoute: AppRoutes.adminMediaCenterActivities,
       rationale:
           'توثيق نشاط مؤسسي دوري أو تشغيلي لا يحتاج دائمًا نفس حساسية الخبر العاجل أو الإعلان.',
-      dataSource: 'public.activities.',
+      dataSource: 'media_center.content_items → media_center.v_unit_public_activities_runtime_v1.',
       publishingScope:
           'أنشطة الوزارة في الصفحة/المسار العام، وأنشطة الوحدة في صفحة الوحدة.',
       owner: 'الإعلام المركزي والوحدة المالكة للنشاط.',
@@ -2233,7 +2245,7 @@ class MediaCenterGovernanceInfo {
       adminRoute: AppRoutes.adminMediaCenterEvents,
       rationale:
           'الفعالية حدث بزمن ومكان وحضور، وتُدار مرحليًا كتصنيف داخل الأنشطة لا كجدول مستقل.',
-      dataSource: 'public.activities مع فلترة تشغيلية للفعاليات.',
+      dataSource: 'media_center.content_items → media_center.v_unit_public_activities_runtime_v1 مع family_key=events عند توفره.',
       publishingScope:
           'فعاليات الوزارة أو الوحدة حسب النطاق، مع عرض مناسب للفعاليات القادمة والمنتهية.',
       owner: 'الإعلام المركزي أو الوحدة المنظمة.',
@@ -2248,7 +2260,7 @@ class MediaCenterGovernanceInfo {
       adminRoute: AppRoutes.adminMediaCenterPhotos,
       rationale:
           'إدارة أصول بصرية تحتاج معاينة وحقوق ونص بديل، لا مجرد سجل نصي.',
-      dataSource: 'public.media_gallery_items و media-gallery bucket.',
+      dataSource: 'media_center.media_gallery_items/content_assets → media_center.v_unit_public_gallery_runtime_v1.',
       publishingScope:
           'صور الوزارة في الصفحة/المعرض العام، وصور الوحدة ضمن صفحة الوحدة أو معرضها.',
       owner: 'الجهة المالكة للصورة مع مراجعة الإعلام عند الظهور العام.',
@@ -2263,7 +2275,7 @@ class MediaCenterGovernanceInfo {
       adminRoute: AppRoutes.adminMediaCenterVideos,
       rationale:
           'الفيديو يعتمد رابطًا/ملفًا ومعاينة ووصفًا، وله قيود مختلفة عن الصور والنصوص.',
-      dataSource: 'public.media_gallery_items وروابط أو ملفات وسائط.',
+      dataSource: 'media_center.media_gallery_items/content_assets → media_center.v_unit_public_gallery_runtime_v1.',
       publishingScope: 'فيديوهات الوزارة أو الوحدة حسب النطاق وحقوق النشر.',
       owner: 'الإعلام المركزي أو الوحدة المالكة للفيديو.',
       workflow: 'إضافة فيديو ← تحقق الرابط/المعاينة ← اعتماد ← نشر ← أرشفة.',
@@ -2276,7 +2288,7 @@ class MediaCenterGovernanceInfo {
       adminRoute: AppRoutes.adminMediaCenterBreakingNews,
       rationale:
           'الأخبار العاجلة ذات أثر فوري على الصفحة الرئيسية، لذلك تحتاج صلاحية مركزية وزمن ظهور مضبوط.',
-      dataSource: 'public.breaking_news.',
+      dataSource: 'media_center.content_items/platform_content surface settings → unit/home scoped breaking wrapper.',
       publishingScope: 'غالبًا مركزي على الصفحة الرئيسية أو شريط العاجل.',
       owner: 'الإعلام المركزي أو من يفوضه رسميًا.',
       workflow:
@@ -2291,7 +2303,7 @@ class MediaCenterGovernanceInfo {
       adminRoute: AppRoutes.adminMediaCenterFridaySermons,
       rationale:
           'الخطب محتوى تخصصي لا يعامل كمادة إعلامية عامة فقط؛ يحتاج اعتمادًا إداريًا/شرعيًا.',
-      dataSource: 'public.friday_sermons.',
+      dataSource: 'media_center.friday_sermons أو owner-schema sermon surface؛ public.friday_sermons legacy evidence only.',
       publishingScope: 'صفحة خُطب الجمعة العامة أو الأرشيف المخصص.',
       owner: 'الإدارة المختصة بخطب الجمعة.',
       workflow:
@@ -2306,7 +2318,7 @@ class MediaCenterGovernanceInfo {
       adminRoute: AppRoutes.adminMediaCenterHeroSlider,
       rationale:
           'السلايدر واجهة وحملة بصرية وليس خبرًا أو إعلانًا نصيًا؛ يحتاج تصميمًا وترتيبًا وCTA.',
-      dataSource: 'public.hero_slides.',
+      dataSource: 'core.org_unit_profiles/platform_content surface settings → core.v_unit_public_surface_profile_runtime_v1.',
       publishingScope: 'الصفحة الرئيسية والحملات البصرية المعتمدة.',
       owner: 'الإعلام المركزي وإدارة الصفحة الرئيسية.',
       workflow:

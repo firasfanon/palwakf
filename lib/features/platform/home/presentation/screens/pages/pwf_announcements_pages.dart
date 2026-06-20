@@ -210,16 +210,18 @@ class PwfAnnouncementDetailWebScreen extends ConsumerWidget {
   const PwfAnnouncementDetailWebScreen({
     super.key,
     required this.unitSlug,
-    required this.id,
+    required this.contentId,
   });
 
   final String unitSlug;
-  final int id;
+  final String contentId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(
-      announcementForUnitByIdProvider(UnitAnnouncementIdParam(unitSlug, id)),
+      announcementContentDetailForUnitProvider(
+        UnitAnnouncementContentIdParam(unitSlug, contentId),
+      ),
     );
 
     return PwfWebPageScaffold(
@@ -229,22 +231,23 @@ class PwfAnnouncementDetailWebScreen extends ConsumerWidget {
       child: PwfSectionContainer(
         sectionKey: 'PwfAnnouncementDetailWebScreen',
         child: async.when(
-          data: (a) {
-            if (a == null) {
+          data: (item) {
+            if (item == null) {
               return const PwfEmptyBlock(
                 title: 'الإعلان غير موجود',
-                message: 'قد يكون تم حذف الإعلان أو تغيير مساره.',
+                message:
+                    'العنصر غير منشور أو لا يطابق نطاق الوحدة أو فئة المحتوى المطلوبة.',
                 icon: Icons.notifications_off_outlined,
               );
             }
-            return _AnnouncementDetailBody(item: a, unitSlug: unitSlug);
+            return _AnnouncementDetailBody(item: item, unitSlug: unitSlug);
           },
           loading: () =>
               const PwfLoadingBlock(message: 'جاري تحميل تفاصيل الإعلان...'),
           error: (e, _) => PwfErrorBlock(
             onRetry: () => ref.invalidate(
-              announcementForUnitByIdProvider(
-                UnitAnnouncementIdParam(unitSlug, id),
+              announcementContentDetailForUnitProvider(
+                UnitAnnouncementContentIdParam(unitSlug, contentId),
               ),
             ),
             message: e.toString(),
@@ -312,7 +315,7 @@ class _InlineComplementaryAnnouncementsCard extends StatelessWidget {
                   width: 260,
                   child: OutlinedButton(
                     onPressed: () => context.go(
-                      UnitRoutes.announcementDetail(unitSlug, item.id),
+                      UnitRoutes.announcementDetail(unitSlug, item.publicDetailId),
                     ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.all(14),
@@ -568,7 +571,7 @@ class _AnnouncementHeroCard extends StatelessWidget {
           const SizedBox(height: 18),
           ElevatedButton.icon(
             onPressed: () =>
-                context.go(UnitRoutes.announcementDetail(unitSlug, item.id)),
+                context.go(UnitRoutes.announcementDetail(unitSlug, item.publicDetailId)),
             icon: const Icon(Icons.arrow_back),
             label: const Text('عرض تفاصيل الإعلان'),
             style: ElevatedButton.styleFrom(
@@ -626,7 +629,7 @@ class _AnnouncementCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = _priorityColor(item.priority);
     return InkWell(
-      onTap: () => context.go(UnitRoutes.announcementDetail(unitSlug, item.id)),
+      onTap: () => context.go(UnitRoutes.announcementDetail(unitSlug, item.publicDetailId)),
       borderRadius: PwfHomeRadii.br16,
       child: PwfSurfaceCard(
         padding: EdgeInsets.zero,
@@ -811,7 +814,7 @@ class _AnnouncementDetailBody extends ConsumerWidget {
             .where((e) => e.id != item.id)
             .take(3)
             .toList(growable: false);
-    final detailPath = UnitRoutes.announcementDetail(unitSlug, item.id);
+    final detailPath = UnitRoutes.announcementDetail(unitSlug, item.publicDetailId);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1015,7 +1018,7 @@ class _AnnouncementDetailBody extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 10),
                   child: InkWell(
                     onTap: () => context.go(
-                      UnitRoutes.announcementDetail(unitSlug, related.id),
+                      UnitRoutes.announcementDetail(unitSlug, related.publicDetailId),
                     ),
                     borderRadius: BorderRadius.circular(14),
                     child: Container(

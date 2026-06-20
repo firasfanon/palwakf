@@ -65,6 +65,7 @@ import 'router_refresh_notifier.dart';
 import 'unit_routes.dart';
 import 'unit_path_utils.dart';
 import 'public_route_canonicalization.dart';
+import '../../core/unit/pwf_unit_slug_registry.dart';
 import '../../data/models/news_article.dart';
 import '../../presentation/screens/public/news_details/news_detail_route_screen.dart';
 import '../../presentation/screens/public/unit/unit_home_screen.dart';
@@ -129,6 +130,12 @@ class GoRouterConfig {
   static GoRouter build(Ref ref) {
     final refresh = GoRouterRefreshStream(
       Supabase.instance.client.auth.onAuthStateChange,
+      onEvent: () {
+        // Session identity and JWT changes may change the self-authority DTO.
+        // Clear only local cache; server-side authorization remains authoritative.
+        ref.read(accessRepositoryProvider).clearCache();
+        ref.invalidate(accessProfileProvider);
+      },
     );
 
     return GoRouter(
@@ -143,6 +150,12 @@ class GoRouterConfig {
           query: state.uri.query,
         );
         if (canonicalPublicRoute != null) return canonicalPublicRoute;
+
+        final canonicalUnitRoute = PwfUnitSlugRegistry.redirectLegacyPath(
+          location,
+          query: state.uri.query,
+        );
+        if (canonicalUnitRoute != null) return canonicalUnitRoute;
 
         final isLogin =
             location == AppRoutes.login || location == AppRoutes.adminLogin;

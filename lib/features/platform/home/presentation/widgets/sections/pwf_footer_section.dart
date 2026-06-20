@@ -70,6 +70,28 @@ class _PwfFooterSectionState extends ConsumerState<PwfFooterSection> {
 
   FooterSettings _fallbackSettings() {
     final now = DateTime.now();
+    final isHome = widget.unitSlug.trim().toLowerCase() == 'home';
+    if (!isHome) {
+      return FooterSettings(
+        id: 'fallback-unit-footer',
+        ministryName: 'بيانات الوحدة غير منشورة',
+        ministrySubtitle: 'بوابة الوحدة العامة',
+        ministryDescription:
+            'لم تنشر هذه الوحدة بيانات الاتصال أو وسائل التواصل الاجتماعي الخاصة بها بعد.',
+        contactPhone: null,
+        contactEmail: null,
+        contactAddress: null,
+        workingDays: 'غير منشور',
+        workingHours: 'غير منشور',
+        quickLinks: const [],
+        servicesLinks: const [],
+        bottomLinks: const [],
+        copyrightText: 'بوابة الوحدة العامة - بيانات الاتصال بانتظار الاعتماد.',
+        developerCredit: '',
+        createdAt: now,
+        updatedAt: now,
+      );
+    }
     return FooterSettings(
       id: 'fallback',
       ministryName: 'وزارة الأوقاف والشؤون الدينية',

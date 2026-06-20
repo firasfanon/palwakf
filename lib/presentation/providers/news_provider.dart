@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/news_article.dart';
 import '../../data/services/news_service.dart';
+import 'unit_context_provider.dart';
 
 // News service provider
 final newsServiceProvider = Provider<NewsService>((ref) {
@@ -10,19 +11,25 @@ final newsServiceProvider = Provider<NewsService>((ref) {
 // All news provider
 final newsProvider = FutureProvider<List<NewsArticle>>((ref) async {
   final newsService = ref.read(newsServiceProvider);
-  return await newsService.getAllNews();
+  final homeUnitId = await ref.watch(unitIdBySlugExactProvider('home').future);
+  if (homeUnitId == null || homeUnitId.isEmpty) return const <NewsArticle>[];
+  return newsService.getAllNewsForUnit(homeUnitId, unitSlug: 'home');
 });
 
 // Latest news provider
 final latestNewsProvider = FutureProvider<List<NewsArticle>>((ref) async {
   final newsService = ref.read(newsServiceProvider);
-  return await newsService.getLatestNews(limit: 10);
+  final homeUnitId = await ref.watch(unitIdBySlugExactProvider('home').future);
+  if (homeUnitId == null || homeUnitId.isEmpty) return const <NewsArticle>[];
+  return newsService.getLatestNewsForUnit(homeUnitId, unitSlug: 'home', limit: 10);
 });
 
 // Featured news provider
 final featuredNewsProvider = FutureProvider<List<NewsArticle>>((ref) async {
   final newsService = ref.read(newsServiceProvider);
-  return await newsService.getFeaturedNews();
+  final homeUnitId = await ref.watch(unitIdBySlugExactProvider('home').future);
+  if (homeUnitId == null || homeUnitId.isEmpty) return const <NewsArticle>[];
+  return newsService.getFeaturedNewsForUnit(homeUnitId, unitSlug: 'home');
 });
 
 // News by category provider
@@ -32,7 +39,9 @@ final newsByCategoryProvider =
       category,
     ) async {
       final newsService = ref.read(newsServiceProvider);
-      return await newsService.getNewsByCategory(category);
+      final homeUnitId = await ref.watch(unitIdBySlugExactProvider('home').future);
+      if (homeUnitId == null || homeUnitId.isEmpty) return const <NewsArticle>[];
+      return newsService.getNewsByCategoryForUnit(category, homeUnitId, unitSlug: 'home');
     });
 
 // Single news article provider
@@ -41,7 +50,9 @@ final newsArticleProvider = FutureProvider.family<NewsArticle?, int>((
   id,
 ) async {
   final newsService = ref.read(newsServiceProvider);
-  return await newsService.getNewsById(id);
+  final homeUnitId = await ref.watch(unitIdBySlugExactProvider('home').future);
+  if (homeUnitId == null || homeUnitId.isEmpty) return null;
+  return newsService.getNewsByIdForUnit(id, homeUnitId, unitSlug: 'home');
 });
 
 // Search news provider
@@ -51,7 +62,9 @@ final searchNewsProvider = FutureProvider.family<List<NewsArticle>, String>((
 ) async {
   if (query.isEmpty) return [];
   final newsService = ref.read(newsServiceProvider);
-  return await newsService.searchNews(query);
+  final homeUnitId = await ref.watch(unitIdBySlugExactProvider('home').future);
+  if (homeUnitId == null || homeUnitId.isEmpty) return const <NewsArticle>[];
+  return newsService.searchNewsForUnit(query, homeUnitId, unitSlug: 'home');
 });
 
 // News statistics provider

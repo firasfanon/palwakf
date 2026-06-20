@@ -4,6 +4,7 @@ import '../models/media_gallery_item.dart';
 import '../services/media_compat_mapper.dart';
 import '../services/supabase_service.dart';
 import 'package:waqf/core/database/pwf_database_owner_surfaces.dart';
+import 'package:waqf/core/public_runtime/pwf_public_media_runtime_gateway.dart';
 
 class MediaGalleryRepository {
   final SupabaseService _service;
@@ -18,12 +19,14 @@ class MediaGalleryRepository {
 
   Future<List<MediaGalleryItem>> fetchActiveForUnit(
     String unitId, {
+    String? unitSlug,
     required MediaType mediaType,
     int limit = 8,
   }) async {
     try {
       final rows = await _fetchRows(
         unitId: unitId,
+        unitSlug: unitSlug,
         mediaType: mediaType,
         includeInactive: false,
         search: '',
@@ -44,6 +47,7 @@ class MediaGalleryRepository {
 
   Future<List<MediaGalleryItem>> fetchForUnit(
     String unitId, {
+    String? unitSlug,
     required MediaType mediaType,
     bool includeInactive = true,
     String search = '',
@@ -52,6 +56,7 @@ class MediaGalleryRepository {
     try {
       final rows = await _fetchRows(
         unitId: unitId,
+        unitSlug: unitSlug,
         mediaType: mediaType,
         includeInactive: includeInactive,
         search: search,
@@ -72,6 +77,7 @@ class MediaGalleryRepository {
 
   Future<List<MediaGalleryItem>> fetchPublicForUnit(
     String unitId, {
+    String? unitSlug,
     required MediaType mediaType,
     String search = '',
     int? limit,
@@ -79,6 +85,7 @@ class MediaGalleryRepository {
     try {
       final rows = await _fetchRows(
         unitId: unitId,
+        unitSlug: unitSlug,
         mediaType: mediaType,
         includeInactive: false,
         search: search,
@@ -234,6 +241,7 @@ class MediaGalleryRepository {
 
   Future<List<Map<String, dynamic>>> _fetchRows({
     required String unitId,
+    String? unitSlug,
     required MediaType mediaType,
     required bool includeInactive,
     required String search,
@@ -247,6 +255,7 @@ class MediaGalleryRepository {
     if (publicMode) {
       final compatRows = await _fetchCompatGalleryRows(
         unitId: unitId,
+        unitSlug: unitSlug,
         mediaType: mediaType,
         search: search,
         limit: limit,
@@ -288,48 +297,44 @@ class MediaGalleryRepository {
 
   Future<List<Map<String, dynamic>>> _fetchCompatGalleryRows({
     required String unitId,
+    String? unitSlug,
     required MediaType mediaType,
     required String search,
     required int? limit,
   }) async {
+    final unitRef = unitSlug?.trim().isNotEmpty == true
+        ? unitSlug!.trim()
+        : unitId.trim();
     try {
-      dynamic query = _client
-          .from(PwfDatabaseOwnerSurfaces.vMediaGalleryCompatV1)
-          .select();
+      final rows = await PwfPublicMediaRuntimeGateway(_client).fetchFeed(
+        unitRef: unitRef.isEmpty ? 'home' : unitRef,
+        familyKey: mediaType == MediaType.video
+            ? 'gallery_videos'
+            : 'gallery_images',
+        limit: (limit ?? 50).clamp(1, 50).toInt(),
+      );
 
-      final normalizedUnitSlug = unitId.trim().toLowerCase();
-      if (normalizedUnitSlug.isNotEmpty && normalizedUnitSlug != 'home') {
-        query = query.eq('unit_slug', normalizedUnitSlug);
-      }
-      query = query.order('published_at', ascending: false);
-      if (limit != null) query = query.limit(limit);
-
-      final response = await query;
-      var rows = (response as List<dynamic>)
-          .map(
-            (raw) => MediaCompatMapper.galleryLegacyMapFromCompatRow(
-              raw as Map<String, dynamic>,
-            ),
-          )
+      var mapped = rows
+          .map(MediaCompatMapper.galleryLegacyMapFromCompatRow)
           .where(
             (row) =>
                 MediaTypeX.fromDb(row['media_type']?.toString()) == mediaType,
           )
           .toList(growable: false);
 
-      final s = search.trim().toLowerCase();
-      if (s.isNotEmpty) {
-        rows = rows
+      final normalizedSearch = search.trim().toLowerCase();
+      if (normalizedSearch.isNotEmpty) {
+        mapped = mapped
             .where((row) {
               final title = (row['title'] ?? '').toString().toLowerCase();
-              final description = (row['description'] ?? '')
-                  .toString()
-                  .toLowerCase();
-              return title.contains(s) || description.contains(s);
+              final description =
+                  (row['description'] ?? '').toString().toLowerCase();
+              return title.contains(normalizedSearch) ||
+                  description.contains(normalizedSearch);
             })
             .toList(growable: false);
       }
-      return rows;
+      return mapped;
     } catch (_) {
       return const <Map<String, dynamic>>[];
     }

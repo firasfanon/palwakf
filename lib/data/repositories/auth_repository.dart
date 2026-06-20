@@ -255,12 +255,10 @@ class AuthRepository {
       final unitId = (row['unit_id'] ?? '').toString().trim();
       if (unitId.isNotEmpty) {
         try {
-          final unit = await _supabaseService.client
-              .schema('core')
-              .from(PwfDatabaseOwnerSurfaces.orgUnits)
-              .select('id,slug,name_ar')
-              .eq('id', unitId)
-              .maybeSingle();
+          final unit = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+            _supabaseService.client,
+            PwfDatabaseOwnerSurfaces.orgUnits,
+          ).select('id,slug,name_ar').eq('id', unitId).maybeSingle();
           if (unit != null) {
             row['unit_slug'] = unit['slug'];
             row['unit_name_ar'] = unit['name_ar'];

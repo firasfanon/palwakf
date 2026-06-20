@@ -533,7 +533,7 @@ class _NavBar extends StatelessWidget {
     final items = <_NavItem>[
       _NavItem(
         'الرئيسية',
-        () => context.go(unitSlug == 'home' ? AppRoutes.home : '/$unitSlug'),
+        () => context.go(UnitRoutes.home(unitSlug)),
       ),
       _NavItem('الأخبار', () => context.go(UnitRoutes.news(unitSlug))),
       _NavItem(
@@ -639,7 +639,7 @@ class _NewsAnnouncementsActivitiesRow extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   onTap: () =>
-                      context.go(UnitRoutes.newsDetail(unitSlug, a.id)),
+                      context.go(UnitRoutes.newsDetail(unitSlug, a.publicDetailId)),
                 );
               },
             ),

@@ -7,12 +7,14 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:waqf/app/routing/unit_routes.dart';
 import 'package:waqf/presentation/providers/unit_dashboard_preview_providers.dart';
 import 'package:waqf/presentation/providers/homepage_settings_provider.dart';
+import 'package:waqf/presentation/providers/unit_context_provider.dart';
 import 'package:waqf/data/models/announcement.dart';
 
 import '../../../presentation/theme/pwf_home_palette.dart';
 import '../pwf_section_container.dart';
 import '../shared/pwf_section_title.dart';
 import '../shared/pwf_hoverable.dart';
+import '../../screens/pages/pwf_public_content_shared.dart';
 import 'pwf_content_display_settings.dart';
 
 class PwfAnnouncementsSection extends ConsumerWidget {
@@ -53,16 +55,18 @@ class PwfAnnouncementsSection extends ConsumerWidget {
       ),
     );
     final isHomeScope = unitSlug.trim().toLowerCase() == 'home';
+    final unit = ref.watch(orgUnitBySlugProvider(unitSlug)).valueOrNull;
+    final scopeLabel = pwfResolveScopeLabel(unitSlug: unitSlug, unit: unit);
 
     return PwfSectionContainer(
       sectionKey: 'PwfAnnouncementsSection',
       child: Column(
         children: [
           PwfSectionTitle(
-            title: 'الإعلانات والتنويهات',
+            title: isHomeScope ? 'الإعلانات والتنويهات' : 'إعلانات $scopeLabel',
             subtitle: isHomeScope
                 ? 'إعلانات الوزارة الرسمية مع نافذة إضافية للتنويهات الصادرة عن الوحدات والمحافظات.'
-                : 'إعلانات الجهة الحالية مع مساحة مختصرة للتنويهات الوزارية الرسمية.',
+                : 'الإعلانات والتنويهات المنشورة لهذه الجهة دون خلط مع إعلانات الوزارة المركزية.',
           ),
           const SizedBox(height: 22),
           async.when(
@@ -181,7 +185,7 @@ class _AnnouncementCard extends StatelessWidget {
         a.priority.name.toLowerCase() == 'urgent';
 
     return PwfHoverable(
-      onTap: () => context.go(UnitRoutes.announcementDetail(unitSlug, a.id)),
+      onTap: () => context.go(UnitRoutes.announcementDetail(unitSlug, a.publicDetailId)),
       hoverTranslate: const Offset(0, -6),
       borderRadius: PwfHomeRadii.br16,
       child: Container(
@@ -349,7 +353,7 @@ class _ComplementaryAnnouncementsStrip extends StatelessWidget {
                   width: 280,
                   child: PwfHoverable(
                     onTap: () => context.go(
-                      UnitRoutes.announcementDetail(unitSlug, item.id),
+                      UnitRoutes.announcementDetail(unitSlug, item.publicDetailId),
                     ),
                     hoverTranslate: const Offset(0, -4),
                     borderRadius: PwfHomeRadii.br16,

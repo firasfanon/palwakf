@@ -71,7 +71,7 @@ class PwfHomeVisualContract {
   }
 
   static Color sectionBackground(String? sectionKey) {
-    // Platform 12 - Surface Continuity Closure:
+    // Platform 12 — Surface Continuity Closure:
     // The public home page uses one continuous sovereign surface on a white sovereign canvas. Grey bands must
     // not appear between active sections after admins hide/reorder content.
     // Section widgets may still paint intentional internal cards/gradients,
@@ -131,8 +131,9 @@ class PwfHomeVisualContract {
   }
 
   static TextStyle cardTitleStyle(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
     return GoogleFonts.cairo(
-      fontSize: 18,
+      fontSize: width < 640 ? 16.5 : 18,
       fontWeight: FontWeight.w800,
       color: PwfHomePalette.dark,
       height: 1.35,
@@ -140,8 +141,9 @@ class PwfHomeVisualContract {
   }
 
   static TextStyle cardBodyStyle(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
     return GoogleFonts.cairo(
-      fontSize: 14,
+      fontSize: width < 640 ? 13.25 : 14,
       color: const Color(0xFF475569),
       height: 1.55,
       fontWeight: FontWeight.w600,
@@ -170,10 +172,17 @@ class PwfVisualCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mobile = MediaQuery.sizeOf(context).width < 640;
     final card = AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOut,
-      padding: padding ?? const EdgeInsets.all(PwfHomeVisualContract.cardPadding),
+      padding:
+          padding ??
+          EdgeInsets.all(
+            mobile
+                ? PwfHomeVisualContract.compactCardPadding
+                : PwfHomeVisualContract.cardPadding,
+          ),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: PwfHomeVisualContract.cardBorderRadius,
@@ -268,6 +277,9 @@ class PwfVisualChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final maxLabelWidth = (MediaQuery.sizeOf(context).width - 96)
+        .clamp(120.0, 360.0)
+        .toDouble();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
       decoration: BoxDecoration(
@@ -282,13 +294,19 @@ class PwfVisualChip extends StatelessWidget {
             Icon(icon, size: 14, color: color),
             const SizedBox(width: 6),
           ],
-          Text(
-            label,
-            style: GoogleFonts.cairo(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: color,
-              height: 1,
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxLabelWidth),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              style: GoogleFonts.cairo(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: color,
+                height: 1,
+              ),
             ),
           ),
         ],
@@ -374,6 +392,52 @@ class PwfVisualResponsiveGrid extends StatelessWidget {
           children: [
             for (final child in children) SizedBox(width: itemWidth, child: child),
           ],
+        );
+      },
+    );
+  }
+}
+
+
+/// Standard public action layout.
+///
+/// On narrow public pages buttons are stacked and stretched so long Arabic
+/// labels do not create RenderFlex overflows inside toolbars or mastheads.
+class PwfVisualActionStack extends StatelessWidget {
+  const PwfVisualActionStack({
+    super.key,
+    required this.children,
+    this.alignment = WrapAlignment.start,
+    this.spacing = 10,
+    this.runSpacing = 10,
+  });
+
+  final List<Widget> children;
+  final WrapAlignment alignment;
+  final double spacing;
+  final double runSpacing;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final mobile = constraints.maxWidth < 640;
+        if (mobile) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (int i = 0; i < children.length; i++) ...[
+                SizedBox(width: double.infinity, child: children[i]),
+                if (i != children.length - 1) SizedBox(height: runSpacing),
+              ],
+            ],
+          );
+        }
+        return Wrap(
+          spacing: spacing,
+          runSpacing: runSpacing,
+          alignment: alignment,
+          children: children,
         );
       },
     );

@@ -33,11 +33,11 @@ extension MediaCenterMobileFamilyX on MediaCenterMobileFamily {
   String get apiEdgeSurface {
     switch (this) {
       case MediaCenterMobileFamily.news:
-        return 'public.v_media_news_compat_v1';
+        return 'media_center.v_unit_public_news_runtime_v1';
       case MediaCenterMobileFamily.announcements:
-        return 'public.v_media_announcements_compat_v1';
+        return 'media_center.v_unit_public_announcements_runtime_v1';
       case MediaCenterMobileFamily.activities:
-        return 'public.v_media_activities_compat_v1';
+        return 'media_center.v_unit_public_activities_runtime_v1';
     }
   }
 }

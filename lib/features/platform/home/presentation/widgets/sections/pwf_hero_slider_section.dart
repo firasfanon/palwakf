@@ -7,9 +7,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:waqf/app/routing/app_routes.dart';
+import 'package:waqf/features/platform/home/presentation/config/pwf_home_hero_landmarks.dart';
+import 'package:waqf/data/repositories/homepage_repository.dart' show HeroSlide;
 import 'package:waqf/presentation/widgets/home/hero_slider.dart'
     show heroSlidesForUnitProvider;
 import 'package:waqf/features/platform/public_runtime/presentation/widgets/pwf_public_image_fallback.dart';
+import 'package:waqf/features/platform/home/data/models/pwf_unit_public_sovereign_models.dart';
+import 'package:waqf/features/platform/home/presentation/providers/pwf_unit_public_sovereign_providers.dart';
 
 import '../../theme/pwf_home_palette.dart';
 import '../pwf_web_container.dart';
@@ -29,10 +33,23 @@ class _PwfHeroSliderSectionState extends ConsumerState<PwfHeroSliderSection> {
   Timer? _timer;
   int _index = 0;
 
+  bool _reduceMotion = false;
+
   @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 6), (_) {
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.accessibleNavigation ?? false;
+    if (reduceMotion == _reduceMotion && (_timer != null || reduceMotion)) {
+      return;
+    }
+
+    _reduceMotion = reduceMotion;
+    _timer?.cancel();
+    _timer = null;
+    if (_reduceMotion) return;
+
+    _timer = Timer.periodic(const Duration(seconds: 7), (_) {
       if (!mounted) return;
       setState(() => _index++);
     });
@@ -58,9 +75,81 @@ class _PwfHeroSliderSectionState extends ConsumerState<PwfHeroSliderSection> {
 
   @override
   Widget build(BuildContext context) {
-    final slidesAsync = ref.watch(heroSlidesForUnitProvider(widget.unitSlug));
-    final List<_HeroSlideVM> fallback = _defaultSlides(context);
+    final normalized = widget.unitSlug.trim().toLowerCase();
 
+    // Platform 15 Hero Identity Closure: the ministry homepage uses only the
+    // approved local landmark catalog. This avoids remote demo image requests
+    // and makes the exact national identity deterministic without changing
+    // homepage data, media-center ownership, or any database contract.
+    if (normalized == 'home') {
+      final slides = _homeLandmarkSlides();
+      return _HeroSliderBody(
+        slides: slides,
+        index: (_index % slides.length).toInt(),
+        onDot: _goTo,
+        onPrev: () => _prev(slides.length),
+        onNext: () => _next(slides.length),
+      );
+    }
+
+    final profileAsync = ref.watch(
+      pwfUnitPublicProfileBySlugProvider(normalized.isEmpty ? 'home' : normalized),
+    );
+    final slidesAsync = ref.watch(heroSlidesForUnitProvider(widget.unitSlug));
+
+    return profileAsync.when(
+      loading: () => _buildWithProfile(context, slidesAsync, null, loading: true),
+      error: (_, __) => _buildWithProfile(context, slidesAsync, null),
+      data: (profile) => _buildWithProfile(context, slidesAsync, profile),
+    );
+  }
+
+  Widget _buildWithProfile(
+    BuildContext context,
+    AsyncValue<List<HeroSlide>> slidesAsync,
+    PwfUnitPublicProfile? profile, {
+    bool loading = false,
+  }) {
+    final normalized = widget.unitSlug.trim().toLowerCase();
+    final profileSlides = _profileSlides(profile, normalized);
+    if (profileSlides.isNotEmpty) {
+      return _HeroSliderBody(
+        slides: profileSlides,
+        index: (_index % profileSlides.length).toInt(),
+        onDot: _goTo,
+        onPrev: () => _prev(profileSlides.length),
+        onNext: () => _next(profileSlides.length),
+        loading: loading,
+      );
+    }
+
+    // A directorate without a published profile must remain local and explicit.
+    // It must never borrow the ministry hero, arbitrary stock images, or a
+    // guessed landmark while profile governance is still incomplete.
+    if (normalized.isNotEmpty && normalized != 'home') {
+      final placeholder = <_HeroSlideVM>[
+        _HeroSlideVM(
+          title: (profile?.unitNameAr ?? '').trim().isNotEmpty
+              ? profile!.unitNameAr
+              : 'بيانات الوحدة غير منشورة',
+          subtitle: 'تعرض هذه البوابة محتوى الوحدة فقط. لم تُعتمد بعد بيانات Hero الرسمية لهذه الوحدة.',
+          imageUrl: '',
+          ctaText: 'اتصل بالوحدة',
+          ctaLink: '/$normalized/contact',
+          ctaIcon: Icons.contact_page_outlined,
+        ),
+      ];
+      return _HeroSliderBody(
+        slides: placeholder,
+        index: 0,
+        onDot: _goTo,
+        onPrev: () {},
+        onNext: () {},
+        loading: loading,
+      );
+    }
+
+    final fallback = _homeLandmarkSlides();
     return slidesAsync.when(
       data: (dbSlides) {
         final slides = dbSlides.isEmpty
@@ -84,6 +173,7 @@ class _PwfHeroSliderSectionState extends ConsumerState<PwfHeroSliderSection> {
           onDot: _goTo,
           onPrev: () => _prev(slides.length),
           onNext: () => _next(slides.length),
+          loading: loading,
         );
       },
       error: (_, __) => _HeroSliderBody(
@@ -104,39 +194,42 @@ class _PwfHeroSliderSectionState extends ConsumerState<PwfHeroSliderSection> {
     );
   }
 
-  List<_HeroSlideVM> _defaultSlides(BuildContext context) {
-    return [
+  List<_HeroSlideVM> _profileSlides(
+    PwfUnitPublicProfile? profile,
+    String normalized,
+  ) {
+    if (profile == null || !profile.isPublished) return const <_HeroSlideVM>[];
+    final title = (profile.heroTitleAr ?? '').trim();
+    final imageUrl = (profile.heroImageUrl ?? '').trim();
+    if (title.isEmpty || imageUrl.isEmpty) return const <_HeroSlideVM>[];
+    return <_HeroSlideVM>[
       _HeroSlideVM(
-        title: 'المنصة الإلكترونية المتكاملة لوزارة الأوقاف',
-        subtitle:
-            'نوفر خدمات إلكترونية متكاملة تسهل الوصول إلى جميع خدمات الوزارة ومعلوماتها',
-        imageUrl:
-            'https://images.unsplash.com/photo-1587614382346-4ec70e388b28?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80',
-        ctaText: 'خدمات إلكترونية سريعة',
-        ctaLink: AppRoutes.services,
-        ctaIcon: Icons.bolt,
-      ),
-      _HeroSlideVM(
-        title: 'تعزيز التعليم الديني والثقافة الإسلامية',
-        subtitle:
-            'نشرف على المعاهد الدينية ودور تحفيظ القرآن وندرب الأئمة والدعاة',
-        imageUrl:
-            'https://images.unsplash.com/photo-1519735777090-ec97162dc266?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80',
-        ctaText: 'روابط مهمة للأوقاف',
-        ctaLink: AppRoutes.eservices,
-        ctaIcon: Icons.menu_book,
-      ),
-      _HeroSlideVM(
-        title: 'حماية المقدسات الإسلامية والمسيحية في فلسطين',
-        subtitle:
-            'نعمل على صيانة وترميم المساجد والكنائس والمقدسات في كافة أنحاء الوطن',
-        imageUrl:
-            'https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80',
-        ctaText: 'ساهم في حماية المقدسات',
-        ctaLink: AppRoutes.contact,
-        ctaIcon: Icons.volunteer_activism,
+        title: title,
+        subtitle: (profile.heroSubtitleAr ?? '').trim().isEmpty
+            ? 'البوابة العامة لـ ${profile.unitNameAr}'
+            : profile.heroSubtitleAr!.trim(),
+        imageUrl: imageUrl,
+        ctaText: 'اتصل بالوحدة',
+        ctaLink: '/${profile.publicSlug.isEmpty ? normalized : profile.publicSlug}/contact',
+        ctaIcon: Icons.contact_page_outlined,
       ),
     ];
+  }
+
+  List<_HeroSlideVM> _homeLandmarkSlides() {
+    return PwfHomeHeroLandmarks.slides
+        .map(
+          (slide) => _HeroSlideVM(
+            title: slide.title,
+            subtitle: slide.subtitle,
+            imageUrl: slide.assetPath,
+            ctaText: slide.ctaText,
+            ctaLink: slide.ctaLink,
+            ctaIcon: slide.ctaIcon,
+            imageAlignment: slide.imageAlignment,
+          ),
+        )
+        .toList(growable: false);
   }
 }
 
@@ -234,6 +327,7 @@ class _HeroSliderBody extends StatelessWidget {
                   'hero-bg-$index-${slide.title}-${slide.imageUrl}',
                 ),
                 imageUrl: slide.imageUrl,
+                alignment: slide.imageAlignment,
               ),
             ),
           ),
@@ -292,9 +386,14 @@ class _HeroSliderBody extends StatelessWidget {
 }
 
 class _HeroBackground extends StatelessWidget {
-  const _HeroBackground({super.key, required this.imageUrl});
+  const _HeroBackground({
+    super.key,
+    required this.imageUrl,
+    required this.alignment,
+  });
 
   final String imageUrl;
+  final AlignmentGeometry alignment;
 
   @override
   Widget build(BuildContext context) {
@@ -306,7 +405,7 @@ class _HeroBackground extends StatelessWidget {
         // UAT showed several DB-managed images still looked pulled upward when
         // sections above the hero were disabled; a lower focus reveals more of
         // the lower half while keeping a full-bleed cover without grey bands.
-        alignment: const Alignment(0, 0.36),
+        alignment: alignment,
         fallbackColor: Colors.black.withValues(alpha: 0.2),
       ),
     );
@@ -563,6 +662,7 @@ class _HeroSlideVM {
     required this.ctaText,
     required this.ctaLink,
     this.ctaIcon,
+    this.imageAlignment = const Alignment(0, 0.36),
   });
 
   final String title;
@@ -571,4 +671,5 @@ class _HeroSlideVM {
   final String ctaText;
   final String ctaLink;
   final IconData? ctaIcon;
+  final AlignmentGeometry imageAlignment;
 }

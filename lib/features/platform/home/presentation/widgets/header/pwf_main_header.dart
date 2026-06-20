@@ -5,8 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:waqf/app/routing/app_routes.dart';
+import 'package:waqf/app/routing/unit_routes.dart';
 import 'package:waqf/data/models/header_settings.dart';
 import 'package:waqf/presentation/providers/header_settings_provider.dart';
+import 'package:waqf/presentation/providers/unit_context_provider.dart';
+import '../../screens/pages/pwf_public_content_shared.dart';
 import '../../theme/pwf_home_palette.dart';
 import '../pwf_web_container.dart';
 
@@ -27,6 +30,15 @@ class PwfMainHeader extends ConsumerWidget {
       data: (value) => value,
       orElse: _fallbackSettings,
     );
+    final unit = ref.watch(orgUnitBySlugProvider(normalizedSlug)).valueOrNull;
+    final scopeLabel = pwfResolveScopeLabel(
+      unitSlug: normalizedSlug,
+      unit: unit,
+      contextualLabel: settings.siteName,
+    );
+    final displaySettings = normalizedSlug == 'home'
+        ? settings
+        : settings.copyWith(siteName: scopeLabel, logoAlt: scopeLabel);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 15),
@@ -46,46 +58,104 @@ class PwfMainHeader extends ConsumerWidget {
             final titleFont = width < 820 ? 22.0 : 28.8;
             final subtitleFont = width < 820 ? 12.5 : 14.4;
 
-            return Row(
+            final brand = Row(
               children: [
+                _HeaderLogo(logoUrl: displaySettings.logoUrl),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Row(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _HeaderLogo(logoUrl: settings.logoUrl),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              settings.siteName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.cairo(
-                                fontSize: titleFont,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                height: 1.1,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              settings.siteTagline,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.cairo(
-                                fontSize: subtitleFont,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.white.withValues(alpha: 0.90),
-                              ),
-                            ),
-                          ],
+                      Text(
+                        displaySettings.siteName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.cairo(
+                          fontSize: titleFont,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          height: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        displaySettings.siteTagline,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.cairo(
+                          fontSize: subtitleFont,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white.withValues(alpha: 0.90),
                         ),
                       ),
                     ],
                   ),
                 ),
+              ],
+            );
+
+            if (width < 640) {
+              final mobileControlWidth = width.isFinite ? width : 320.0;
+              final stackButtons = width < 380;
+              final emergencyLabel = normalizedSlug == 'home'
+                  ? 'الطوارئ'
+                  : 'طوارئ ${displaySettings.siteName}';
+              final loginButton = _HeaderButton(
+                icon: Icons.login,
+                label: 'دخول الموظفين',
+                background: Colors.white.withValues(alpha: 0.10),
+                horizontalPadding: 12,
+                fontSize: 12,
+                maxLabelWidth: stackButtons
+                    ? (mobileControlWidth - 64).clamp(80.0, 320.0).toDouble()
+                    : 112,
+                onTap: () => context.go(AppRoutes.adminLogin),
+              );
+              final emergencyButton = _HeaderButton(
+                icon: Icons.phone,
+                label: emergencyLabel,
+                background: PwfHomePalette.danger,
+                hoverBackground: const Color(0xFFC82333),
+                horizontalPadding: 12,
+                fontSize: 12,
+                maxLabelWidth: stackButtons
+                    ? (mobileControlWidth - 64).clamp(80.0, 320.0).toDouble()
+                    : 112,
+                onTap: () => context.go(AppRoutes.complaints),
+              );
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  brand,
+                  const SizedBox(height: 12),
+                  _SearchBox(
+                    width: mobileControlWidth,
+                    scopeLabel: displaySettings.siteName,
+                    unitSlug: normalizedSlug,
+                  ),
+                  const SizedBox(height: 10),
+                  if (stackButtons) ...[
+                    SizedBox(width: double.infinity, child: loginButton),
+                    SizedBox(height: buttonGap),
+                    SizedBox(width: double.infinity, child: emergencyButton),
+                  ] else
+                    Row(
+                      children: [
+                        Expanded(child: loginButton),
+                        SizedBox(width: buttonGap),
+                        Expanded(child: emergencyButton),
+                      ],
+                    ),
+                ],
+              );
+            }
+
+            return Row(
+              children: [
+                Expanded(child: brand),
                 const SizedBox(width: 16),
                 Flexible(
                   child: Align(
@@ -97,7 +167,7 @@ class PwfMainHeader extends ConsumerWidget {
                         children: [
                           _SearchBox(
                             width: searchWidth,
-                            scopeLabel: settings.siteName,
+                            scopeLabel: displaySettings.siteName,
                             unitSlug: normalizedSlug,
                           ),
                           SizedBox(width: compact ? 12 : 20),
@@ -118,7 +188,7 @@ class PwfMainHeader extends ConsumerWidget {
                                 icon: Icons.phone,
                                 label: normalizedSlug == 'home'
                                     ? 'الطوارئ'
-                                    : 'طوارئ ${settings.siteName}',
+                                    : 'طوارئ ${displaySettings.siteName}',
                                 background: PwfHomePalette.danger,
                                 hoverBackground: const Color(0xFFC82333),
                                 horizontalPadding: buttonHorizontal,
@@ -231,7 +301,7 @@ class _SearchBoxState extends State<_SearchBox> {
     final slug = widget.unitSlug.trim().isEmpty
         ? 'home'
         : widget.unitSlug.trim().toLowerCase();
-    final path = slug == 'home' ? '/home/search' : '/$slug/search';
+    final path = UnitRoutes.search(slug);
 
     if (query.isEmpty) {
       context.go(path);
@@ -324,6 +394,7 @@ class _HeaderButton extends StatefulWidget {
     this.hoverBackground,
     required this.horizontalPadding,
     required this.fontSize,
+    this.maxLabelWidth,
   });
 
   final IconData icon;
@@ -333,6 +404,7 @@ class _HeaderButton extends StatefulWidget {
   final VoidCallback onTap;
   final double horizontalPadding;
   final double fontSize;
+  final double? maxLabelWidth;
 
   @override
   State<_HeaderButton> createState() => _HeaderButtonState();
@@ -360,15 +432,26 @@ class _HeaderButtonState extends State<_HeaderButton> {
           ),
           decoration: BoxDecoration(color: bg, borderRadius: PwfHomeRadii.br8),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(widget.icon, size: 14, color: Colors.white),
               const SizedBox(width: 8),
-              Text(
-                widget.label,
-                style: GoogleFonts.cairo(
-                  fontSize: widget.fontSize,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: widget.maxLabelWidth ?? double.infinity,
+                ),
+                child: Text(
+                  widget.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: false,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.cairo(
+                    fontSize: widget.fontSize,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],

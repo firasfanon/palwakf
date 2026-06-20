@@ -66,9 +66,15 @@ final unitMediaGalleryProvider =
       ref,
       q,
     ) async {
-      final unitId = await ref.watch(unitIdBySlugProvider(q.unitSlug).future);
+      final unitId = await ref.watch(unitIdBySlugExactProvider(q.unitSlug).future);
+      if (unitId == null || unitId.isEmpty) return const <MediaGalleryItem>[];
       final repo = ref.read(mediaGalleryRepositoryProvider);
-      return repo.fetchActiveForUnit(unitId, mediaType: q.type, limit: q.limit);
+      return repo.fetchActiveForUnit(
+        unitId,
+        unitSlug: q.unitSlug,
+        mediaType: q.type,
+        limit: q.limit,
+      );
     });
 
 final publicMediaGalleryBrowseProvider =
@@ -76,10 +82,12 @@ final publicMediaGalleryBrowseProvider =
       List<MediaGalleryItem>,
       PublicMediaGalleryBrowseQuery
     >((ref, q) async {
-      final unitId = await ref.watch(unitIdBySlugProvider(q.unitSlug).future);
+      final unitId = await ref.watch(unitIdBySlugExactProvider(q.unitSlug).future);
+      if (unitId == null || unitId.isEmpty) return const <MediaGalleryItem>[];
       final repo = ref.read(mediaGalleryRepositoryProvider);
       return repo.fetchPublicForUnit(
         unitId,
+        unitSlug: q.unitSlug,
         mediaType: q.type,
         search: q.search,
         limit: q.limit,

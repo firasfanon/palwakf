@@ -31,6 +31,7 @@ class PwfZakatCalculatorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mobile = MediaQuery.sizeOf(context).width < 640;
     return Container(
       decoration: BoxDecoration(
         color: PwfZakatPalette.card,
@@ -38,7 +39,7 @@ class PwfZakatCalculatorCard extends StatelessWidget {
         border: Border.all(color: PwfZakatPalette.border),
         boxShadow: PwfZakatDecorations.shadow,
       ),
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(mobile ? 14 : 20),
       child: Column(
         children: <Widget>[
           _TabsBar(
@@ -106,6 +107,8 @@ class _TabsBar extends StatelessWidget {
                   const SizedBox(width: 10),
                   Text(
                     t.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium!.copyWith(
                       color: isActive ? Colors.white : PwfZakatPalette.gray,
                       fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,

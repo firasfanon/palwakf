@@ -29,11 +29,10 @@ class AdminUsersRepository {
 
     final unitsById = <String, Map<String, dynamic>>{};
     if (unitIds.isNotEmpty) {
-      final units = await _client
-          .schema('core')
-          .from(PwfDatabaseOwnerSurfaces.orgUnits)
-          .select('id,slug,name_ar,name_en,login_key')
-          .inFilter('id', unitIds);
+      final units = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+        _client,
+        PwfDatabaseOwnerSurfaces.orgUnits,
+      ).select('id,slug,name_ar,name_en,login_key').inFilter('id', unitIds);
       for (final raw in units as List) {
         final row = Map<String, dynamic>.from(raw as Map);
         final id = (row['id'] ?? '').toString();
@@ -174,10 +173,10 @@ class AdminUsersRepository {
   }
 
   Future<List<Map<String, dynamic>>> fetchActiveUnits() async {
-    final res = await _client
-        .schema('core')
-        .from(PwfDatabaseOwnerSurfaces.orgUnits)
-        .select('id,slug,name_ar,name_en,login_key,is_active')
+    final res = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+      _client,
+      PwfDatabaseOwnerSurfaces.orgUnits,
+    ).select('id,slug,name_ar,name_en,login_key,is_active')
         .eq('is_active', true)
         .order('name_ar');
 

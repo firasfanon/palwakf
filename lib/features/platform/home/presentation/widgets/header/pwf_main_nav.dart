@@ -100,7 +100,7 @@ List<Widget> _navItems(
           icon: Icons.info_outline,
           label: isHome ? 'عن الوزارة' : 'الصفحة الرئيسية لـ $scopeLabel',
           onTap: () =>
-              context.go(isHome ? AppRoutes.about : UnitRoutes.home(unitSlug)),
+              context.go(isHome ? AppRoutes.about : UnitRoutes.about(unitSlug)),
         ),
         _DropdownLink(
           icon: Icons.person,
@@ -110,17 +110,23 @@ List<Widget> _navItems(
         _DropdownLink(
           icon: Icons.flag,
           label: 'الرؤيا والرسالة',
-          onTap: () => context.go(AppRoutes.visionMission),
+          onTap: () => context.go(
+            isHome ? AppRoutes.visionMission : UnitRoutes.visionMission(unitSlug),
+          ),
         ),
         _DropdownLink(
           icon: Icons.account_tree,
           label: 'الهيكل التنظيمي',
-          onTap: () => context.go(AppRoutes.structure),
+          onTap: () => context.go(
+            isHome ? AppRoutes.structure : UnitRoutes.structure(unitSlug),
+          ),
         ),
         _DropdownLink(
           icon: Icons.groups_2_outlined,
           label: 'الوزراء السابقون',
-          onTap: () => context.go(AppRoutes.formerMinisters),
+          onTap: () => context.go(
+            isHome ? AppRoutes.formerMinisters : UnitRoutes.formerMinisters(unitSlug),
+          ),
         ),
       ],
     ),
@@ -297,7 +303,9 @@ List<Widget> _navItems(
     _NavLink(
       icon: Icons.phone,
       label: isHome ? 'اتصل بنا' : 'اتصل بـ $scopeLabel',
-      onTap: () => context.go(AppRoutes.contact),
+      onTap: () => context.go(
+        isHome ? AppRoutes.contact : UnitRoutes.contact(unitSlug),
+      ),
     ),
   ];
 }

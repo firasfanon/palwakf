@@ -56,6 +56,14 @@ class MyActivityScreen extends ConsumerWidget {
                                 value: contract.displayName,
                               ),
                               _Badge(
+                                label: 'الدور',
+                                value: contract.policyRoleLabelAr,
+                              ),
+                              _Badge(
+                                label: 'النطاق',
+                                value: contract.scopeLabel,
+                              ),
+                              _Badge(
                                 label: 'الأنظمة',
                                 value: '${contract.systems.length}',
                               ),
@@ -69,6 +77,10 @@ class MyActivityScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
+                  if (contract.isSuperuser) ...[
+                    const SizedBox(height: 16),
+                    const _UniversalAuthorityNotice(),
+                  ],
                   const SizedBox(height: 16),
                   _SectionBlock(
                     title: 'الأنظمة المتاحة حاليًا',
@@ -96,7 +108,9 @@ class MyActivityScreen extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              Text('الدور: ${entry.role.name}'),
+                              Text(
+                                'الدور: ${contract.isSuperuser ? 'سوبر يوزر سيادي' : entry.role.name}',
+                              ),
                               Text(
                                 'الصلاحيات: ${entry.grantedPermissions.length}',
                               ),
@@ -182,6 +196,33 @@ class MyActivityScreen extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text('تعذر تحميل الصفحة: $e')),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class _UniversalAuthorityNotice extends StatelessWidget {
+  const _UniversalAuthorityNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: const Color(0xFFEAF4FF),
+      child: const Padding(
+        padding: EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Icon(Icons.verified_user_outlined),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'السلطة السيادية مفعلة لهذا الحساب: كل الوحدات وكل الأنظمة متاحة على مستوى الواجهة. تبقى عمليات الكتابة التخصصية خاضعة لعقود الـRPC الخاصة بكل نظام.',
+                style: TextStyle(height: 1.5),
+              ),
+            ),
+          ],
         ),
       ),
     );

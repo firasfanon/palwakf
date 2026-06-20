@@ -1,4 +1,3 @@
-// lib/presentation/screens/admin/web_login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,7 +6,6 @@ import 'package:waqf/core/constants/app_constants.dart';
 import 'package:waqf/features/platform/access/application/pwf_auth_error_normalizer.dart';
 import 'package:waqf/features/platform/access/domain/pwf_safe_return_path.dart';
 import 'package:waqf/presentation/providers/auth_provider.dart';
-import 'package:waqf/presentation/widgets/forms/custom_text_field.dart';
 
 class WebLoginScreen extends ConsumerStatefulWidget {
   const WebLoginScreen({super.key});
@@ -20,8 +18,10 @@ class _WebLoginScreenState extends ConsumerState<WebLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
+
   bool _rememberMe = false;
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -32,6 +32,7 @@ class _WebLoginScreenState extends ConsumerState<WebLoginScreen> {
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
     try {
       await ref.read(authStateProvider.notifier).login(
@@ -39,72 +40,78 @@ class _WebLoginScreenState extends ConsumerState<WebLoginScreen> {
             _passwordController.text,
           );
       if (!mounted) return;
+
       final from = GoRouterState.of(context).uri.queryParameters['from'];
       final safeTarget = PwfSafeReturnPath.fallback(
         from,
         fallbackPath: AppRoutes.adminDashboard,
       );
       context.go(safeTarget);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(PwfAuthErrorNormalizer.normalize(e)),
-            backgroundColor: AppConstants.royalRed,
-          ),
-        );
-      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(PwfAuthErrorNormalizer.normalize(error)),
+          backgroundColor: AppConstants.royalRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  void _openPasswordRecovery() {
+    final from = GoRouterState.of(context).uri.queryParameters['from'];
+    final safeFrom = PwfSafeReturnPath.fallback(
+      from,
+      fallbackPath: AppRoutes.adminDashboard,
+    );
+    context.go(
+      '${AppRoutes.forgotPassword}?from=${Uri.encodeComponent(safeFrom)}',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF6F8FB),
+        backgroundColor: const Color(0xFFF7F9FC),
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final compact = constraints.maxWidth < 900;
-              final veryCompact = constraints.maxWidth < 520;
-              final form = _LoginForm(
+              final compact = constraints.maxWidth < 920;
+              final phone = constraints.maxWidth < 540;
+              final form = _WebLoginCard(
                 formKey: _formKey,
                 identifierController: _identifierController,
                 passwordController: _passwordController,
+                obscurePassword: _obscurePassword,
                 rememberMe: _rememberMe,
                 isLoading: _isLoading,
                 compact: compact,
+                onTogglePassword: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
                 onRememberChanged: (value) =>
                     setState(() => _rememberMe = value ?? false),
                 onLogin: _handleLogin,
-                onForgotPassword: () {
-                  final from =
-                      GoRouterState.of(context).uri.queryParameters['from'];
-                  final safeFrom = PwfSafeReturnPath.fallback(
-                    from,
-                    fallbackPath: AppRoutes.adminDashboard,
-                  );
-                  context.go(
-                    '${AppRoutes.forgotPassword}?from=${Uri.encodeComponent(safeFrom)}',
-                  );
-                },
+                onForgotPassword: _openPasswordRecovery,
+                onHome: () => context.go(AppRoutes.home),
               );
-              final hero = _LoginHero(compact: compact, theme: theme);
 
               if (compact) {
                 return SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: veryCompact ? 12 : 18,
-                    vertical: veryCompact ? 12 : 18,
+                  padding: EdgeInsets.fromLTRB(
+                    phone ? 14 : 22,
+                    phone ? 14 : 22,
+                    phone ? 14 : 22,
+                    phone ? 22 : 30,
                   ),
                   child: Column(
                     children: [
-                      hero,
-                      const SizedBox(height: 12),
+                      _LoginBrandPanel(compact: true),
+                      const SizedBox(height: 16),
                       form,
                     ],
                   ),
@@ -113,12 +120,12 @@ class _WebLoginScreenState extends ConsumerState<WebLoginScreen> {
 
               return Row(
                 children: [
-                  Expanded(flex: 5, child: hero),
+                  const Expanded(flex: 5, child: _LoginBrandPanel()),
                   Expanded(
                     flex: 6,
                     child: Center(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(28),
                         child: form,
                       ),
                     ),
@@ -133,141 +140,127 @@ class _WebLoginScreenState extends ConsumerState<WebLoginScreen> {
   }
 }
 
-class _LoginHero extends StatelessWidget {
-  const _LoginHero({required this.compact, required this.theme});
+class _LoginBrandPanel extends StatelessWidget {
+  const _LoginBrandPanel({this.compact = false});
 
   final bool compact;
-  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      constraints: BoxConstraints(minHeight: compact ? 160 : 520),
+      constraints: BoxConstraints(minHeight: compact ? 210 : 620),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0B1220), Color(0xFF0F4C81)],
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-        ),
+        color: const Color(0xFF0F4C81),
         borderRadius: compact ? BorderRadius.circular(28) : BorderRadius.zero,
       ),
       child: Stack(
+        clipBehavior: Clip.hardEdge,
         children: [
           Positioned(
-            top: compact ? 18 : 60,
-            right: compact ? 18 : 50,
-            child: Container(
-              width: compact ? 92 : 180,
-              height: compact ? 92 : 180,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEAB308).withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
+            top: compact ? -42 : -84,
+            left: compact ? -32 : -76,
+            child: _DecorativeOrb(
+              size: compact ? 150 : 300,
+              color: const Color(0xFFEAB308).withValues(alpha: 0.13),
             ),
           ),
           Positioned(
-            bottom: compact ? 14 : 70,
-            left: compact ? 18 : 40,
-            child: Container(
-              width: compact ? 120 : 220,
-              height: compact ? 120 : 220,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.04),
-                shape: BoxShape.circle,
-              ),
+            bottom: compact ? -60 : -110,
+            right: compact ? -40 : -80,
+            child: _DecorativeOrb(
+              size: compact ? 190 : 380,
+              color: Colors.white.withValues(alpha: 0.06),
             ),
           ),
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: compact ? 18 : 54,
-              vertical: compact ? 18 : 48,
+          Positioned(
+            top: compact ? 28 : 58,
+            right: compact ? 24 : 52,
+            child: IconButton(
+              tooltip: 'العودة للصفحة الرئيسية',
+              onPressed: () => context.go(AppRoutes.home),
+              style: IconButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.white.withValues(alpha: 0.10),
+              ),
+              icon: const Icon(Icons.home_outlined),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: compact ? 72 : 112,
-                  height: compact ? 72 : 112,
-                  padding: EdgeInsets.all(compact ? 10 : 14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(compact ? 22 : 28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.16),
-                        blurRadius: compact ? 14 : 24,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
+          ),
+          Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: compact ? 26 : 60,
+                vertical: compact ? 30 : 54,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: compact ? 76 : 116,
+                    height: compact ? 76 : 116,
+                    padding: EdgeInsets.all(compact ? 11 : 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(compact ? 24 : 32),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 26,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: Image.asset(AppConstants.appLogo, fit: BoxFit.contain),
                   ),
-                  child: Image.asset(AppConstants.appLogo, fit: BoxFit.contain),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEAB308).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: const Color(0xFFEAB308).withValues(alpha: 0.25),
+                  SizedBox(height: compact ? 14 : 20),
+                  Text(
+                    'منصة الأوقاف الفلسطينية',
+                    textAlign: TextAlign.center,
+                    style: (compact
+                            ? theme.textTheme.headlineSmall
+                            : theme.textTheme.displaySmall)
+                        ?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      height: 1.25,
                     ),
                   ),
-                  child: const Text(
-                    'نظام إداري سيادي - PalWakf',
-                    style: TextStyle(
-                      color: Color(0xFFEAB308),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'وزارة الأوقاف والشؤون الدينية',
-                  textAlign: TextAlign.center,
-                  style: (compact
-                          ? theme.textTheme.headlineSmall
-                          : theme.textTheme.displaySmall)
-                      ?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    height: 1.18,
-                  ),
-                ),
-                if (!compact) ...[
-                  const SizedBox(height: 18),
-                  const Text(
-                    'وصول آمن إلى لوحة التحكم الإدارية مع دعم الهوية الموحدة، الصلاحيات، وحوكمة الأنظمة المتصلة بالمنصة.',
+                  const SizedBox(height: 8),
+                  Text(
+                    'وزارة الأوقاف والشؤون الدينية',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Color(0xFFCBD5E1),
-                      fontSize: 16,
-                      height: 1.7,
+                      color: Colors.white.withValues(alpha: 0.82),
+                      fontSize: compact ? 14 : 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  const Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      _InfoChip(
-                        icon: Icons.security_rounded,
-                        label: 'تسجيل دخول آمن',
+                  if (!compact) ...[
+                    const SizedBox(height: 20),
+                    const Text(
+                      'بوابة موحّدة للموظفين للوصول إلى مساحة العمل الخاصة بهم.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Color(0xFFDCEAF7),
+                        fontSize: 16,
+                        height: 1.7,
                       ),
-                      _InfoChip(
-                        icon: Icons.account_tree_outlined,
-                        label: 'ربط وحدوي ومركزي',
-                      ),
-                      _InfoChip(
-                        icon: Icons.verified_user_outlined,
-                        label: 'RBAC / RLS',
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 22),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: const [
+                        _BrandPill(icon: Icons.language_rounded, label: 'واجهة عربية'),
+                        _BrandPill(icon: Icons.devices_rounded, label: 'متوافقة مع الأجهزة'),
+                        _BrandPill(icon: Icons.support_agent_rounded, label: 'دعم المنصة'),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ],
@@ -276,108 +269,185 @@ class _LoginHero extends StatelessWidget {
   }
 }
 
-class _LoginForm extends StatelessWidget {
-  const _LoginForm({
+class _DecorativeOrb extends StatelessWidget {
+  const _DecorativeOrb({required this.size, required this.color});
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}
+
+class _BrandPill extends StatelessWidget {
+  const _BrandPill({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: const Color(0xFFEAB308)),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WebLoginCard extends StatelessWidget {
+  const _WebLoginCard({
     required this.formKey,
     required this.identifierController,
     required this.passwordController,
+    required this.obscurePassword,
     required this.rememberMe,
     required this.isLoading,
     required this.compact,
+    required this.onTogglePassword,
     required this.onRememberChanged,
     required this.onLogin,
     required this.onForgotPassword,
+    required this.onHome,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController identifierController;
   final TextEditingController passwordController;
+  final bool obscurePassword;
   final bool rememberMe;
   final bool isLoading;
   final bool compact;
+  final VoidCallback onTogglePassword;
   final ValueChanged<bool?> onRememberChanged;
   final VoidCallback onLogin;
   final VoidCallback onForgotPassword;
+  final VoidCallback onHome;
 
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 520),
+      constraints: const BoxConstraints(maxWidth: 490),
       child: Container(
-        padding: EdgeInsets.all(compact ? 18 : 30),
+        padding: EdgeInsets.all(compact ? 22 : 34),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(compact ? 24 : 28),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(compact ? 26 : 30),
+          border: Border.all(color: const Color(0xFFE4EAF1)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 32,
-              offset: const Offset(0, 12),
+              color: const Color(0xFF0F4C81).withValues(alpha: 0.08),
+              blurRadius: 36,
+              offset: const Offset(0, 16),
             ),
           ],
         ),
         child: Form(
           key: formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'تسجيل الدخول الإداري',
-                textAlign: TextAlign.center,
+              Align(
+                alignment: Alignment.centerRight,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF3FA),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.login_rounded, color: Color(0xFF0F4C81)),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'مرحبًا بك',
                 style: TextStyle(
-                  fontSize: compact ? 22 : 24,
+                  color: Color(0xFF12355A),
+                  fontSize: 27,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0F4C81),
                 ),
               ),
-              SizedBox(height: compact ? 8 : 10),
-              Text(
-                compact
-                    ? 'أدخل بياناتك للوصول إلى لوحة التحكم.'
-                    : 'أدخل بريدك الإلكتروني أو اسم المستخدم وكلمة المرور للوصول إلى لوحة التحكم. للحسابات الحساسة يوصى بتفعيل البريد الموثق والمصادقة متعددة العوامل.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFF6B7280), height: 1.6),
+              const SizedBox(height: 6),
+              const Text(
+                'أدخل بيانات حسابك للمتابعة إلى مساحة العمل.',
+                style: TextStyle(color: Color(0xFF64748B), height: 1.6),
               ),
-              SizedBox(height: compact ? 10 : 12),
-              SizedBox(
-                width: double.infinity,
-                child: CustomTextField(
-                  controller: identifierController,
+              const SizedBox(height: 24),
+              TextFormField(
+                controller: identifierController,
+                autofocus: !compact,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                textDirection: TextDirection.ltr,
+                autofillHints: const [AutofillHints.username, AutofillHints.email],
+                decoration: _inputDecoration(
                   label: 'البريد الإلكتروني أو اسم المستخدم',
-                  hint: 'name@example.com أو bthadmin',
-                  prefixIcon: Icons.person_outline_rounded,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'البريد الإلكتروني أو اسم المستخدم مطلوب';
-                    }
-                    return null;
-                  },
+                  hint: 'name@example.com',
+                  icon: Icons.person_outline_rounded,
                 ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'أدخل البريد الإلكتروني أو اسم المستخدم.';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: PasswordTextField(
-                  controller: passwordController,
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: passwordController,
+                obscureText: obscurePassword,
+                textDirection: TextDirection.ltr,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                onFieldSubmitted: (_) => onLogin(),
+                decoration: _inputDecoration(
                   label: 'كلمة المرور',
                   hint: 'أدخل كلمة المرور',
-                  onFieldSubmitted: (_) => onLogin(),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'كلمة المرور مطلوبة';
-                    }
-                    return null;
-                  },
+                  icon: Icons.lock_outline_rounded,
+                ).copyWith(
+                  suffixIcon: IconButton(
+                    tooltip: obscurePassword ? 'إظهار كلمة المرور' : 'إخفاء كلمة المرور',
+                    onPressed: onTogglePassword,
+                    icon: Icon(
+                      obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                  ),
                 ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'أدخل كلمة المرور.';
+                  }
+                  return null;
+                },
               ),
-              SizedBox(height: compact ? 10 : 18),
+              const SizedBox(height: 12),
               Wrap(
-                alignment: WrapAlignment.center,
+                alignment: WrapAlignment.spaceBetween,
                 crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 10,
+                spacing: 8,
                 runSpacing: 4,
                 children: [
                   Row(
@@ -393,14 +463,13 @@ class _LoginForm extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: compact ? 12 : 22),
+              const SizedBox(height: 18),
               SizedBox(
-                width: double.infinity,
-                height: compact ? 50 : 56,
+                height: 54,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF0F4C81), Color(0xFFEAB308)],
+                      colors: [Color(0xFF0F4C81), Color(0xFF1C679F)],
                       begin: Alignment.centerRight,
                       end: Alignment.centerLeft,
                     ),
@@ -413,77 +482,50 @@ class _LoginForm extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     onPressed: isLoading ? null : onLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: isLoading
+                    icon: isLoading
                         ? const SizedBox(
-                            height: 22,
-                            width: 22,
+                            height: 20,
+                            width: 20,
                             child: CircularProgressIndicator(
                               color: Colors.white,
                               strokeWidth: 2,
                             ),
                           )
-                        : FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Text(
-                                  'دخول آمن إلى لوحة التحكم',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(width: 10),
-                                Icon(Icons.login_rounded, color: Colors.white),
-                              ],
-                            ),
-                          ),
+                        : const Icon(Icons.arrow_back_rounded),
+                    label: Text(
+                      isLoading ? 'جارٍ التحقق...' : 'تسجيل الدخول',
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
                   ),
                 ),
               ),
-              if (!compact) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
+              const SizedBox(height: 16),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.lock_outline_rounded, size: 16, color: Color(0xFF64748B)),
+                  SizedBox(width: 7),
+                  Text(
+                    'تعامل مع بيانات الدخول بسرية.',
+                    style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
                   ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.info_outline_rounded,
-                          color: Color(0xFF0F4C81)),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'لأغراض الإنتاج: الحسابات الإدارية يجب أن ترتبط ببريد حقيقي مؤكد، وسياسات جلسة محددة، ومصادقة إضافية للحسابات الحساسة.',
-                          style:
-                              TextStyle(height: 1.5, color: Color(0xFF475569)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 12),
-              Center(
-                child: TextButton.icon(
-                  onPressed: () => context.go(AppRoutes.home),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  label: const Text('العودة للصفحة الرئيسية'),
-                ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: onHome,
+                icon: const Icon(Icons.home_outlined),
+                label: const Text('العودة للصفحة الرئيسية'),
               ),
             ],
           ),
@@ -491,32 +533,31 @@ class _LoginForm extends StatelessWidget {
       ),
     );
   }
-}
 
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+  InputDecoration _inputDecoration({
+    required String label,
+    required String hint,
+    required IconData icon,
+  }) {
+    const borderColor = Color(0xFFD8E1EB);
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixIcon: Icon(icon, color: const Color(0xFF0F4C81)),
+      filled: true,
+      fillColor: const Color(0xFFFBFCFE),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: borderColor),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: const Color(0xFFEAB308)),
-          const SizedBox(width: 8),
-          Text(label,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w700)),
-        ],
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: borderColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Color(0xFF0F4C81), width: 1.5),
       ),
     );
   }

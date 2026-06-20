@@ -22,8 +22,11 @@ final unitNewsProvider = FutureProvider.family<List<NewsArticle>, String>((
   ref,
   unitSlug,
 ) async {
-  final unitId = await ref.watch(unitIdBySlugProvider(unitSlug).future);
-  return ref.read(unitNewsServiceProvider).getAllNewsForUnit(unitId);
+  final unitId = await ref.watch(unitIdBySlugExactProvider(unitSlug).future);
+  if (unitId == null || unitId.isEmpty) return const <NewsArticle>[];
+  return ref
+      .read(unitNewsServiceProvider)
+      .getAllNewsForUnit(unitId, unitSlug: unitSlug);
 });
 
 final unitNewsByCategoryProvider =
@@ -32,19 +35,69 @@ final unitNewsByCategoryProvider =
       param,
     ) async {
       final unitId = await ref.watch(
-        unitIdBySlugProvider(param.unitSlug).future,
+        unitIdBySlugExactProvider(param.unitSlug).future,
       );
+      if (unitId == null || unitId.isEmpty) return const <NewsArticle>[];
       return ref
           .read(unitNewsServiceProvider)
-          .getNewsByCategoryForUnit(param.category, unitId);
+          .getNewsByCategoryForUnit(
+            param.category,
+            unitId,
+            unitSlug: param.unitSlug,
+          );
+    });
+
+
+
+/// Opaque public media detail identity. `contentId` is the server-issued
+/// content_id passed through the URL; it is not a lossy legacy integer hash.
+class UnitNewsContentIdParam {
+  const UnitNewsContentIdParam(this.unitSlug, this.contentId);
+
+  final String unitSlug;
+  final String contentId;
+
+  String get normalizedUnitSlug {
+    final value = unitSlug.trim().toLowerCase();
+    return value.isEmpty ? 'home' : value;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is UnitNewsContentIdParam &&
+      other.normalizedUnitSlug == normalizedUnitSlug &&
+      other.contentId == contentId;
+
+  @override
+  int get hashCode => Object.hash(normalizedUnitSlug, contentId);
+}
+
+/// Fresh public detail loader. This invokes rpc_public_media_detail_v2 only;
+/// it does not reconstruct a detail item from a feed/list result.
+final unitNewsContentDetailProvider =
+    FutureProvider.family<NewsArticle?, UnitNewsContentIdParam>((ref, param) async {
+      final unitId = await ref.watch(
+        unitIdBySlugExactProvider(param.normalizedUnitSlug).future,
+      );
+      if (unitId == null || unitId.isEmpty) return null;
+      return ref.read(unitNewsServiceProvider).getNewsByContentIdForUnit(
+            param.contentId,
+            unitId,
+            unitSlug: param.normalizedUnitSlug,
+          );
     });
 
 final unitNewsArticleProvider =
     FutureProvider.family<NewsArticle?, UnitNewsIdParam>((ref, param) async {
       final unitId = await ref.watch(
-        unitIdBySlugProvider(param.unitSlug).future,
+        unitIdBySlugExactProvider(param.unitSlug).future,
       );
+      if (unitId == null || unitId.isEmpty) return null;
       return ref
           .read(unitNewsServiceProvider)
-          .getNewsByIdForUnit(param.id, unitId);
+          .getNewsByIdForUnit(
+            param.id,
+            unitId,
+            unitSlug: param.unitSlug,
+          );
     });

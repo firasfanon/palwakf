@@ -5,18 +5,17 @@ import '../../data/repositories/announcement_repository.dart';
 import '../../data/services/supabase_service.dart';
 import 'unit_context_provider.dart';
 
-const _fallbackGlobalUnitId = '11111111-1111-1111-1111-111111111111';
-
 final announcementRepositoryProvider = Provider<AnnouncementRepository>((ref) {
   return AnnouncementRepository(SupabaseService());
 });
 
 final announcementsForUnitProvider =
     FutureProvider.family<List<Announcement>, String>((ref, unitSlug) async {
-      final unitId = await ref.watch(unitIdBySlugProvider(unitSlug).future);
+      final unitId = await ref.watch(unitIdBySlugExactProvider(unitSlug).future);
+      if (unitId == null || unitId.isEmpty) return const <Announcement>[];
       return ref
           .read(announcementRepositoryProvider)
-          .getAllAnnouncementsForUnit(unitId);
+          .getAllAnnouncementsForUnit(unitId, unitSlug: unitSlug);
     });
 
 class UnitAnnouncementIdParam {
@@ -42,6 +41,43 @@ class UnitAnnouncementIdParam {
   int get hashCode => Object.hash(normalizedUnitSlug, id);
 }
 
+
+
+class UnitAnnouncementContentIdParam {
+  const UnitAnnouncementContentIdParam(this.unitSlug, this.contentId);
+
+  final String unitSlug;
+  final String contentId;
+
+  String get normalizedUnitSlug {
+    final value = unitSlug.trim().toLowerCase();
+    return value.isEmpty ? 'home' : value;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is UnitAnnouncementContentIdParam &&
+      other.normalizedUnitSlug == normalizedUnitSlug &&
+      other.contentId == contentId;
+
+  @override
+  int get hashCode => Object.hash(normalizedUnitSlug, contentId);
+}
+
+/// Direct public detail RPC provider; feed/list reconstruction is prohibited.
+final announcementContentDetailForUnitProvider =
+    FutureProvider.family<Announcement?, UnitAnnouncementContentIdParam>((ref, p) async {
+      final unitId = await ref.watch(
+        unitIdBySlugExactProvider(p.normalizedUnitSlug).future,
+      );
+      if (unitId == null || unitId.isEmpty) return null;
+      return ref.read(announcementRepositoryProvider).getAnnouncementByContentIdForUnit(
+            p.contentId,
+            unitId,
+            unitSlug: p.normalizedUnitSlug,
+          );
+    });
+
 /// Announcement detail for unit.
 ///
 /// Database Wave B-1A media runtime bridge rule:
@@ -56,17 +92,21 @@ final announcementForUnitByIdProvider =
     ) async {
       final repo = ref.read(announcementRepositoryProvider);
 
-      final compat = await repo.getCompatRuntimeAnnouncementById(p.id);
-      if (compat != null) return compat;
+      if (p.normalizedUnitSlug == 'home') {
+        final compat = await repo.getCompatRuntimeAnnouncementById(p.id);
+        if (compat != null) return compat;
+      }
 
       final unitId = await ref
-          .watch(unitIdBySlugProvider(p.normalizedUnitSlug).future)
-          .timeout(
-            const Duration(seconds: 6),
-            onTimeout: () => _fallbackGlobalUnitId,
-          );
+          .watch(unitIdBySlugExactProvider(p.normalizedUnitSlug).future)
+          .timeout(const Duration(seconds: 6), onTimeout: () => null);
+      if (unitId == null || unitId.isEmpty) return null;
 
       return repo
-          .getAnnouncementByIdForUnit(p.id, unitId)
+          .getAnnouncementByIdForUnit(
+            p.id,
+            unitId,
+            unitSlug: p.normalizedUnitSlug,
+          )
           .timeout(const Duration(seconds: 8), onTimeout: () => null);
     });

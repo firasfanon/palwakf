@@ -1,55 +1,56 @@
 // lib/data/repositories/footer_repository.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:waqf/core/database/pwf_database_owner_surfaces.dart';
+import 'package:waqf/core/unit/pwf_canonical_unit_identity.dart';
 import '../models/footer_settings.dart';
 
 class FooterRepository {
   FooterRepository(this._supabase);
 
   final SupabaseClient _supabase;
+
+  // Runtime reads are dependency-zero: core owner-schema profile surface only.
+  static const String _unitSurfaceProfileReadSurface =
+      PwfDatabaseOwnerSurfaces.unitPublicSurfaceProfileRuntimeV1;
+
+  // Owner writes are performed only through core.rpc_unit_public_profile_write_v1.
+
+  // Legacy global fallback sentinel retained for contract tests only. Runtime
+  // unit pages remain strict: if (!strictUnitOnly) _globalUnitId must never be
+  // reached for unit-scoped public pages.
   static const String _globalUnitId = '11111111-1111-1111-1111-111111111111';
 
-  // Phase 1 public-schema remediation:
-  // Runtime reads use the public compatibility wrapper. Admin writes remain on
-  // the preserved legacy public table until owner-write RPCs are approved.
-  static const String _footerSettingsReadSurface =
-      'v_platform_footer_settings_compat_v1';
-  static const String _footerSettingsLegacyWriteTable = 'footer_settings';
-
   Future<FooterSettings> fetchFooterSettings() async {
-    try {
-      final response = await _supabase
-          .from(_footerSettingsReadSurface)
-          .select()
-          .order('updated_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
-      if (response != null) return _hydrateFooter(response);
-    } on PostgrestException catch (error) {
-      if (!_isOptionalSingletonMiss(error)) rethrow;
-    }
-
+    final row = await _fetchProfileByInternalSlug('home');
+    if (row != null) return _hydrateRuntimeProfileFooter(row, isHome: true);
     return _runtimeDefaultFooterSettings();
   }
 
   Future<FooterSettings> fetchFooterSettingsForScopes({
     String? unitId,
     String? homeUnitId,
+    bool strictUnitOnly = false,
   }) async {
-    try {
-      for (final candidate in <String?>[
-        unitId,
-        if (homeUnitId != unitId) homeUnitId,
-        _globalUnitId,
-      ]) {
-        final scoped = await _fetchByUnitId(candidate);
-        if (scoped != null) return scoped;
+    final normalizedUnitId = unitId?.trim();
+    if (normalizedUnitId != null && normalizedUnitId.isNotEmpty) {
+      final row = await _fetchProfileByUnitId(normalizedUnitId);
+      if (row != null) {
+        return _hydrateRuntimeProfileFooter(row, isHome: !strictUnitOnly);
       }
+    }
 
-      final global = await _fetchGlobalNull();
-      if (global != null) return global;
-    } on PostgrestException {
-      // fall through to legacy single-row behavior
+    if (strictUnitOnly) return _runtimeUnitPlaceholderFooterSettings();
+
+    final homeId = homeUnitId?.trim();
+    if (homeId != null && homeId.isNotEmpty) {
+      final row = await _fetchProfileByUnitId(homeId);
+      if (row != null) return _hydrateRuntimeProfileFooter(row, isHome: true);
+    }
+
+    if (!strictUnitOnly) {
+      final row = await _fetchProfileByUnitId(_globalUnitId);
+      if (row != null) return _hydrateRuntimeProfileFooter(row, isHome: true);
     }
 
     return fetchFooterSettings();
@@ -58,21 +59,13 @@ class FooterRepository {
   Future<FooterSettings> fetchFooterSettingsForEdit({
     String? unitId,
     String? homeUnitId,
+    bool strictUnitOnly = false,
   }) async {
-    final normalizedUnitId = unitId?.trim().isEmpty ?? true
-        ? null
-        : unitId!.trim();
-
-    final exact = normalizedUnitId == null
-        ? await _fetchGlobalNull()
-        : await _fetchByUnitId(normalizedUnitId);
-    if (exact != null) return exact;
-
     final effective = await fetchFooterSettingsForScopes(
-      unitId: normalizedUnitId,
+      unitId: unitId,
       homeUnitId: homeUnitId,
+      strictUnitOnly: strictUnitOnly,
     );
-
     return effective.copyWith(
       id: '',
       createdAt: DateTime.now(),
@@ -80,145 +73,210 @@ class FooterRepository {
     );
   }
 
-  Future<void> saveFooterSettingsForUnit(
-    FooterSettings settings, {
-    String? unitId,
-  }) async {
-    final normalizedUnitId = unitId?.trim().isEmpty ?? true
-        ? null
-        : unitId!.trim();
-    final userId = _supabase.auth.currentUser?.id;
-    final payload = {
-      'ministry_logo_url': settings.ministryLogoUrl,
-      'ministry_name': settings.ministryName,
-      'ministry_subtitle': settings.ministrySubtitle,
-      'ministry_description': settings.ministryDescription,
-      'contact_phone': settings.contactPhone,
-      'contact_fax': settings.contactFax,
-      'contact_email': settings.contactEmail,
-      'contact_address': settings.contactAddress,
-      'working_days': settings.workingDays,
-      'working_hours': settings.workingHours,
-      'facebook_url': settings.facebookUrl,
-      'twitter_url': settings.twitterUrl,
-      'instagram_url': settings.instagramUrl,
-      'youtube_url': settings.youtubeUrl,
-      'linkedin_url': settings.linkedinUrl,
-      'quick_links': settings.quickLinks.map((e) => e.toJson()).toList(),
-      'services_links': settings.servicesLinks.map((e) => e.toJson()).toList(),
-      'bottom_links': settings.bottomLinks.map((e) => e.toJson()).toList(),
-      'partners': settings.partners.map((e) => e.toJson()).toList(),
-      'show_partners': settings.showPartners,
-      'copyright_text': settings.copyrightText,
-      'developer_credit': settings.developerCredit,
-      'show_developer_credit': settings.showDeveloperCredit,
-      'show_phone': settings.showPhone,
-      'show_email': settings.showEmail,
-      'show_address': settings.showAddress,
-      'show_working_hours': settings.showWorkingHours,
-      'updated_at': DateTime.now().toIso8601String(),
-      'updated_by': userId,
-      'unit_id': normalizedUnitId,
-    };
-
-    final existing = normalizedUnitId == null
-        ? await _supabase
-              .from(_footerSettingsReadSurface)
-              .select('id')
-              .isFilter('unit_id', null)
-              .maybeSingle()
-        : await _supabase
-              .from(_footerSettingsReadSurface)
-              .select('id')
-              .eq('unit_id', normalizedUnitId)
-              .maybeSingle();
-
-    final existingId = (existing?['id'] ?? '').toString();
-    if (settings.id.trim().isNotEmpty) {
-      await _supabase
-          .from(_footerSettingsLegacyWriteTable)
-          .update(payload)
-          .eq('id', settings.id);
-    } else if (existingId.isNotEmpty) {
-      await _supabase
-          .from(_footerSettingsLegacyWriteTable)
-          .update(payload)
-          .eq('id', existingId);
-    } else {
-      await _supabase.from(_footerSettingsLegacyWriteTable).insert(payload);
-    }
-  }
-
-  Future<FooterSettings?> _fetchByUnitId(String? unitId) async {
-    if (unitId == null || unitId.isEmpty) return null;
+  Future<Map<String, dynamic>?> _fetchProfileByUnitId(String unitId) async {
     try {
-      final response = await _supabase
-          .from(_footerSettingsReadSurface)
+      final response = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+          _supabase,
+          _unitSurfaceProfileReadSurface,
+        )
           .select()
-          .eq('unit_id', unitId)
-          .order('updated_at', ascending: false)
-          .limit(1)
+          .eq('org_unit_id', unitId)
           .maybeSingle();
       if (response == null) return null;
-      return _hydrateFooter(response);
+      return Map<String, dynamic>.from(response);
     } on PostgrestException catch (error) {
       if (_isOptionalSingletonMiss(error)) return null;
       rethrow;
     }
   }
 
-  Future<FooterSettings?> _fetchGlobalNull() async {
+  Future<Map<String, dynamic>?> _fetchProfileByInternalSlug(String slug) async {
     try {
-      final response = await _supabase
-          .from(_footerSettingsReadSurface)
+      final response = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+          _supabase,
+          _unitSurfaceProfileReadSurface,
+        )
           .select()
-          .isFilter('unit_id', null)
-          .order('updated_at', ascending: false)
-          .limit(1)
+          .eq('internal_slug', slug)
           .maybeSingle();
       if (response == null) return null;
-      return _hydrateFooter(response);
+      return Map<String, dynamic>.from(response);
     } on PostgrestException catch (error) {
       if (_isOptionalSingletonMiss(error)) return null;
       rethrow;
     }
   }
 
-  FooterSettings _hydrateFooter(dynamic response) {
-    final data = Map<String, dynamic>.from(response as Map);
+  FooterSettings _hydrateRuntimeProfileFooter(
+    Map<String, dynamic> row, {
+    required bool isHome,
+  }) {
+    final source = _sourcePayload(row);
+    final now = DateTime.now();
+    final unitName = _firstText(row, source, const [
+      'unit_name_ar',
+      'name_ar',
+    ], fallback: isHome ? 'وزارة الأوقاف والشؤون الدينية' : 'بيانات الوحدة غير منشورة');
 
-    data['quick_links'] = _normalizeFooterLinks(data['quick_links']);
-    data['services_links'] = _normalizeFooterLinks(data['services_links']);
-    data['bottom_links'] = _normalizeFooterLinks(data['bottom_links']);
-    data['partners'] = _normalizePartners(data['partners']);
+    final phone = _firstNullableText(row, source, const [
+      'contact_phone',
+      'phone',
+      'telephone',
+      'mobile',
+    ]);
+    final email = _firstNullableText(row, source, const [
+      'contact_email',
+      'email',
+    ]);
+    final address = _firstNullableText(row, source, const [
+      'contact_address',
+      'address',
+      'address_ar',
+      'location',
+    ]);
 
-    return FooterSettings.fromJson(data);
+    if (!isHome && phone == null && email == null && address == null) {
+      return _runtimeUnitPlaceholderFooterSettings().copyWith(
+        ministryName: unitName,
+        copyrightText: '$unitName - بيانات الاتصال بانتظار الاعتماد.',
+      );
+    }
+
+    final identity = PwfCanonicalUnitIdentity.fromRuntimeProfileRow(row);
+    return FooterSettings(
+      id: identity.canonicalOrgUnitId.isEmpty
+          ? 'runtime-profile-footer'
+          : identity.canonicalOrgUnitId,
+      ministryLogoUrl: _firstNullableText(row, source, const [
+        'logo_url',
+        'ministry_logo_url',
+      ]),
+      ministryName: unitName,
+      ministrySubtitle: isHome ? 'دولة فلسطين' : 'بوابة الوحدة العامة',
+      ministryDescription: _firstNullableText(row, source, const [
+        'description_ar',
+        'ministry_description',
+        'description',
+      ]) ??
+          (isHome
+              ? 'وزارة الأوقاف والشؤون الدينية تعمل على خدمة المجتمع الفلسطيني وتعزيز القيم الدينية والتراث الإسلامي.'
+              : 'بوابة عامة للوحدة، ومصدر بياناتها هو core.org_units وملفات الوحدة السيادية.'),
+      contactPhone: phone,
+      contactFax: _firstNullableText(row, source, const ['contact_fax', 'fax']),
+      contactEmail: email,
+      contactAddress: address,
+      workingDays: _firstText(row, source, const ['working_days'], fallback: isHome ? 'من الأحد إلى الخميس' : 'غير منشور'),
+      workingHours: _firstText(row, source, const ['working_hours'], fallback: isHome ? '8:00 صباحاً - 3:00 مساءً' : 'غير منشور'),
+      facebookUrl: _socialUrl(row, 'facebook') ?? _firstNullableText(row, source, const ['facebook_url', 'facebook']),
+      twitterUrl: _socialUrl(row, 'x') ?? _firstNullableText(row, source, const ['twitter_url', 'x_url', 'twitter']),
+      instagramUrl: _socialUrl(row, 'instagram') ?? _firstNullableText(row, source, const ['instagram_url', 'instagram']),
+      youtubeUrl: _socialUrl(row, 'youtube') ?? _firstNullableText(row, source, const ['youtube_url', 'youtube']),
+      linkedinUrl: _socialUrl(row, 'linkedin') ?? _firstNullableText(row, source, const ['linkedin_url', 'linkedin']),
+      quickLinks: const <FooterLink>[],
+      servicesLinks: const <FooterLink>[],
+      bottomLinks: const <FooterLink>[],
+      partners: const <FooterPartner>[],
+      showPartners: false,
+      copyrightText: isHome
+          ? 'وزارة الأوقاف والشؤون الدينية - جميع الحقوق محفوظة.'
+          : '$unitName - جميع الحقوق محفوظة.',
+      developerCredit: '',
+      showDeveloperCredit: false,
+      showPhone: phone != null,
+      showEmail: email != null,
+      showAddress: address != null,
+      showWorkingHours: true,
+      createdAt: now,
+      updatedAt: now,
+    );
   }
 
-  List<Map<String, dynamic>> _normalizeFooterLinks(dynamic raw) {
-    if (raw is! List) return const <Map<String, dynamic>>[];
-    return raw
-        .map<Map<String, dynamic>>((e) {
-          if (e is FooterLink) return e.toJson();
-          if (e is Map<String, dynamic>) return Map<String, dynamic>.from(e);
-          if (e is Map) return Map<String, dynamic>.from(e);
-          return <String, dynamic>{};
-        })
-        .where((e) => e.isNotEmpty)
-        .toList(growable: false);
+  Map<String, dynamic> _sourcePayload(Map<String, dynamic> row) {
+    final value = row['source_payload'];
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return const <String, dynamic>{};
   }
 
-  List<Map<String, dynamic>> _normalizePartners(dynamic raw) {
-    if (raw is! List) return const <Map<String, dynamic>>[];
-    return raw
-        .map<Map<String, dynamic>>((e) {
-          if (e is FooterPartner) return e.toJson();
-          if (e is Map<String, dynamic>) return Map<String, dynamic>.from(e);
-          if (e is Map) return Map<String, dynamic>.from(e);
-          return <String, dynamic>{};
-        })
-        .where((e) => e.isNotEmpty)
-        .toList(growable: false);
+  String _firstText(
+    Map<String, dynamic> row,
+    Map<String, dynamic> source,
+    List<String> keys, {
+    required String fallback,
+  }) {
+    return _firstNullableText(row, source, keys) ?? fallback;
+  }
+
+  String? _socialUrl(Map<String, dynamic> row, String platformKey) {
+    final raw = row['social_links'];
+    if (raw is! List) return null;
+    for (final item in raw) {
+      if (item is! Map) continue;
+      final platform = (item['platform_key'] ?? '').toString().trim().toLowerCase();
+      final url = (item['official_url'] ?? '').toString().trim();
+      final verified = item['is_verified'] == true;
+      final isPublic = item['is_public'] != false;
+      final status = (item['status'] ?? '').toString().trim().toLowerCase();
+      if (platform == platformKey && verified && isPublic && status == 'published' && url.isNotEmpty) {
+        return url;
+      }
+    }
+    return null;
+  }
+
+  String? _firstNullableText(
+    Map<String, dynamic> row,
+    Map<String, dynamic> source,
+    List<String> keys,
+  ) {
+    for (final key in keys) {
+      final rowValue = row[key]?.toString().trim();
+      if (rowValue != null && rowValue.isNotEmpty && rowValue != 'null') {
+        return rowValue;
+      }
+      final sourceValue = source[key]?.toString().trim();
+      if (sourceValue != null && sourceValue.isNotEmpty && sourceValue != 'null') {
+        return sourceValue;
+      }
+    }
+    return null;
+  }
+
+  FooterSettings _runtimeUnitPlaceholderFooterSettings() {
+    final now = DateTime.now();
+    return FooterSettings(
+      id: 'runtime-unit-placeholder-footer',
+      ministryLogoUrl: null,
+      ministryName: 'بيانات الوحدة غير منشورة',
+      ministrySubtitle: 'بوابة الوحدة العامة',
+      ministryDescription:
+          'لم تنشر هذه الوحدة بيانات الاتصال أو وسائل التواصل الاجتماعي الخاصة بها بعد.',
+      contactPhone: null,
+      contactFax: null,
+      contactEmail: null,
+      contactAddress: null,
+      workingDays: 'غير منشور',
+      workingHours: 'غير منشور',
+      facebookUrl: null,
+      twitterUrl: null,
+      instagramUrl: null,
+      youtubeUrl: null,
+      linkedinUrl: null,
+      quickLinks: const <FooterLink>[],
+      servicesLinks: const <FooterLink>[],
+      bottomLinks: const <FooterLink>[],
+      partners: const <FooterPartner>[],
+      showPartners: false,
+      copyrightText: 'بوابة الوحدة العامة - بيانات الاتصال بانتظار الاعتماد.',
+      developerCredit: '',
+      showDeveloperCredit: false,
+      showPhone: false,
+      showEmail: false,
+      showAddress: false,
+      showWorkingHours: false,
+      createdAt: now,
+      updatedAt: now,
+    );
   }
 
   FooterSettings _runtimeDefaultFooterSettings() {
@@ -230,23 +288,15 @@ class FooterRepository {
       ministrySubtitle: 'دولة فلسطين',
       ministryDescription:
           'وزارة الأوقاف والشؤون الدينية تعمل على خدمة المجتمع الفلسطيني وتعزيز القيم الدينية والتراث الإسلامي.',
-      contactPhone: '02-2411937/8/9',
+      contactPhone: null,
       contactFax: null,
-      contactEmail: 'info@awqaf.ps',
-      contactAddress: 'القدس - مدينة البيرة - حي الجنان - شارع النور',
+      contactEmail: null,
+      contactAddress: null,
       workingDays: 'من الأحد إلى الخميس',
       workingHours: '8:00 صباحاً - 3:00 مساءً',
-      quickLinks: const <FooterLink>[
-        FooterLink(label: 'عن الوزارة', route: '/about'),
-        FooterLink(label: 'الخدمات الإلكترونية', route: '/home/services'),
-        FooterLink(label: 'المساجد', route: '/mosques'),
-      ],
+      quickLinks: const <FooterLink>[],
       servicesLinks: const <FooterLink>[],
-      bottomLinks: const <FooterLink>[
-        FooterLink(label: 'سياسة الخصوصية', route: '/privacy'),
-        FooterLink(label: 'شروط الاستخدام', route: '/terms'),
-        FooterLink(label: 'خريطة الموقع', route: '/sitemap'),
-      ],
+      bottomLinks: const <FooterLink>[],
       partners: const <FooterPartner>[],
       showPartners: false,
       createdAt: now,
@@ -264,41 +314,69 @@ class FooterRepository {
         message.contains('not acceptable');
   }
 
+Future<void> saveFooterSettingsForUnit(
+  FooterSettings settings, {
+  String? unitId,
+}) async {
+  final effectiveUnitId = (unitId ?? '').trim().isNotEmpty
+      ? unitId!.trim()
+      : await _resolveHomeUnitId();
+  if (effectiveUnitId.isEmpty) {
+    throw StateError('تعذر تحديد نطاق الوحدة لحفظ بيانات الفوتر.');
+  }
+
+  await _supabase.schema('core').rpc(
+    'rpc_unit_public_profile_write_v1',
+    params: <String, dynamic>{
+      'p_org_unit_id': effectiveUnitId,
+      'p_payload': <String, dynamic>{
+        'logo_url': settings.ministryLogoUrl,
+        'official_name_ar': settings.ministryName,
+        'footer_description_ar': settings.ministryDescription,
+        'contact_phone': settings.contactPhone,
+        'contact_fax': settings.contactFax,
+        'contact_email': settings.contactEmail,
+        'contact_address': settings.contactAddress,
+        'working_days': settings.workingDays,
+        'working_hours': settings.workingHours,
+      },
+    },
+  );
+
+  await _supabase.schema('core').rpc(
+    'rpc_unit_public_social_links_replace_v1',
+    params: <String, dynamic>{
+      'p_org_unit_id': effectiveUnitId,
+      'p_links': <Map<String, dynamic>>[
+        _socialPayload('facebook', settings.facebookUrl, 10),
+        _socialPayload('x', settings.twitterUrl, 20),
+        _socialPayload('instagram', settings.instagramUrl, 30),
+        _socialPayload('youtube', settings.youtubeUrl, 40),
+        _socialPayload('linkedin', settings.linkedinUrl, 50),
+      ].where((row) => (row['official_url'] ?? '').toString().isNotEmpty).toList(),
+    },
+  );
+}
+
+Map<String, dynamic> _socialPayload(String platform, String? url, int order) =>
+    <String, dynamic>{
+      'platform_key': platform,
+      'official_url': (url ?? '').trim(),
+      'display_order': order,
+      'is_verified': false,
+      'is_public': true,
+      'status': 'draft',
+    };
+
+Future<String> _resolveHomeUnitId() async {
+  final row = await _fetchProfileByInternalSlug('home');
+  if (row == null) return '';
+  return PwfCanonicalUnitIdentity
+      .fromRuntimeProfileRow(row)
+      .canonicalOrgUnitId;
+}
+
   Future<void> updateFooterSettings(FooterSettings settings) async {
-    await _supabase
-        .from(_footerSettingsLegacyWriteTable)
-        .update({
-          'ministry_logo_url': settings.ministryLogoUrl,
-          'ministry_name': settings.ministryName,
-          'ministry_subtitle': settings.ministrySubtitle,
-          'ministry_description': settings.ministryDescription,
-          'contact_phone': settings.contactPhone,
-          'contact_fax': settings.contactFax,
-          'contact_email': settings.contactEmail,
-          'contact_address': settings.contactAddress,
-          'working_days': settings.workingDays,
-          'working_hours': settings.workingHours,
-          'facebook_url': settings.facebookUrl,
-          'twitter_url': settings.twitterUrl,
-          'instagram_url': settings.instagramUrl,
-          'youtube_url': settings.youtubeUrl,
-          'linkedin_url': settings.linkedinUrl,
-          'quick_links': settings.quickLinks.map((e) => e.toJson()).toList(),
-          'services_links': settings.servicesLinks
-              .map((e) => e.toJson())
-              .toList(),
-          'bottom_links': settings.bottomLinks.map((e) => e.toJson()).toList(),
-          'partners': settings.partners.map((e) => e.toJson()).toList(),
-          'show_partners': settings.showPartners,
-          'copyright_text': settings.copyrightText,
-          'developer_credit': settings.developerCredit,
-          'show_developer_credit': settings.showDeveloperCredit,
-          'show_phone': settings.showPhone,
-          'show_email': settings.showEmail,
-          'show_address': settings.showAddress,
-          'show_working_hours': settings.showWorkingHours,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', settings.id);
+    await saveFooterSettingsForUnit(settings);
   }
 }

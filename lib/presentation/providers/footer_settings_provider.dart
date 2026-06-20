@@ -1,5 +1,6 @@
 // lib/presentation/providers/footer_settings_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:waqf/core/unit/pwf_unit_slug_registry.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/footer_settings.dart';
 import '../../data/repositories/footer_repository.dart';
@@ -102,20 +103,20 @@ final footerSettingsProvider =
 final editableFooterSettingsProvider =
     FutureProvider.family<FooterSettings, String>((ref, unitSlug) async {
       final repository = ref.watch(footerRepositoryProvider);
-      final normalized = unitSlug.trim().isEmpty
-          ? 'home'
-          : unitSlug.trim().toLowerCase();
+      final normalized = PwfUnitSlugRegistry.internalSlugFor(unitSlug);
       String? unitId;
       String? homeUnitId;
 
       try {
-        unitId = await ref.watch(unitIdBySlugProvider(normalized).future);
+        unitId = await ref.watch(unitIdBySlugExactProvider(normalized).future);
       } catch (_) {
         unitId = null;
       }
 
       try {
-        homeUnitId = await ref.watch(unitIdBySlugProvider('home').future);
+        homeUnitId = normalized == 'home'
+            ? await ref.watch(unitIdBySlugExactProvider('home').future)
+            : null;
       } catch (_) {
         homeUnitId = null;
       }
@@ -123,26 +124,27 @@ final editableFooterSettingsProvider =
       return repository.fetchFooterSettingsForEdit(
         unitId: unitId,
         homeUnitId: homeUnitId,
+        strictUnitOnly: normalized != 'home',
       );
     });
 
 final publicFooterSettingsProvider =
     FutureProvider.family<FooterSettings, String>((ref, unitSlug) async {
       final repository = ref.watch(footerRepositoryProvider);
-      final normalized = unitSlug.trim().isEmpty
-          ? 'home'
-          : unitSlug.trim().toLowerCase();
+      final normalized = PwfUnitSlugRegistry.internalSlugFor(unitSlug);
       String? unitId;
       String? homeUnitId;
 
       try {
-        unitId = await ref.watch(unitIdBySlugProvider(normalized).future);
+        unitId = await ref.watch(unitIdBySlugExactProvider(normalized).future);
       } catch (_) {
         unitId = null;
       }
 
       try {
-        homeUnitId = await ref.watch(unitIdBySlugProvider('home').future);
+        homeUnitId = normalized == 'home'
+            ? await ref.watch(unitIdBySlugExactProvider('home').future)
+            : null;
       } catch (_) {
         homeUnitId = null;
       }
@@ -150,5 +152,6 @@ final publicFooterSettingsProvider =
       return repository.fetchFooterSettingsForScopes(
         unitId: unitId,
         homeUnitId: homeUnitId,
+        strictUnitOnly: normalized != 'home',
       );
     });

@@ -115,7 +115,7 @@ class _AnnouncementCard extends StatelessWidget {
 
     return InkWell(
       borderRadius: BorderRadius.circular(AppConstants.radiusL),
-      onTap: () => context.go(UnitRoutes.announcementDetail(unitSlug, item.id)),
+      onTap: () => context.go(UnitRoutes.announcementDetail(unitSlug, item.publicDetailId)),
       child: Card(
         elevation: 1.5,
         shape: RoundedRectangleBorder(

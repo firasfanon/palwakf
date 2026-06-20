@@ -14,19 +14,16 @@ import '../../providers/unit_context_provider.dart';
 
 /// Unit-aware provider for hero slides.
 ///
-/// Fallback behavior:
-/// - If unit lookup fails or unit-scoped query returns empty, returns the global list.
+/// Sovereign binding behavior:
+/// - `/home` reads only hero slides bound to the home org-unit id.
+/// - unit routes read only their selected org-unit id.
+/// - a unit route never falls back to the ministry/global hero slides.
 final heroSlidesForUnitProvider =
     FutureProvider.family<List<HeroSlide>, String>((ref, unitSlug) async {
       final repository = ref.watch(homepageRepositoryProvider);
-      try {
-        final unitId = await ref.watch(unitIdBySlugProvider(unitSlug).future);
-        final items = await repository.fetchActiveHeroSlidesForUnit(unitId);
-        if (items.isNotEmpty) return items;
-      } catch (_) {
-        // Ignore and fallback
-      }
-      return repository.fetchActiveHeroSlides();
+      final unitId = await ref.watch(unitIdBySlugExactProvider(unitSlug).future);
+      if (unitId == null || unitId.isEmpty) return const <HeroSlide>[];
+      return repository.fetchActiveHeroSlidesForUnit(unitId);
     });
 
 /// Backwards-compatible provider (global/home).

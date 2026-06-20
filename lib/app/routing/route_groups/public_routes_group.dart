@@ -355,7 +355,7 @@ RouteBase _buildPublicShellRoute() {
         path: '/:unitSlug',
         redirect: (context, state) {
           final slug =
-              (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+              PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
           if (UnitPathUtils.isReservedFirstSegment(slug)) {
             return AppRoutes.notFound;
           }
@@ -363,7 +363,7 @@ RouteBase _buildPublicShellRoute() {
         },
         builder: (context, state) {
           final slug =
-              (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+              PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
           return UnitHomeScreen(unitSlug: slug);
         },
         routes: [
@@ -386,7 +386,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'services',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfServicesWebScreen(unitSlug: slug)
                   : const ServicesScreen();
@@ -396,7 +396,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'eservices',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfEServicesWebScreen(unitSlug: slug)
                   : const EServicesScreen();
@@ -406,7 +406,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'news',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfNewsListWebScreen(unitSlug: slug)
                   : NewsScreen(unitSlug: slug);
@@ -416,21 +416,17 @@ RouteBase _buildPublicShellRoute() {
             path: 'news/:id',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
-              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
-              final extra = state.extra is NewsArticle
-                  ? state.extra as NewsArticle
-                  : null;
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
+              final contentId = state.pathParameters['id'] ?? '';
               return kIsWeb
                   ? PwfNewsDetailWebScreen(
                       unitSlug: slug,
-                      id: id,
-                      extraArticle: extra,
+                      contentId: contentId,
                     )
                   : NewsDetailRouteScreen(
                       unitSlug: slug,
-                      id: id,
-                      extraArticle: extra,
+                      id: int.tryParse(contentId) ?? 0,
+                      contentId: contentId,
                     );
             },
           ),
@@ -438,7 +434,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'announcements',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfAnnouncementsListWebScreen(unitSlug: slug)
                   : AnnouncementsScreen(unitSlug: slug);
@@ -448,10 +444,13 @@ RouteBase _buildPublicShellRoute() {
             path: 'announcements/:id',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
-              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
+              final contentId = state.pathParameters['id'] ?? '';
               return kIsWeb
-                  ? PwfAnnouncementDetailWebScreen(unitSlug: slug, id: id)
+                  ? PwfAnnouncementDetailWebScreen(
+                      unitSlug: slug,
+                      contentId: contentId,
+                    )
                   : const UnderConstructionScreen();
             },
           ),
@@ -459,7 +458,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'activities',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfActivitiesListWebScreen(unitSlug: slug)
                   : ActivitiesScreen(unitSlug: slug);
@@ -469,7 +468,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'events',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfEventsPublicScreen(unitSlug: slug);
             },
           ),
@@ -477,7 +476,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'events/:id',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfPlatformCenterContentDetailScreen(
                 unitSlug: slug,
                 familyKey: 'events',
@@ -489,10 +488,13 @@ RouteBase _buildPublicShellRoute() {
             path: 'activities/:id',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
-              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
+              final contentId = state.pathParameters['id'] ?? '';
               return kIsWeb
-                  ? PwfActivityDetailWebScreen(unitSlug: slug, id: id)
+                  ? PwfActivityDetailWebScreen(
+                      unitSlug: slug,
+                      contentId: contentId,
+                    )
                   : const UnderConstructionScreen();
             },
           ),
@@ -500,7 +502,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'services/request',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfPublicRequestEntryScreen(unitSlug: slug);
             },
           ),
@@ -508,7 +510,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'services/track',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfPublicRequestTrackingScreen(unitSlug: slug);
             },
           ),
@@ -516,7 +518,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'media',
             redirect: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return UnitRoutes.gallery(slug);
             },
           ),
@@ -524,7 +526,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'gallery',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfMediaGalleryWebScreen(unitSlug: slug)
                   : const UnderConstructionScreen();
@@ -534,7 +536,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'media-center',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfMediaCenterPublicHubScreen(unitSlug: slug);
             },
           ),
@@ -542,7 +544,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'legal-references',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfLegalReferencesPublicScreen(unitSlug: slug);
             },
           ),
@@ -550,7 +552,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'legal-references/:id',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfPlatformCenterContentDetailScreen(
                 unitSlug: slug,
                 familyKey: 'legal-references',
@@ -562,7 +564,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'sanctities-observatory',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfSanctitiesObservatoryPublicScreen(unitSlug: slug);
             },
           ),
@@ -570,7 +572,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'sanctities-observatory/:id',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfPlatformCenterContentDetailScreen(
                 unitSlug: slug,
                 familyKey: 'sanctities-observatory',
@@ -582,7 +584,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'social-posts',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfMediaFamilyPublicScreen(
                 unitSlug: slug,
                 familyKey: 'social-posts',
@@ -593,7 +595,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'social-posts/:id',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfPlatformCenterContentDetailScreen(
                 unitSlug: slug,
                 familyKey: 'social-posts',
@@ -605,7 +607,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'press-releases',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfMediaFamilyPublicScreen(
                 unitSlug: slug,
                 familyKey: 'press-releases',
@@ -616,7 +618,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'press-releases/:id',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfPlatformCenterContentDetailScreen(
                 unitSlug: slug,
                 familyKey: 'press-releases',
@@ -628,7 +630,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'official-statements',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfMediaFamilyPublicScreen(
                 unitSlug: slug,
                 familyKey: 'official-statements',
@@ -639,7 +641,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'official-statements/:id',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfPlatformCenterContentDetailScreen(
                 unitSlug: slug,
                 familyKey: 'official-statements',
@@ -651,7 +653,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'awareness-campaigns',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfMediaFamilyPublicScreen(
                 unitSlug: slug,
                 familyKey: 'awareness-campaigns',
@@ -662,7 +664,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'awareness-campaigns/:id',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfPlatformCenterContentDetailScreen(
                 unitSlug: slug,
                 familyKey: 'awareness-campaigns',
@@ -674,7 +676,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'friday-sermons',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfFridaySermonsWebScreen(unitSlug: slug)
                   : const UnderConstructionScreen();
@@ -684,7 +686,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'social-services',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfSocialServicesWebScreen(unitSlug: slug)
                   : const SocialServicesScreen();
@@ -694,7 +696,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'mosques',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfMosquesAwqafWebScreen(unitSlug: slug)
                   : const MosquesScreen();
@@ -704,7 +706,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'projects',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfProjectsWebScreen(unitSlug: slug)
                   : const ProjectsScreen();
@@ -714,7 +716,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'about',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfAboutWebScreen(unitSlug: slug)
                   : const AboutScreen();
@@ -728,7 +730,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'vision-mission',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfVisionMissionWebScreen(unitSlug: slug)
                   : const VisionMissionScreen();
@@ -738,7 +740,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'structure',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfOrgStructureWebScreen(unitSlug: slug)
                   : const StructureScreen();
@@ -748,7 +750,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'former-ministers',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfFormerMinistersWebScreen(unitSlug: slug)
                   : const FormerMinistersScreen();
@@ -758,7 +760,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'contact',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return kIsWeb
                   ? PwfContactWebScreen(unitSlug: slug)
                   : const ContactScreen();
@@ -768,7 +770,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'privacy',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfPrivacyPolicyWebScreen(unitSlug: slug);
             },
           ),
@@ -776,7 +778,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'terms',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfTermsOfUseWebScreen(unitSlug: slug);
             },
           ),
@@ -784,7 +786,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'sitemap',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfSiteMapWebScreen(unitSlug: slug);
             },
           ),
@@ -792,7 +794,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'search',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return SearchScreen(
                 initialQuery: state.uri.queryParameters['q'] ?? '',
                 unitSlug: slug,
@@ -803,7 +805,7 @@ RouteBase _buildPublicShellRoute() {
             path: 'chat',
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               final sid = state.uri.queryParameters['sid'];
               if (kIsWeb) {
                 return PwfWebPageScaffold(
@@ -822,13 +824,13 @@ RouteBase _buildPublicShellRoute() {
             path: 'complaints',
             redirect: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               if (slug == 'admin') return AppRoutes.adminComplaints;
               return null;
             },
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfComplaintsScreen(
                 unitSlug: slug,
                 embedInPublicShell: true,
@@ -839,13 +841,13 @@ RouteBase _buildPublicShellRoute() {
             path: 'zakat',
             redirect: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               if (slug == 'admin') return AppRoutes.adminZakat;
               return null;
             },
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfZakatPublicScreen(unitSlug: slug);
             },
           ),
@@ -853,13 +855,13 @@ RouteBase _buildPublicShellRoute() {
             path: 'prayer-times',
             redirect: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               if (slug == 'admin') return AppRoutes.adminPrayerTimes;
               return null;
             },
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfPrayerTimesPublicScreen(unitSlug: slug);
             },
           ),
@@ -867,13 +869,13 @@ RouteBase _buildPublicShellRoute() {
             path: 'quran',
             redirect: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               if (slug == 'admin') return AppRoutes.adminQuran;
               return null;
             },
             builder: (context, state) {
               final slug =
-                  (state.pathParameters['unitSlug'] ?? 'home').toLowerCase();
+                  PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
               return PwfQuranPublicScreen(unitSlug: slug);
             },
           ),

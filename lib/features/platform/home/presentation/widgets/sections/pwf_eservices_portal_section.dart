@@ -73,7 +73,7 @@ class PwfEServicesPortalSection extends ConsumerWidget {
                 maxCrossAxisExtent: isMobile ? 360 : 420,
                 mainAxisSpacing: isMobile ? 14 : 25,
                 crossAxisSpacing: isMobile ? 14 : 25,
-                childAspectRatio: isMobile ? 1.28 : 1.08,
+                mainAxisExtent: isMobile ? 244 : 282,
               ),
               itemCount: items.length,
               itemBuilder: (_, i) => _PwfEServiceCard(item: items[i]),
@@ -223,10 +223,10 @@ class _PwfEServiceCardState extends State<_PwfEServiceCard>
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(
-                isMobile ? 18 : 28,
-                isMobile ? 18 : 26,
-                isMobile ? 18 : 28,
-                isMobile ? 16 : 24,
+                isMobile ? 16 : 22,
+                isMobile ? 16 : 22,
+                isMobile ? 16 : 22,
+                isMobile ? 14 : 20,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -234,33 +234,40 @@ class _PwfEServiceCardState extends State<_PwfEServiceCard>
                 children: [
                   Icon(
                     widget.item.icon,
-                    size: isMobile ? 34 : 44,
+                    size: isMobile ? 30 : 38,
                     color: accentColor,
                   ),
                   SizedBox(height: isMobile ? 6 : 8),
                   Text(
                     widget.item.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.cairo(
-                      fontSize: isMobile ? 15 : 16,
+                      fontSize: isMobile ? 14.5 : 15.5,
                       fontWeight: FontWeight.w800,
                       color: accentColor,
+                      height: 1.25,
                     ),
                   ),
                   SizedBox(height: isMobile ? 6 : 8),
-                  Flexible(
+                  Expanded(
                     child: Text(
                       widget.item.description,
+                      maxLines: isMobile ? 3 : 4,
+                      overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.cairo(
-                        fontSize: isMobile ? 13.5 : 15,
+                        fontSize: isMobile ? 12.5 : 13.5,
                         color: PwfHomePalette.gray,
-                        height: 1.5,
+                        height: 1.45,
                       ),
                     ),
                   ),
                   SizedBox(height: isMobile ? 6 : 8),
-                  PwfInlineLink(
+                  SizedBox(
+                    width: double.infinity,
+                    child: PwfInlineLink(
                     label: widget.item.linkLabel,
                     icon: Icons.arrow_back,
                     onTap: () {
@@ -280,6 +287,7 @@ class _PwfEServiceCardState extends State<_PwfEServiceCard>
                       }
                       context.go(link.startsWith('/') ? link : '/$link');
                     },
+                    ),
                   ),
                 ],
               ),

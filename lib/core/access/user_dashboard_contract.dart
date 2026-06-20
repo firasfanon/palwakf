@@ -115,8 +115,14 @@ class UserDashboardContractBuilder {
     required AdminUser user,
     required AccessProfile? profile,
   }) {
+    final hasPlatformRootAuthority = _hasPlatformRootAuthority(user, profile);
     final visibleSystems = SystemKey.values
-        .map((key) => _systemAccessFor(key, user, profile))
+        .map((key) => _systemAccessFor(
+              key,
+              user,
+              profile,
+              hasPlatformRootAuthority: hasPlatformRootAuthority,
+            ))
         .where((entry) => entry.isVisible)
         .toList();
 
@@ -125,9 +131,10 @@ class UserDashboardContractBuilder {
           .where((entry) =>
               entry.isOversight && entry.systemKey != SystemKey.platformAdmin)
           .map((entry) => entry.title),
-      ...user.assignedSystemKeys
-          .map((key) => _labelForSystemKeyName(key))
-          .where((title) => title.trim().isNotEmpty),
+      if (!hasPlatformRootAuthority)
+        ...user.assignedSystemKeys
+            .map((key) => _labelForSystemKeyName(key))
+            .where((title) => title.trim().isNotEmpty),
     }.toList();
 
     final policyRoleKey = _policyRoleKey(user, profile, managedSystemTitles);
@@ -262,16 +269,16 @@ class UserDashboardContractBuilder {
       email: user.email,
       username: (user.username ?? '').trim(),
       isActive: user.isActive,
-      isSuperuser: _hasPlatformRootAuthority(user, profile),
-      scopeLabel: user.scopeLabel,
+      isSuperuser: hasPlatformRootAuthority,
+      scopeLabel: hasPlatformRootAuthority ? 'مركزي — كل الوحدات' : user.scopeLabel,
       roleLabelAr: policyRoleLabel,
       policyRoleKey: policyRoleKey,
       policyRoleLabelAr: policyRoleLabel,
       governanceScopeDescription: governanceDescription,
       governanceBadges: governanceBadges,
       managedSystems: managedSystemTitles,
-      unitNameAr: user.unitNameAr,
-      unitSlug: user.unitSlug,
+      unitNameAr: hasPlatformRootAuthority ? null : user.unitNameAr,
+      unitSlug: hasPlatformRootAuthority ? null : user.unitSlug,
       systems: visibleSystems,
       quickActions: quickActions,
       adminTools: adminTools,
@@ -409,15 +416,17 @@ class UserDashboardContractBuilder {
   static UserDashboardSystemAccess _systemAccessFor(
     SystemKey key,
     AdminUser user,
-    AccessProfile? profile,
-  ) {
+    AccessProfile? profile, {
+    required bool hasPlatformRootAuthority,
+  }) {
     final hasAnyPermission = (profile?.permissions[key]?.isNotEmpty ?? false);
     final explicitSystemAssigned = user.effectiveSystemKeys.contains(key.name);
     final inferredRole =
         _inferredRoleForSystem(user, key, explicitSystemAssigned);
     final profileRole = profile?.roleFor(key) ?? platform_role.UserRole.viewer;
-    final role =
-        profileRole.index >= inferredRole.index ? profileRole : inferredRole;
+    final role = hasPlatformRootAuthority
+        ? platform_role.UserRole.superuser
+        : (profileRole.index >= inferredRole.index ? profileRole : inferredRole);
 
     final platformVisibility =
         (profile?.can(SystemKey.platformAdmin, Permission.manageUsers) ??
@@ -441,24 +450,28 @@ class UserDashboardContractBuilder {
                 explicitSystemAssigned)) ||
         (user.normalizedRole == 'employee' && explicitSystemAssigned);
 
-    final isVisible = key == SystemKey.platformAdmin
-        ? platformVisibility
-        : (profile?.hasRoleAtLeast(key, platform_role.UserRole.viewer) ??
-                false) ||
-            hasAnyPermission ||
-            derivedVisibility;
+    final isVisible = hasPlatformRootAuthority ||
+        (key == SystemKey.platformAdmin
+            ? platformVisibility
+            : (profile?.hasRoleAtLeast(key, platform_role.UserRole.viewer) ??
+                    false) ||
+                hasAnyPermission ||
+                derivedVisibility);
 
-    final permissions = (profile?.permissions[key] ?? const <Permission>{})
+    final permissions = (hasPlatformRootAuthority
+            ? Permission.values.toSet()
+            : (profile?.permissions[key] ?? const <Permission>{}))
         .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
 
-    final isOversight = key != SystemKey.platformAdmin &&
-        ((profile?.isSuperuser ?? false) ||
-            role == platform_role.UserRole.superuser ||
-            role == platform_role.UserRole.admin ||
-            user.isPowerAdmin ||
-            user.isUnitAdmin ||
-            user.isSystemSuperUser);
+    final isOversight = hasPlatformRootAuthority ||
+        (key != SystemKey.platformAdmin &&
+            ((profile?.isSuperuser ?? false) ||
+                role == platform_role.UserRole.superuser ||
+                role == platform_role.UserRole.admin ||
+                user.isPowerAdmin ||
+                user.isUnitAdmin ||
+                user.isSystemSuperUser));
 
     return UserDashboardSystemAccess(
       systemKey: key,
@@ -467,7 +480,8 @@ class UserDashboardContractBuilder {
       role: role,
       isVisible: isVisible,
       canRead: isVisible,
-      canWrite: role.canWrite ||
+      canWrite: hasPlatformRootAuthority ||
+          role.canWrite ||
           (profile?.isSuperuser ?? false) ||
           user.isUnitAdmin ||
           user.isPowerAdmin ||

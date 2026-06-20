@@ -139,8 +139,10 @@ class PwfPlatformCenterContentItem {
         'body_ar',
       ], 'لا يوجد وصف مختصر.'),
       ownerName: text([
+        'owner_unit_name_ar',
         'owner_name',
         'unit_name',
+        'unit_name_ar',
         'created_by_name',
         'source_name',
       ], 'الوزارة'),
@@ -158,7 +160,12 @@ class PwfPlatformCenterContentItem {
           : text(['document_url', 'file_url', 'attachment_url'], ''),
       body: text(['body_ar', 'body', 'content_ar', 'content'], ''),
       categoryKey: text(['category_key', 'category', 'type_key'], ''),
-      unitSlug: text(['unit_slug', 'unit', 'scope_slug'], 'home'),
+      unitSlug: text([
+        'owner_unit_slug',
+        'unit_slug',
+        'unit',
+        'scope_slug',
+      ], 'home'),
       metadata: json,
       isFallback: false,
     );

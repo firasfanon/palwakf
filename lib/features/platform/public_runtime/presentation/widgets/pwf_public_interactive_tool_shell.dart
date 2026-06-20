@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:waqf/features/platform/home/presentation/screens/pages/pwf_public_content_shared.dart';
 import 'package:waqf/features/platform/home/presentation/widgets/pwf_section_container.dart';
+import 'package:waqf/features/platform/home/presentation/widgets/shared/pwf_home_visual_contract.dart';
 
 /// Public shell for interactive tools such as `/home/zakat` and `/home/chat`.
 ///
@@ -35,7 +36,7 @@ class PwfPublicInteractiveToolShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return PwfSectionContainer(
       sectionKey: 'PwfPublicInteractiveToolShell_$canonicalRoute',
-      verticalPadding: 36,
+      verticalPadding: PwfHomeVisualContract.publicSubpageVerticalPadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -74,9 +75,7 @@ class _PublicActionsBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return PwfSurfaceCard(
       padding: const EdgeInsets.all(14),
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 10,
+      child: PwfVisualActionStack(
         alignment: WrapAlignment.end,
         children: [
           if (primaryAction != null) primaryAction!,

@@ -14,10 +14,11 @@ final unitActivityRepositoryProvider = Provider<ActivityRepository>((ref) {
 /// Simple unfiltered list for unit pages (used by Web identity pages).
 final activitiesForUnitProvider = FutureProvider.family<List<Activity>, String>(
   (ref, unitSlug) async {
-    final unitId = await ref.watch(unitIdBySlugProvider(unitSlug).future);
+    final unitId = await ref.watch(unitIdBySlugExactProvider(unitSlug).future);
+    if (unitId == null || unitId.isEmpty) return const <Activity>[];
     return ref
         .read(unitActivityRepositoryProvider)
-        .getAllActivitiesForUnit(unitId);
+        .getAllActivitiesForUnit(unitId, unitSlug: unitSlug);
   },
 );
 
@@ -27,32 +28,80 @@ class UnitActivityIdParam {
   const UnitActivityIdParam(this.unitSlug, this.id);
 }
 
+
+
+class UnitActivityContentIdParam {
+  const UnitActivityContentIdParam(this.unitSlug, this.contentId);
+
+  final String unitSlug;
+  final String contentId;
+
+  String get normalizedUnitSlug {
+    final value = unitSlug.trim().toLowerCase();
+    return value.isEmpty ? 'home' : value;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is UnitActivityContentIdParam &&
+      other.normalizedUnitSlug == normalizedUnitSlug &&
+      other.contentId == contentId;
+
+  @override
+  int get hashCode => Object.hash(normalizedUnitSlug, contentId);
+}
+
+/// Direct public detail RPC provider; no bounded feed/cache fallback.
+final activityContentDetailForUnitProvider =
+    FutureProvider.family<Activity?, UnitActivityContentIdParam>((ref, p) async {
+      final unitId = await ref.watch(
+        unitIdBySlugExactProvider(p.normalizedUnitSlug).future,
+      );
+      if (unitId == null || unitId.isEmpty) return null;
+      return ref.read(unitActivityRepositoryProvider).getActivityByContentIdForUnit(
+            p.contentId,
+            unitId,
+            unitSlug: p.normalizedUnitSlug,
+          );
+    });
+
 /// Activity detail for unit.
-/// Fail-open: repository falls back to global lookup if unit scoping fails.
+/// Returns null when the requested item is not owned by this unit.
 final activityForUnitByIdProvider =
     FutureProvider.family<Activity?, UnitActivityIdParam>((ref, p) async {
-      final unitId = await ref.watch(unitIdBySlugProvider(p.unitSlug).future);
+      final unitId = await ref.watch(unitIdBySlugExactProvider(p.unitSlug).future);
+      if (unitId == null || unitId.isEmpty) return null;
       return ref
           .read(unitActivityRepositoryProvider)
-          .getActivityByIdForUnit(p.id, unitId);
+          .getActivityByIdForUnit(
+            p.id,
+            unitId,
+            unitSlug: p.unitSlug,
+          );
     });
 
 final filteredActivitiesForUnitProvider =
     FutureProvider.family<List<Activity>, String>((ref, unitSlug) async {
       final repo = ref.read(unitActivityRepositoryProvider);
       final filter = ref.watch(activitiesFilterProvider);
-      final unitId = await ref.watch(unitIdBySlugProvider(unitSlug).future);
+      final unitId = await ref.watch(unitIdBySlugExactProvider(unitSlug).future);
+      if (unitId == null || unitId.isEmpty) return const <Activity>[];
 
       List<Activity> items;
       if (filter.category != null) {
         items = await repo.getActivitiesByCategoryForUnit(
           filter.category!,
           unitId,
+          unitSlug: unitSlug,
         );
       } else if (filter.status != null) {
-        items = await repo.getActivitiesByStatusForUnit(filter.status!, unitId);
+        items = await repo.getActivitiesByStatusForUnit(
+          filter.status!,
+          unitId,
+          unitSlug: unitSlug,
+        );
       } else {
-        items = await repo.getAllActivitiesForUnit(unitId);
+        items = await repo.getAllActivitiesForUnit(unitId, unitSlug: unitSlug);
       }
 
       final q = filter.searchQuery.trim();

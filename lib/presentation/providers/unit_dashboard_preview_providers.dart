@@ -4,22 +4,13 @@ import '../../data/models/announcement.dart';
 import '../../data/models/activity.dart';
 import '../../data/models/news_article.dart';
 import 'unit_context_provider.dart';
-import 'supabase_providers.dart';
 import 'unit_announcements_provider.dart';
 import 'unit_activities_provider.dart';
 import 'unit_news_provider.dart';
-import 'package:waqf/core/database/pwf_database_owner_surfaces.dart';
 
 /// A simple parameter object for preview providers.
 ///
 /// We keep it immutable so Riverpod can cache it safely.
-
-String _normalizeScopeSlug(String slug) {
-  final s = slug.trim().toLowerCase();
-  return s.isEmpty ? 'home' : s;
-}
-
-bool _isHomeScope(String slug) => _normalizeScopeSlug(slug) == 'home';
 
 class UnitPreviewParams {
   final String unitSlug;
@@ -46,9 +37,14 @@ final unitLatestAnnouncementsPreviewProvider =
       ref,
       p,
     ) async {
-      final unitId = await ref.watch(unitIdBySlugProvider(p.unitSlug).future);
+      final unitId = await ref.watch(unitIdBySlugExactProvider(p.unitSlug).future);
+      if (unitId == null || unitId.isEmpty) return const <Announcement>[];
       final repo = ref.read(announcementRepositoryProvider);
-      return repo.getActiveAnnouncementsForUnit(unitId, limit: p.limit);
+      return repo.getActiveAnnouncementsForUnit(
+        unitId,
+        unitSlug: p.unitSlug,
+        limit: p.limit,
+      );
     });
 
 /// Upcoming activities preview for a given unit.
@@ -57,9 +53,14 @@ final unitLatestAnnouncementsPreviewProvider =
 /// orders soonest first.
 final unitUpcomingActivitiesPreviewProvider =
     FutureProvider.family<List<Activity>, UnitPreviewParams>((ref, p) async {
-      final unitId = await ref.watch(unitIdBySlugProvider(p.unitSlug).future);
+      final unitId = await ref.watch(unitIdBySlugExactProvider(p.unitSlug).future);
+      if (unitId == null || unitId.isEmpty) return const <Activity>[];
       final repo = ref.read(unitActivityRepositoryProvider);
-      return repo.getUpcomingActivitiesForUnit(unitId, limit: p.limit);
+      return repo.getUpcomingActivitiesForUnit(
+        unitId,
+        unitSlug: p.unitSlug,
+        limit: p.limit,
+      );
     });
 
 /// Latest published news preview for a given unit.
@@ -69,137 +70,46 @@ final unitUpcomingActivitiesPreviewProvider =
 final unitLatestNewsPreviewProvider =
     FutureProvider.family<List<NewsArticle>, UnitPreviewParams>((ref, p) async {
       try {
-        final unitId = await ref.watch(unitIdBySlugProvider(p.unitSlug).future);
+        final unitId = await ref.watch(unitIdBySlugExactProvider(p.unitSlug).future);
+        if (unitId == null || unitId.isEmpty) return const <NewsArticle>[];
         final service = ref.read(unitNewsServiceProvider);
-        return service.getLatestNewsForUnit(unitId, limit: p.limit);
+        return service.getLatestNewsForUnit(
+          unitId,
+          unitSlug: p.unitSlug,
+          limit: p.limit,
+        );
       } catch (_) {
-        return [];
+        return const <NewsArticle>[];
       }
     });
 
 /// Complementary news preview for a given scope.
 ///
-/// - home => latest published items from non-home units/systems
-/// - non-home => latest published ministry/home items
+/// Unit public surfaces must not import ministry/home news.
+/// Platform 13 owner-runtime cutover: the public home page must not import
+/// provincial content as a complementary block, and unit pages must not import
+/// ministry/home rows. Cross-scope previews are therefore disabled until a
+/// governed owner-schema aggregation surface is approved.
 final complementaryLatestNewsPreviewProvider =
     FutureProvider.family<List<NewsArticle>, UnitPreviewParams>((ref, p) async {
-      try {
-        final normalized = _normalizeScopeSlug(p.unitSlug);
-        final homeUnitId = await ref.watch(unitIdBySlugProvider('home').future);
-        final service = ref.read(unitNewsServiceProvider);
-
-        if (!_isHomeScope(normalized)) {
-          final currentUnitId = await ref.watch(
-            unitIdBySlugProvider(normalized).future,
-          );
-          if (currentUnitId == homeUnitId) return [];
-          return service.getLatestNewsForUnit(homeUnitId, limit: p.limit);
-        }
-
-        final supabase = ref.read(supabaseServiceProvider).client;
-        final response = await supabase
-            .from(PwfDatabaseOwnerSurfaces.newsArticles)
-            .select()
-            .eq('status', 'published')
-            .neq('unit_id', homeUnitId)
-            .order('published_at', ascending: false)
-            .limit(p.limit);
-
-        return (response as List<dynamic>)
-            .map((json) => NewsArticle.fromJson(json as Map<String, dynamic>))
-            .toList();
-      } catch (_) {
-        return [];
-      }
+      return const <NewsArticle>[];
     });
 
 /// Complementary announcements preview for a given scope.
 ///
-/// - home => latest active items from non-home units/systems
-/// - non-home => latest active ministry/home announcements
+/// Unit public surfaces must not import ministry/home announcements.
+/// Disabled for the same owner-runtime separation rule used by news.
 final complementaryAnnouncementsPreviewProvider =
-    FutureProvider.family<List<Announcement>, UnitPreviewParams>((
-      ref,
-      p,
-    ) async {
-      try {
-        final normalized = _normalizeScopeSlug(p.unitSlug);
-        final homeUnitId = await ref.watch(unitIdBySlugProvider('home').future);
-        final repo = ref.read(announcementRepositoryProvider);
-
-        if (!_isHomeScope(normalized)) {
-          final currentUnitId = await ref.watch(
-            unitIdBySlugProvider(normalized).future,
-          );
-          if (currentUnitId == homeUnitId) return [];
-          return repo.getActiveAnnouncementsForUnit(homeUnitId, limit: p.limit);
-        }
-
-        final supabase = ref.read(supabaseServiceProvider).client;
-        final response = await supabase
-            .from(PwfDatabaseOwnerSurfaces.announcements)
-            .select()
-            .eq('is_active', true)
-            .neq('unit_id', homeUnitId)
-            .order('created_at', ascending: false)
-            .limit(p.limit);
-
-        final now = DateTime.now();
-        return (response as List<dynamic>)
-            .map((json) => Announcement.fromDb(json as Map<String, dynamic>))
-            .where((announcement) {
-              if (announcement.validUntil == null) return true;
-              final validUntil = announcement.validUntil!;
-              return validUntil.isAfter(
-                DateTime(
-                  now.year,
-                  now.month,
-                  now.day,
-                ).subtract(const Duration(microseconds: 1)),
-              );
-            })
-            .toList();
-      } catch (_) {
-        return [];
-      }
+    FutureProvider.family<List<Announcement>, UnitPreviewParams>((ref, p) async {
+      return const <Announcement>[];
     });
 
 /// Complementary upcoming activities preview for a given scope.
 ///
-/// - home => upcoming items from non-home units/systems
-/// - non-home => upcoming ministry/home items
+/// Unit public surfaces must not import ministry/home activities.
+/// Disabled for the same owner-runtime separation rule used by news.
 final complementaryUpcomingActivitiesPreviewProvider =
     FutureProvider.family<List<Activity>, UnitPreviewParams>((ref, p) async {
-      try {
-        final normalized = _normalizeScopeSlug(p.unitSlug);
-        final homeUnitId = await ref.watch(unitIdBySlugProvider('home').future);
-        final repo = ref.read(unitActivityRepositoryProvider);
-
-        if (!_isHomeScope(normalized)) {
-          final currentUnitId = await ref.watch(
-            unitIdBySlugProvider(normalized).future,
-          );
-          if (currentUnitId == homeUnitId) return [];
-          return repo.getUpcomingActivitiesForUnit(homeUnitId, limit: p.limit);
-        }
-
-        final supabase = ref.read(supabaseServiceProvider).client;
-        final today = DateTime.now();
-        final todayIsoDate =
-            '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-        final response = await supabase
-            .from(PwfDatabaseOwnerSurfaces.activities)
-            .select()
-            .neq('unit_id', homeUnitId)
-            .eq('status', 'upcoming')
-            .gte('start_date', todayIsoDate)
-            .order('start_date', ascending: true)
-            .limit(p.limit);
-
-        return (response as List<dynamic>)
-            .map((json) => Activity.fromDb(json as Map<String, dynamic>))
-            .toList();
-      } catch (_) {
-        return [];
-      }
+      return const <Activity>[];
     });
+

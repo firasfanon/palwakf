@@ -1,93 +1,133 @@
-// lib/data/repositories/header_repository.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:waqf/core/database/pwf_database_owner_surfaces.dart';
+import 'package:waqf/core/unit/pwf_canonical_unit_identity.dart';
+
 import '../models/header_settings.dart';
 
+/// Header/tool-bar read/write repository.
+///
+/// Public reads are direct owner-schema reads from
+/// `core.v_unit_public_surface_profile_runtime_v1`. Unit pages remain strict:
+/// they never borrow the ministry header identity when their profile is absent.
 class HeaderRepository {
   HeaderRepository(this._supabase);
 
   final SupabaseClient _supabase;
 
-  // Phase 1 public-schema remediation: runtime reads use the wrapper.
-  // Admin writes remain on preserved legacy public table pending owner-write RPCs.
-  static const String _headerSettingsReadSurface =
-      'v_platform_header_settings_compat_v1';
-  static const String _headerSettingsLegacyWriteTable = 'header_settings';
-  static const String _globalUnitId = '11111111-1111-1111-1111-111111111111';
+  static const String _unitSurfaceProfileReadSurface =
+      PwfDatabaseOwnerSurfaces.unitPublicSurfaceProfileRuntimeV1;
 
   Future<HeaderSettings> fetchHeaderSettings() async {
-    try {
-      final response = await _supabase
-          .from(_headerSettingsReadSurface)
-          .select()
-          .order('updated_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
-      if (response != null) {
-        return HeaderSettings.fromJson(Map<String, dynamic>.from(response));
-      }
-    } on PostgrestException catch (error) {
-      if (!_isOptionalSingletonMiss(error)) rethrow;
-    }
-
-    return _runtimeDefaultHeaderSettings();
+    final settings = await _fetchByInternalSlug('home');
+    return settings ?? _runtimeDefaultHeaderSettings();
   }
 
   Future<HeaderSettings> fetchHeaderSettingsForScopes({
     String? unitId,
     String? homeUnitId,
+    bool strictUnitOnly = false,
   }) async {
-    try {
-      for (final candidate in <String?>[
-        unitId,
-        if (homeUnitId != unitId) homeUnitId,
-        _globalUnitId,
-      ]) {
-        final scoped = await _fetchByUnitId(candidate);
-        if (scoped != null) return scoped;
-      }
-
-      final global = await _fetchGlobalNull();
-      if (global != null) return global;
-    } on PostgrestException {
-      // fall through to legacy single-row behavior
+    final normalizedUnitId = unitId?.trim() ?? '';
+    if (normalizedUnitId.isNotEmpty) {
+      final settings = await _fetchByUnitId(normalizedUnitId);
+      if (settings != null) return settings;
     }
 
+    if (strictUnitOnly) {
+      return _runtimeUnitPlaceholderHeaderSettings();
+    }
+
+    final normalizedHomeId = homeUnitId?.trim() ?? '';
+    if (normalizedHomeId.isNotEmpty) {
+      final settings = await _fetchByUnitId(normalizedHomeId);
+      if (settings != null) return settings;
+    }
     return fetchHeaderSettings();
   }
 
-  Future<HeaderSettings?> _fetchByUnitId(String? unitId) async {
-    if (unitId == null || unitId.isEmpty) return null;
+  Future<HeaderSettings?> _fetchByUnitId(String unitId) async {
     try {
-      final response = await _supabase
-          .from(_headerSettingsReadSurface)
-          .select()
-          .eq('unit_id', unitId)
-          .order('updated_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
-      if (response == null) return null;
-      return HeaderSettings.fromJson(Map<String, dynamic>.from(response));
+      final response = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+        _supabase,
+        _unitSurfaceProfileReadSurface,
+      ).select().eq('org_unit_id', unitId).maybeSingle();
+      return response == null ? null : _map(response);
     } on PostgrestException catch (error) {
       if (_isOptionalSingletonMiss(error)) return null;
       rethrow;
     }
   }
 
-  Future<HeaderSettings?> _fetchGlobalNull() async {
+  Future<HeaderSettings?> _fetchByInternalSlug(String slug) async {
     try {
-      final response = await _supabase
-          .from(_headerSettingsReadSurface)
-          .select()
-          .isFilter('unit_id', null)
-          .order('updated_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
-      if (response == null) return null;
-      return HeaderSettings.fromJson(Map<String, dynamic>.from(response));
+      final response = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+        _supabase,
+        _unitSurfaceProfileReadSurface,
+      ).select().eq('internal_slug', slug).maybeSingle();
+      return response == null ? null : _map(response);
     } on PostgrestException catch (error) {
       if (_isOptionalSingletonMiss(error)) return null;
       rethrow;
     }
+  }
+
+  HeaderSettings _map(dynamic row) =>
+      _fromRuntimeProfile(Map<String, dynamic>.from(row as Map));
+
+  HeaderSettings _fromRuntimeProfile(Map<String, dynamic> row) {
+    final source = row['source_payload'] is Map
+        ? Map<String, dynamic>.from(row['source_payload'] as Map)
+        : const <String, dynamic>{};
+    String text(String key, {String fallback = ''}) {
+      final direct = (row[key] ?? '').toString().trim();
+      if (direct.isNotEmpty && direct != 'null') return direct;
+      final nested = (source[key] ?? '').toString().trim();
+      if (nested.isNotEmpty && nested != 'null') return nested;
+      return fallback;
+    }
+    bool boolValue(String key, {bool fallback = true}) {
+      final value = row[key] ?? source[key];
+      if (value is bool) return value;
+      return value?.toString().toLowerCase() == 'false' ? false : fallback;
+    }
+
+    final identity = PwfCanonicalUnitIdentity.fromRuntimeProfileRow(row);
+    final now = DateTime.now();
+    final unitName = text('unit_name_ar', fallback: 'بوابة الوحدة العامة');
+    final isHome = text('internal_slug') == 'home';
+    return HeaderSettings(
+      id: identity.canonicalOrgUnitId.isEmpty
+          ? 'runtime-profile-header'
+          : identity.canonicalOrgUnitId,
+      logoUrl: text('logo_url'),
+      logoAlt: unitName,
+      siteName: unitName,
+      siteTagline: isHome ? 'دولة فلسطين' : 'بوابة الوحدة العامة',
+      faviconUrl: null,
+      showBreakingNews: boolValue('show_breaking_news'),
+      breakingNewsText: text('breaking_news_text').isEmpty
+          ? null
+          : text('breaking_news_text'),
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  HeaderSettings _runtimeUnitPlaceholderHeaderSettings() {
+    final now = DateTime.now();
+    return HeaderSettings(
+      id: 'runtime-unit-placeholder-header',
+      logoUrl: '',
+      logoAlt: 'بيانات الوحدة غير منشورة',
+      siteName: 'بيانات الوحدة غير منشورة',
+      siteTagline: 'بوابة الوحدة العامة',
+      faviconUrl: null,
+      showBreakingNews: false,
+      breakingNewsText: null,
+      createdAt: now,
+      updatedAt: now,
+    );
   }
 
   HeaderSettings _runtimeDefaultHeaderSettings() {
@@ -117,18 +157,22 @@ class HeaderRepository {
   }
 
   Future<void> updateHeaderSettings(HeaderSettings settings) async {
-    await _supabase
-        .from(_headerSettingsLegacyWriteTable)
-        .update({
+    final home = await _fetchByInternalSlug('home');
+    final homeId = home?.id.trim() ?? '';
+    if (homeId.isEmpty) {
+      throw StateError('تعذر تحديد نطاق الوزارة لحفظ إعدادات الشريط العلوي.');
+    }
+    await _supabase.schema('core').rpc(
+      'rpc_unit_public_profile_write_v1',
+      params: <String, dynamic>{
+        'p_org_unit_id': homeId,
+        'p_payload': <String, dynamic>{
+          'official_name_ar': settings.siteName,
           'logo_url': settings.logoUrl,
-          'logo_alt': settings.logoAlt,
-          'site_name': settings.siteName,
-          'site_tagline': settings.siteTagline,
-          'favicon_url': settings.faviconUrl,
           'show_breaking_news': settings.showBreakingNews,
           'breaking_news_text': settings.breakingNewsText,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', settings.id);
+        },
+      },
+    );
   }
 }

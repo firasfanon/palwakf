@@ -1,3 +1,5 @@
+import '../../core/unit/pwf_unit_slug_registry.dart';
+
 class UnitPathUtils {
   UnitPathUtils._();
 
@@ -67,9 +69,10 @@ class UnitPathUtils {
     return _reservedFirstSegments.contains(segment.trim().toLowerCase());
   }
 
-  /// Returns the unit slug from a path, defaulting to 'home' if none is found.
+  /// Returns the internal unit slug from a public path, defaulting to 'home'.
   /// Examples:
-  /// - '/bth/news' -> 'bth'
+  /// - '/bethlehem/news' -> 'bth'
+  /// - '/bth/news' -> 'bth' (legacy alias)
   /// - '/home' -> 'home'
   /// - '/news' -> 'home' (reserved)
   static String resolveUnitSlugFromPath(String path) {
@@ -78,6 +81,6 @@ class UnitPathUtils {
     if (parts.isEmpty) return 'home';
     final first = parts.first.toLowerCase();
     if (isReservedFirstSegment(first)) return 'home';
-    return first;
+    return PwfUnitSlugRegistry.internalSlugFor(first);
   }
 }

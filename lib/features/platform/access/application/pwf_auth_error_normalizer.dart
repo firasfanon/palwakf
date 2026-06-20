@@ -9,13 +9,13 @@ class PwfAuthErrorNormalizer {
   static String normalize(Object? error) {
     final raw = (error ?? '').toString().toLowerCase();
     if (raw.trim().isEmpty) {
-      return 'تعذر تسجيل الدخول. تحقق من البيانات والصلاحيات ثم أعد المحاولة.';
+      return 'تعذر تسجيل الدخول. تحقق من بيانات الحساب ثم أعد المحاولة.';
     }
     if (raw.contains('invalid login') ||
         raw.contains('invalid credentials') ||
         raw.contains('invalid_grant') ||
         raw.contains('email or password')) {
-      return 'بيانات الدخول غير صحيحة أو الحساب غير مخول.';
+      return 'بيانات الدخول غير صحيحة. راجع البريد أو اسم المستخدم وكلمة المرور ثم حاول مجددًا.';
     }
     if (raw.contains('inactive') || raw.contains('غير نشط')) {
       return 'هذا الحساب غير نشط. راجع مسؤول النظام.';
@@ -29,7 +29,7 @@ class PwfAuthErrorNormalizer {
     if (_isExpiredOrInvalidRecovery(raw)) {
       return 'رابط الاستعادة غير نشط أو انتهت صلاحيته. أرسل رابطًا جديدًا ثم افتحه من نفس المتصفح.';
     }
-    return 'تعذر تسجيل الدخول. تحقق من البيانات والصلاحيات ثم أعد المحاولة.';
+    return 'تعذر تسجيل الدخول. تحقق من بيانات الحساب ثم أعد المحاولة.';
   }
 
   static String normalizeRecovery(Object? error) {
