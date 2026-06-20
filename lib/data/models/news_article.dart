@@ -50,6 +50,15 @@ class NewsArticle {
   @JsonKey(name: 'unit_id')
   final String? unitId;
 
+  /// Opaque `content_id` returned by the allow-listed public media RPC.
+  /// It is not persisted by legacy JSON serializers.
+  final String? runtimeContentId;
+
+  String get publicDetailId {
+    final value = runtimeContentId?.trim();
+    return value == null || value.isEmpty ? id.toString() : value;
+  }
+
   final NewsCategory category;
   final PublishStatus status;
 
@@ -85,6 +94,7 @@ class NewsArticle {
     this.attachmentUrl,
     required this.author,
     this.unitId,
+    this.runtimeContentId,
     required this.category,
     required this.status,
     this.viewCount = 0,
@@ -121,9 +131,11 @@ class NewsArticle {
     DateTime? publishedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? runtimeContentId,
   }) {
     return NewsArticle(
       id: id ?? this.id,
+      runtimeContentId: runtimeContentId ?? this.runtimeContentId,
       title: title ?? this.title,
       excerpt: excerpt ?? this.excerpt,
       content: content ?? this.content,

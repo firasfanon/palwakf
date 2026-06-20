@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:waqf/core/unit/pwf_unit_slug_registry.dart';
 import 'package:waqf/presentation/providers/unit_context_provider.dart';
 import '../models/pwf_site_page.dart';
 import '../repositories/pwf_site_pages_repository.dart';
@@ -55,14 +56,15 @@ final pwfSitePageProvider =
       final repo = ref.watch(pwfSitePagesRepositoryProvider);
       try {
         final normalizedSlug = p.slug.trim();
-        final normalizedUnitSlug = p.unitSlug.trim().toLowerCase();
+        final normalizedUnitSlug = PwfUnitSlugRegistry.internalSlugFor(p.unitSlug);
         if (normalizedUnitSlug.isEmpty ||
             normalizedUnitSlug == 'home' ||
             normalizedUnitSlug == 'global') {
           return await repo.getGlobalPageBySlug(slug: normalizedSlug);
         }
 
-        final unitId = await ref.watch(unitIdBySlugProvider(p.unitSlug).future);
+        final unitId = await ref.watch(unitIdBySlugExactProvider(normalizedUnitSlug).future);
+        if (unitId == null || unitId.isEmpty) return null;
         return await repo.getPageBySlugForUnit(
           slug: normalizedSlug,
           unitId: unitId,

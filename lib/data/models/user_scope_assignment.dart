@@ -96,6 +96,20 @@ class UserScopeAssignment {
         return 'مشرف نظام الوحدة';
       case 'delegate_lawyer':
         return 'وكيل قانوني مفوض';
+      case 'unit_viewer':
+        return 'مشاهد للوحدة';
+      case 'unit_content_editor':
+        return 'محرر محتوى الوحدة';
+      case 'unit_profile_manager':
+        return 'مسؤول ملف الوحدة';
+      case 'unit_reviewer':
+        return 'مراجع محتوى الوحدة';
+      case 'unit_approver':
+        return 'معتمد محتوى الوحدة';
+      case 'unit_publisher':
+        return 'ناشر محتوى الوحدة';
+      case 'unit_director':
+        return 'مدير الوحدة';
       case 'employee':
         return 'موظف';
       default:

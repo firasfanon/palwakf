@@ -1,5 +1,6 @@
 // lib/presentation/providers/homepage_settings_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/unit/pwf_unit_slug_registry.dart';
 import '../../data/models/homepage_section.dart';
 import '../../data/repositories/homepage_repository.dart';
 import 'supabase_providers.dart';
@@ -19,30 +20,45 @@ final homepageRepositoryProvider = Provider<HomepageRepository>((ref) {
 // SECTION PROVIDERS
 // ============================================
 
-/// Provider for homepage sections scoped to the current unit with
-/// fallback precedence: global -> home -> current unit.
+/// Provider for homepage sections scoped to the current public context.
+///
+/// Runtime rule:
+/// - `/home` resolves only to the canonical ministry `core.org_units` record.
+/// - Unit surfaces (`/bethlehem`, `/hebron`, etc.) resolve only to their own
+///   canonical unit record and never inherit ministry/global composition.
+/// - A failed identity resolution returns a safe empty composition; no legacy
+///   public/homepage_sections or global fallback is permitted at runtime.
 final homepageSectionsForUnitProvider =
     FutureProvider.family<List<HomepageSection>, String>((ref, unitSlug) async {
       final repository = ref.watch(homepageRepositoryProvider);
-      final normalized = unitSlug.trim().isEmpty
-          ? 'home'
-          : unitSlug.trim().toLowerCase();
+      final normalized = PwfUnitSlugRegistry.internalSlugFor(unitSlug);
 
       try {
-        final unitIdFuture = ref.watch(unitIdBySlugProvider(normalized).future);
-        final homeUnitIdFuture = ref.watch(unitIdBySlugProvider('home').future);
-        final values = await Future.wait<String>([
+        final unitIdFuture = normalized == 'home'
+            ? ref.watch(unitIdBySlugExactProvider('home').future)
+            : ref.watch(unitIdBySlugExactProvider(normalized).future);
+        final homeUnitIdFuture = ref.watch(
+          unitIdBySlugExactProvider('home').future,
+        );
+        final values = await Future.wait<String?>([
           unitIdFuture,
           homeUnitIdFuture,
         ]);
+        final currentUnitId = values[0] ??
+            (normalized == 'home' ? values[1] : null);
+        if (currentUnitId == null || currentUnitId.trim().isEmpty) {
+          return const <HomepageSection>[];
+        }
 
         return repository.fetchAllSectionsForUnit(
-          unitId: values[0],
-          homeUnitId: values[1],
+          unitId: currentUnitId,
+          homeUnitId: normalized == 'home' ? values[1] : null,
+          strictUnitOnly: normalized != 'home',
         );
       } catch (_) {
-        // Fail-open on web first load / transient resolver errors.
-        return repository.fetchAllSections();
+        // Identity failures must remain safe and isolated. Falling back to
+        // legacy/global homepage rows would reintroduce cross-unit leakage.
+        return const <HomepageSection>[];
       }
     });
 
@@ -75,27 +91,27 @@ final scopedStatisticsSectionProvider =
       unitSlug,
     ) async {
       final repository = ref.watch(homepageRepositoryProvider);
-      final normalized = unitSlug.trim().isEmpty
-          ? 'home'
-          : unitSlug.trim().toLowerCase();
+      final normalized = PwfUnitSlugRegistry.internalSlugFor(unitSlug);
       String? unitId;
       String? homeUnitId;
 
       try {
-        unitId = await ref.watch(unitIdBySlugProvider(normalized).future);
+        unitId = await ref.watch(unitIdBySlugExactProvider(normalized).future);
       } catch (_) {
         unitId = null;
       }
 
       try {
-        homeUnitId = await ref.watch(unitIdBySlugProvider('home').future);
+        homeUnitId = normalized == 'home'
+            ? await ref.watch(unitIdBySlugExactProvider('home').future)
+            : null;
       } catch (_) {
         homeUnitId = null;
       }
 
       return repository.fetchStatisticsSettingsForUnit(
         unitId: unitId,
-        homeUnitId: homeUnitId,
+        homeUnitId: normalized == 'home' ? homeUnitId : null,
       );
     });
 
@@ -536,30 +552,48 @@ final breakingNewsSectionNotifierProvider =
       return BreakingNewsSectionNotifier(repository);
     });
 
-// Provider for active breaking news items
+// Provider for active breaking news items on ministry `/home` only.
 final activeBreakingNewsProvider = FutureProvider<List<BreakingNewsItem>>((
   ref,
 ) async {
   final repository = ref.watch(homepageRepositoryProvider);
-  return repository.fetchActiveBreakingNews();
+  final homeUnitId = await ref.watch(unitIdBySlugExactProvider('home').future);
+  if (homeUnitId == null || homeUnitId.isEmpty) {
+    return await repository.fetchActiveBreakingNews();
+  }
+  final scoped = await repository.fetchActiveBreakingNewsForUnit(homeUnitId);
+  if (scoped.isNotEmpty) return scoped;
+  return await repository.fetchActiveBreakingNews();
 });
 
 /// Provider for active breaking news items scoped by unit slug.
 ///
 /// Fallback behavior:
-/// - If unit lookup fails or unit-scoped query returns empty, returns the global list.
+/// - Ministry home may use the global active breaking-news list.
+/// - Unit surfaces must never fallback to ministry/global breaking news; they
+///   return an empty list when no unit-scoped item is published.
 final activeBreakingNewsForUnitProvider =
     FutureProvider.family<List<BreakingNewsItem>, String>((
       ref,
       unitSlug,
     ) async {
       final repository = ref.watch(homepageRepositoryProvider);
+      final normalized = PwfUnitSlugRegistry.internalSlugFor(unitSlug);
       try {
-        final unitId = await ref.watch(unitIdBySlugProvider(unitSlug).future);
+        final unitId = await ref.watch(unitIdBySlugExactProvider(normalized).future);
+        if (unitId == null || unitId.isEmpty) {
+          if (normalized == 'home') {
+            return const <BreakingNewsItem>[];
+          }
+          return const <BreakingNewsItem>[];
+        }
         final items = await repository.fetchActiveBreakingNewsForUnit(unitId);
         if (items.isNotEmpty) return items;
       } catch (_) {
-        // Ignore and fallback
+        // Ignore and fallback only for ministry home.
       }
-      return repository.fetchActiveBreakingNews();
+      if (normalized == 'home') {
+        return await repository.fetchActiveBreakingNews();
+      }
+      return const <BreakingNewsItem>[];
     });

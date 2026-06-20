@@ -1,15 +1,14 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
+
 import '../enums/enums.dart';
 import '../../data/services/supabase_service.dart';
 import 'access_profile.dart';
+import 'platform_effective_authority.dart';
 
 class AccessRepository {
-  final SupabaseService _supabaseService;
-
   AccessRepository(this._supabaseService);
 
+  final SupabaseService _supabaseService;
   final Map<String, AccessProfile> _cache = {};
 
   static const String _userSystemRolesReadSurface =
@@ -18,44 +17,58 @@ class AccessRepository {
       'v_platform_user_system_permissions_compat_v1';
   static const String _coreAdminUsersReadSurface =
       'v_core_admin_users_compat_v1';
+  static const String _effectiveAuthorityRpc =
+      'rpc_platform_effective_authority_v1';
 
   AccessProfile? getCached(String userId) => _cache[userId];
 
   void clearCache() => _cache.clear();
 
-  Future<AccessProfile?> load(String userId) async {
-    if (_cache.containsKey(userId)) return _cache[userId];
+  void invalidate(String userId) => _cache.remove(userId);
+
+  Future<AccessProfile?> refresh(String userId) =>
+      load(userId, forceRefresh: true);
+
+  Future<AccessProfile?> load(
+    String userId, {
+    bool forceRefresh = false,
+  }) async {
+    final normalizedUserId = userId.trim();
+    if (normalizedUserId.isEmpty) return null;
+    if (forceRefresh) invalidate(normalizedUserId);
+    if (_cache.containsKey(normalizedUserId)) return _cache[normalizedUserId];
 
     try {
       final client = _supabaseService.client;
 
-      // Core/admin profile is read through the public compatibility
-      // wrapper. auth.users remains the Supabase Auth identity source.
+      // The owner-side contract is self-scoped by auth.uid(). It is always
+      // evaluated before legacy compatibility views. A verified universal
+      // Super Admin must not depend on optional system-role rows or unit scope
+      // assignments merely to access route, sidebar, and system UI guards.
+      final effectiveAuthority =
+          await _loadEffectiveAuthority(client, normalizedUserId);
+      if (effectiveAuthority?.isUniversalSuperAdmin == true) {
+        final profile = _buildUniversalSuperAdminProfile(normalizedUserId);
+        _cache[normalizedUserId] = profile;
+        return profile;
+      }
+
+      // Compatibility data remains the ordinary-user fallback only.
       final adminUser = await client
           .from(_coreAdminUsersReadSurface)
           .select('id,is_active,is_superuser,role')
-          .eq('id', userId)
+          .eq('id', normalizedUserId)
           .maybeSingle();
 
-      if (adminUser == null) {
-        return null;
-      }
+      if (adminUser == null && effectiveAuthority == null) return null;
 
-      final isActive = (adminUser['is_active'] as bool?) ?? true;
-      // Platform root authority must be explicit.
-      // Do not treat legacy admin_users.role = super_admin as root by itself;
-      // several scoped/unit actors may carry historical labels while their
-      // effective grants remain unit-bound.
-      var isSuperuser = (adminUser['is_superuser'] as bool?) == true;
+      final isActive = effectiveAuthority?.isActive ??
+          ((adminUser?['is_active'] as bool?) ?? false);
 
-      // Roles per system are read through the public compatibility wrapper.
-      // Do not call legacy/direct PostgREST tables here; the dashboard must remain
-      // console-clean even when optional platform dynamic tables are absent or have
-      // a different historical shape.
       final rolesRows = await client
           .from(_userSystemRolesReadSurface)
           .select('system_key,role')
-          .eq('user_id', userId);
+          .eq('user_id', normalizedUserId);
 
       final roles = <SystemKey, UserRole>{};
       final dynamicRoles = <String, String>{};
@@ -73,14 +86,13 @@ class AccessRepository {
         }
       }
 
-      // Permissions per system are also read through the compatibility wrapper.
       final permissions = <SystemKey, Set<Permission>>{};
       final dynamicPermissions = <String, Set<String>>{};
       try {
         final permsRows = await client
             .from(_userSystemPermissionsReadSurface)
             .select('system_key,permission_key,allow')
-            .eq('user_id', userId);
+            .eq('user_id', normalizedUserId);
 
         for (final row in permsRows as List) {
           final rawSystemKey = (row['system_key'] as String?) ?? '';
@@ -104,45 +116,100 @@ class AccessRepository {
           }
         }
       } catch (_) {
-        // Compatibility surface may not exist yet in very early environments;
-        // keep fail-closed by relying on roles only.
+        // Compatibility permissions are optional for ordinary legacy accounts.
+        // The profile remains fail-closed through explicit roles only.
       }
 
-      // If permissions are empty, infer minimal perms from role (still fail-closed for unknown actions)
       for (final entry in roles.entries) {
         permissions.putIfAbsent(
-            entry.key, () => _inferRolePermissions(entry.value));
+          entry.key,
+          () => _inferRolePermissions(entry.value),
+        );
       }
 
-      if (roles[SystemKey.platformAdmin] == UserRole.superuser ||
-          _isRootRoleAlias(dynamicRoles['platformAdmin'] ?? '') ||
-          _isRootRoleAlias(dynamicRoles['admin'] ?? '') ||
-          _isRootRoleAlias(dynamicRoles['platform_admin'] ?? '')) {
-        isSuperuser = true;
-      }
+      // Compatibility rows may represent elevated roles inside one system,
+      // but they never establish universal platform authority. Only the
+      // owner-side self-authority RPC above can produce isSuperuser=true.
 
       final profile = AccessProfile(
-        userId: userId,
+        userId: normalizedUserId,
         isActive: isActive,
-        isSuperuser: isSuperuser,
+        isSuperuser: false,
         roles: roles,
         permissions: permissions,
         dynamicRoles: dynamicRoles,
         dynamicPermissions: dynamicPermissions,
       );
-
-      _cache[userId] = profile;
+      _cache[normalizedUserId] = profile;
       return profile;
-    } catch (e) {
+    } catch (error) {
       if (kDebugMode) {
-        debugPrint('AccessRepository.load failed: $e');
+        debugPrint('AccessRepository.load failed: $error');
       }
       return null;
     }
   }
 
+  Future<PlatformEffectiveAuthority?> _loadEffectiveAuthority(
+    dynamic client,
+    String expectedUserId,
+  ) async {
+    try {
+      // Do not pass a user id. The SQL function has no parameters and derives
+      // its actor exclusively from auth.uid().
+      final response = await client.rpc(_effectiveAuthorityRpc);
+      final rows = response is List
+          ? response
+          : response is Map
+              ? <dynamic>[response]
+              : const <dynamic>[];
+      if (rows.isEmpty || rows.first is! Map) return null;
+
+      final authority = PlatformEffectiveAuthority.fromJson(
+        Map<String, dynamic>.from(rows.first as Map),
+      );
+      return authority.belongsTo(expectedUserId) ? authority : null;
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('AccessRepository effective authority fallback: $error');
+      }
+      return null;
+    }
+  }
+
+  AccessProfile _buildUniversalSuperAdminProfile(String userId) {
+    final roles = <SystemKey, UserRole>{
+      for (final system in SystemKey.values) system: UserRole.superuser,
+    };
+    final permissions = <SystemKey, Set<Permission>>{
+      for (final system in SystemKey.values) system: Permission.values.toSet(),
+    };
+    return AccessProfile(
+      userId: userId,
+      isActive: true,
+      isSuperuser: true,
+      roles: roles,
+      permissions: permissions,
+      dynamicRoles: const <String, String>{'*': 'super_admin'},
+      dynamicPermissions: <String, Set<String>>{
+        '*': <String>{
+          'read',
+          'create',
+          'update',
+          'delete',
+          'manage',
+          'manageSystems',
+          'manageUsers',
+          'manageSite',
+          'manageHome',
+          'publish',
+          'activate',
+        },
+      },
+    );
+  }
+
   Set<Permission> _inferRolePermissions(UserRole role) {
-    // conservative defaults
     switch (role) {
       case UserRole.superuser:
         return Permission.values.toSet();
@@ -152,7 +219,7 @@ class AccessRepository {
           Permission.create,
           Permission.update,
           Permission.delete,
-          Permission.viewReports
+          Permission.viewReports,
         };
       case UserRole.user:
         return {Permission.read, Permission.create, Permission.update};
@@ -165,17 +232,12 @@ class AccessRepository {
     final v = value.trim();
     final normalized = _normalizeDynamicSystemKey(v);
 
-    // 1) DB enum values usually match Dart enum names (e.g. 'platformAdmin')
     for (final k in SystemKey.values) {
       if (k.name == v || k.name == normalized) return k;
     }
-
-    // 2) Accept slugs used in routes (e.g. 'admin')
     for (final k in SystemKey.values) {
       if (k.slug == v || k.slug == normalized) return k;
     }
-
-    // 3) Legacy aliases
     return switch (v) {
       'platform_admin' => SystemKey.platformAdmin,
       'platform-admin' => SystemKey.platformAdmin,
@@ -211,29 +273,12 @@ class AccessRepository {
 
   Permission? _parsePermission(String value) {
     final v = value.trim();
-
     final normalized = _normalizePermissionAlias(v);
-
-    // DB sometimes uses 'view' for read.
     if (normalized == 'view') return Permission.read;
-
     for (final p in Permission.values) {
       if (p.name == normalized || p.name == v) return p;
     }
     return null;
-  }
-
-  bool _isRootRoleAlias(String value) {
-    return switch (value.trim().toLowerCase().replaceAll('-', '_')) {
-      'superuser' => true,
-      'super_user' => true,
-      'super_admin' => true,
-      'platform_super_admin' => true,
-      'platform_root' => true,
-      'root' => true,
-      'owner' => true,
-      _ => false,
-    };
   }
 
   String _normalizeDynamicSystemKey(String value) {

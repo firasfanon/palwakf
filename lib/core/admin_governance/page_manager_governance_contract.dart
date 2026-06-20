@@ -53,7 +53,7 @@ extension PwfPageManagerRoleX on PwfPageManagerRole {
       case PwfPageManagerRole.contentManager:
         return 'مدير صفحة / محتوى';
       case PwfPageManagerRole.superuser:
-        return 'Superuser';
+        return 'سوبر يوزر سيادي';
     }
   }
 
@@ -68,7 +68,7 @@ extension PwfPageManagerRoleX on PwfPageManagerRole {
       case PwfPageManagerRole.contentManager:
         return 'يدير الصفحة ونطاق المحتوى والحذف المنضبط.';
       case PwfPageManagerRole.superuser:
-        return 'صلاحيات كاملة + رجوع + حوكمة عليا.';
+        return 'تفويض منصة كامل، وإجراءات إدارية مباشرة موثقة، وحوكمة عليا عبر كل النطاقات.';
     }
   }
 }

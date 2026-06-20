@@ -246,11 +246,32 @@ String _operationalRoleKey(Map<String, dynamic> row) {
 
 const List<Map<String, String>> _operationalScopeRoleOptions = [
   {'value': 'power_admin', 'label': 'Power Admin'},
-  {'value': 'unit_admin', 'label': 'مدير وحدة'},
+  {'value': 'unit_admin', 'label': 'مدير صلاحيات الوحدة'},
+  {'value': 'unit_director', 'label': 'مدير الوحدة'},
+  {'value': 'unit_publisher', 'label': 'ناشر محتوى الوحدة'},
+  {'value': 'unit_approver', 'label': 'معتمد محتوى الوحدة'},
+  {'value': 'unit_reviewer', 'label': 'مراجع محتوى الوحدة'},
+  {'value': 'unit_profile_manager', 'label': 'مسؤول ملف الوحدة'},
+  {'value': 'unit_content_editor', 'label': 'محرر محتوى الوحدة'},
+  {'value': 'unit_viewer', 'label': 'مشاهد للوحدة'},
   {'value': 'system_super_user', 'label': 'مشرف نظام الوحدة'},
   {'value': 'employee', 'label': 'موظف'},
   {'value': 'delegate_lawyer', 'label': 'وكيل قانوني مفوض'},
 ];
+
+const Set<String> _siteUnitScopeRoles = {
+  'unit_admin',
+  'unit_director',
+  'unit_publisher',
+  'unit_approver',
+  'unit_reviewer',
+  'unit_profile_manager',
+  'unit_content_editor',
+  'unit_viewer',
+};
+
+bool _isSiteUnitScopeRole(String scopeRoleKey) =>
+    _siteUnitScopeRoles.contains(scopeRoleKey.trim().toLowerCase());
 
 String _persistedAdminRoleForScopeRole(String scopeRoleKey) {
   switch (scopeRoleKey.trim().toLowerCase()) {
@@ -270,14 +291,15 @@ String _persistedAdminRoleForScopeRole(String scopeRoleKey) {
 }
 
 bool _scopeRoleRequiresUnit(String scopeRoleKey) =>
+    _isSiteUnitScopeRole(scopeRoleKey) ||
     switch (scopeRoleKey.trim().toLowerCase()) {
-      'unit_admin' => true,
       'system_super_user' => true,
       'employee' => true,
       _ => false,
     };
 
 bool _scopeRoleRequiresSystem(String scopeRoleKey) =>
+    _isSiteUnitScopeRole(scopeRoleKey) ||
     switch (scopeRoleKey.trim().toLowerCase()) {
       'power_admin' => true,
       'system_super_user' => true,
@@ -4795,7 +4817,7 @@ class _ScopesTab extends ConsumerWidget {
                                   await ref
                                       .read(
                                           userScopeAssignmentsRepositoryProvider)
-                                      .deleteAssignment(item.id);
+                                      .deleteAssignment(item.id, systemKey: item.systemKey);
                                   await _logAdminUsersAudit(
                                     ref,
                                     actionKey: 'delete_scope_assignment',
@@ -4876,11 +4898,16 @@ class _ScopesTab extends ConsumerWidget {
             final requiresSystem = _scopeRoleRequiresSystem(scopeRoleKey);
             final requiresUnit = _scopeRoleRequiresUnit(scopeRoleKey);
             final supportsMultiUnit = _scopeRoleSupportsMultiUnit(scopeRoleKey);
-            final filteredSystemOptions = supportsMultiUnit
-                ? systemOptions
-                    .where((key) => key == SystemKey.cases.name)
-                    .toList()
-                : systemOptions;
+            final filteredSystemOptions = _isSiteUnitScopeRole(scopeRoleKey)
+                ? systemOptions.where((key) => key == SystemKey.site.name).toList()
+                : supportsMultiUnit
+                    ? systemOptions
+                        .where((key) => key == SystemKey.cases.name)
+                        .toList()
+                    : systemOptions;
+            if (_isSiteUnitScopeRole(scopeRoleKey)) {
+              systemKey = SystemKey.site.name;
+            }
             if (requiresSystem &&
                 (systemKey == null || systemKey!.isEmpty) &&
                 filteredSystemOptions.isNotEmpty) {

@@ -18,17 +18,17 @@ class PwfMediaServicesOwnershipClosureContract {
   static const bool deleteLegacyPublicTables = false;
   static const bool archiveLegacyPublicTablesNow = false;
   static const bool allowDirectPublicTableRuntimeReads = false;
-  static const bool allowPublicCompatibilityWrappers = true;
+  static const bool allowPublicCompatibilityWrappers = false;
+  static const bool publicRuntimeDependencyZeroRequired = true;
   static const bool noWaqfAssetsMutation = true;
 
   static const List<String> finalMediaRuntimeContracts = [
-    'public.v_media_content_compat_v1',
-    'public.v_media_news_compat_v1',
-    'public.v_media_announcements_compat_v1',
-    'public.v_media_activities_compat_v1',
-    'public.v_media_gallery_compat_v1',
-    'public.rpc_media_content_compat_v1(...)',
-    'media_center.v_content_items_public_v1',
+    'media_center.v_unit_public_content_runtime_v1',
+    'media_center.v_unit_public_news_runtime_v1',
+    'media_center.v_unit_public_announcements_runtime_v1',
+    'media_center.v_unit_public_activities_runtime_v1',
+    'media_center.v_unit_public_gallery_runtime_v1',
+    'core.v_unit_public_surface_profile_runtime_v1',
   ];
 
   static const List<String> finalServicesRuntimeContracts = [
@@ -39,30 +39,30 @@ class PwfMediaServicesOwnershipClosureContract {
     LegacyPublicTableQuarantine(
       tableName: 'public.news_articles',
       domain: 'media',
-      decision: 'quarantine_preserve_read_only_source',
+      decision: 'quarantine_preserve_not_runtime_source',
       ownerAfterClosure: 'media_center',
-      publicRuntimeContract: 'public.v_media_news_compat_v1',
+      publicRuntimeContract: 'runtime_forbidden_use_media_center.v_unit_public_news_runtime_v1',
     ),
     LegacyPublicTableQuarantine(
       tableName: 'public.announcements',
       domain: 'media',
-      decision: 'quarantine_preserve_read_only_source',
+      decision: 'quarantine_preserve_not_runtime_source',
       ownerAfterClosure: 'media_center',
-      publicRuntimeContract: 'public.v_media_announcements_compat_v1',
+      publicRuntimeContract: 'runtime_forbidden_use_media_center.v_unit_public_announcements_runtime_v1',
     ),
     LegacyPublicTableQuarantine(
       tableName: 'public.activities',
       domain: 'media',
-      decision: 'quarantine_preserve_read_only_source',
+      decision: 'quarantine_preserve_not_runtime_source',
       ownerAfterClosure: 'media_center',
-      publicRuntimeContract: 'public.v_media_activities_compat_v1',
+      publicRuntimeContract: 'runtime_forbidden_use_media_center.v_unit_public_activities_runtime_v1',
     ),
     LegacyPublicTableQuarantine(
       tableName: 'public.media_gallery_items',
       domain: 'media_assets',
       decision: 'quarantine_empty_or_mapping_pending_no_delete',
       ownerAfterClosure: 'media_center.content_assets',
-      publicRuntimeContract: 'public.v_media_gallery_compat_v1',
+      publicRuntimeContract: 'runtime_forbidden_use_media_center.v_unit_public_gallery_runtime_v1',
     ),
     LegacyPublicTableQuarantine(
       tableName: 'public.services',

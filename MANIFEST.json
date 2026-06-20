@@ -1,13 +1,108 @@
 {
-  "session_name": "تطوير المنصة 6",
-  "created": "2026_05_19",
-  "status": "handoff-ready / platform-development-6-start-point-prepared / pwf-sis-current-wave-not-fully-closed / n2-66c-apply-first / n2-67-high-risk-readiness-only-prepared / database-wave-b-preserved-not-executed / production-not-approved / no-waqf-assets-mutation",
-  "current_start": "Apply N2.66C ASCII-Safe Public Overflow Repair, then run format/analyze/chrome, then verify public homepage and admin login browser console.",
-  "last_runtime_clean": "n2-65b-evidence-accepted / n2-65-services-platform-content-closed / n2-66-analyzer-clean-and-chrome-startup-passed-but-browser-runtime-blocked",
-  "mandatory_next_batch": "N2.66C — ASCII-Safe Public Overflow Repair",
-  "database_wave_b_executed": false,
-  "production_approved": false,
-  "waqf_assets_mutation": false,
-  "full_repository_source_included": false,
-  "note": "This baseline contains consolidated operational baseline, handoff, latest patch materials, changelog, error records, and governance guide update. It is not a full clone of the project source repository."
+  "batch_key": "platform14_role_aware_subpage_action_surfaces_super_admin_cross_system_action_gate_recovery_2026_06_20",
+  "package": "updates-only",
+  "generated_at_utc": "2026-06-20T20:44:56Z",
+  "file_count": 20,
+  "files": [
+    {
+      "path": "CHANGED_FILES_PLATFORM14_ROLE_AWARE_SUBPAGE_ACTION_SURFACES_SUPER_ADMIN_CROSS_SYSTEM_ACTION_GATE_RECOVERY_2026_06_20.md",
+      "size_bytes": 1476,
+      "sha256": "e4ccce2f11b401d50798a8f4b1e12c7fdf8bf2c46e40e629598e78bba42bff5a"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "size_bytes": 1590,
+      "sha256": "fa9ca05e6d6f9ef52a368029fcc98aaf2496359a7680503e122832d2520645b9"
+    },
+    {
+      "path": "LATEST_BASELINE_POINTER.md",
+      "size_bytes": 364,
+      "sha256": "065fe71b29851f9735ce5b194c52dc646ae0905f4b6e81e06143770e4befeff0"
+    },
+    {
+      "path": "NEXT_SESSION_PROMPT_PLATFORM14_ROLE_AWARE_SUBPAGE_ACTION_SURFACES_SUPER_ADMIN_CROSS_SYSTEM_ACTION_GATE_RECOVERY_UAT_2026_06_20.md",
+      "size_bytes": 613,
+      "sha256": "cebcba1389c309eef85dbb8cc133f45a3a1b21c88f7010c564db94a66b29b4fd"
+    },
+    {
+      "path": "PALWAKF_PLATFORM_COMPREHENSIVE_GUIDE.md",
+      "size_bytes": 11637,
+      "sha256": "30b324ee28163c57fab171ede90520ac7c8014f700fe7a76d6ff0356c55196be"
+    },
+    {
+      "path": "PLATFORM14_ROLE_AWARE_SUBPAGE_ACTION_SURFACES_SUPER_ADMIN_CROSS_SYSTEM_ACTION_GATE_RECOVERY.patch",
+      "size_bytes": 24264,
+      "sha256": "a1298e154f175854ba056f6df68689d1af3be60555fd65d8ce33769df2ceed1a"
+    },
+    {
+      "path": "PLATFORM14_ROLE_AWARE_SUBPAGE_ACTION_SURFACES_SUPER_ADMIN_CROSS_SYSTEM_ACTION_GATE_RECOVERY_2026_06_20.md",
+      "size_bytes": 5301,
+      "sha256": "e7a2da8535c980d3137e1119fd0781e8b9744336cad0f6732b15a417398fba80"
+    },
+    {
+      "path": "PLATFORM14_ROLE_AWARE_SUBPAGE_ACTION_SURFACES_SUPER_ADMIN_CROSS_SYSTEM_ACTION_GATE_RECOVERY_ERROR_RECORD_2026_06_20.md",
+      "size_bytes": 1051,
+      "sha256": "90a51f0a66084befd624e891eae620e2bb6cfc9ce37e122a8d75ea5f9dcf989b"
+    },
+    {
+      "path": "PLATFORM14_ROLE_AWARE_SUBPAGE_ACTION_SURFACES_SUPER_ADMIN_CROSS_SYSTEM_ACTION_GATE_RECOVERY_STATIC_REVIEW_2026_06_20.md",
+      "size_bytes": 884,
+      "sha256": "8a54b0faf404f4368644581e16376d066c3f2a03676c323eed268c4caa4feeee"
+    },
+    {
+      "path": "README_PLATFORM14_ROLE_AWARE_SUBPAGE_ACTION_SURFACES_SUPER_ADMIN_CROSS_SYSTEM_ACTION_GATE_RECOVERY_2026_06_20.md",
+      "size_bytes": 276,
+      "sha256": "aaac3674b41fd17108d2d0af57e68b869681ac20f4043a7892c387c23e25d3aa"
+    },
+    {
+      "path": "SESSION_HANDOFF_PLATFORM14_ROLE_AWARE_SUBPAGE_ACTION_SURFACES_SUPER_ADMIN_CROSS_SYSTEM_ACTION_GATE_RECOVERY_2026_06_20.md",
+      "size_bytes": 839,
+      "sha256": "aa22136aa96fb4616e7b467ce73b50030087a4598af06a4f2ffc15f71e713d0b"
+    },
+    {
+      "path": "SQL_OPERATOR_RUNBOOK_PLATFORM14_ROLE_AWARE_SUBPAGE_ACTION_SURFACES_SUPER_ADMIN_CROSS_SYSTEM_ACTION_GATE_RECOVERY_2026_06_20.md",
+      "size_bytes": 572,
+      "sha256": "017dc5e40cb08b46fbbf50ef4692de945005a9c23db81d9185791c92f30f416d"
+    },
+    {
+      "path": "UAT_PLATFORM14_ROLE_AWARE_SUBPAGE_ACTION_SURFACES_SUPER_ADMIN_CROSS_SYSTEM_ACTION_GATE_RECOVERY_2026_06_20.md",
+      "size_bytes": 1471,
+      "sha256": "c6cb8d5226dee4b65caf30e73009f1cbfcccaad526de2db6d19c31a470eb3877"
+    },
+    {
+      "path": "UPDATES_ONLY_README.md",
+      "size_bytes": 223,
+      "sha256": "ca27c88d7458950ed41b0268c91686df75aab66386bf3c0ad680b9176b69dd15"
+    },
+    {
+      "path": "lib/core/admin_governance/page_manager_governance_contract.dart",
+      "size_bytes": 10086,
+      "sha256": "2164217ce8f9539174af38503674886ac7bb967a3ad6f9b1acfcab1335f0bb8c"
+    },
+    {
+      "path": "lib/features/platform/home/presentation/widgets/admin/pwf_unit_public_governance_panel.dart",
+      "size_bytes": 38735,
+      "sha256": "7da7de20a9b4f5f76bff47bd784454ec8bfb80f514512030d1717bea0abfca2a"
+    },
+    {
+      "path": "lib/presentation/screens/admin/main/management/home_management/system_surfaces_management_screen.dart",
+      "size_bytes": 10315,
+      "sha256": "a1201d6e12dfbaa7866339dcd910f964aaefd9092220828b65d7b0755e0fad65"
+    },
+    {
+      "path": "lib/presentation/screens/admin/main/management/home_management/unit_surfaces_management_screen.dart",
+      "size_bytes": 14358,
+      "sha256": "f96179536a3d534d3ebab5c606e8e125d064ceeb55896f89b4248a45203e8e0e"
+    },
+    {
+      "path": "test/core/admin_governance/role_aware_subpage_action_surfaces_contract_test.dart",
+      "size_bytes": 1493,
+      "sha256": "d0998c356a33f6faf31697559b2594ef5cf471c740de7830cc93c3d536284d58"
+    },
+    {
+      "path": "tools/platform14_verify_role_aware_subpage_action_surfaces.ps1",
+      "size_bytes": 1769,
+      "sha256": "5dbdd4b29a605c2752f28e157c3d074ffa6abf6fabe1538dcc8c5927f7bad769"
+    }
+  ]
 }

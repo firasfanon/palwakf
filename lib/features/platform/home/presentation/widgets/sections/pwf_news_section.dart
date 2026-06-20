@@ -7,6 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:waqf/app/routing/unit_routes.dart';
 import 'package:waqf/presentation/providers/unit_dashboard_preview_providers.dart';
 import 'package:waqf/presentation/providers/homepage_settings_provider.dart';
+import 'package:waqf/presentation/providers/unit_context_provider.dart';
 import 'package:waqf/data/models/news_article.dart';
 import 'package:waqf/features/platform/public_runtime/presentation/widgets/pwf_public_image_fallback.dart';
 
@@ -14,6 +15,7 @@ import '../../../presentation/theme/pwf_home_palette.dart';
 import '../pwf_section_container.dart';
 import '../shared/pwf_section_title.dart';
 import '../shared/pwf_hoverable.dart';
+import '../../screens/pages/pwf_public_content_shared.dart';
 import 'pwf_content_display_settings.dart';
 
 class PwfNewsSection extends ConsumerWidget {
@@ -54,16 +56,18 @@ class PwfNewsSection extends ConsumerWidget {
       ),
     );
     final isHomeScope = unitSlug.trim().toLowerCase() == 'home';
+    final unit = ref.watch(orgUnitBySlugProvider(unitSlug)).valueOrNull;
+    final scopeLabel = pwfResolveScopeLabel(unitSlug: unitSlug, unit: unit);
 
     return PwfSectionContainer(
       sectionKey: 'PwfNewsSection',
       child: Column(
           children: [
             PwfSectionTitle(
-              title: isHomeScope ? 'أحدث الأخبار' : 'أخبار الصفحة الحالية',
+              title: isHomeScope ? 'أحدث الأخبار' : 'أخبار $scopeLabel',
               subtitle: isHomeScope
                   ? 'آخر أخبار الوزارة الرسمية مع نافذة مختصرة لأخبار المحافظات والوحدات.'
-                  : 'أحدث أخبار الجهة الحالية مع مساحة مختصرة لأخبار الوزارة الرسمية.',
+                  : 'أحدث الأخبار المنشورة لهذه الجهة دون خلط مع أخبار الوزارة المركزية.',
             ),
             const SizedBox(height: 22),
             async.when(
@@ -234,7 +238,7 @@ class _MainNewsCard extends StatelessWidget {
     final published = article.publishedAt ?? article.createdAt;
 
     return PwfHoverable(
-      onTap: () => context.go(UnitRoutes.newsDetail(unitSlug, article.id)),
+      onTap: () => context.go(UnitRoutes.newsDetail(unitSlug, article.publicDetailId)),
       hoverTranslate: const Offset(0, -5),
       borderRadius: PwfHomeRadii.br16,
       child: ClipRRect(
@@ -304,7 +308,7 @@ class _SecondaryMainNewsCard extends StatelessWidget {
     final img = article.imageUrl;
 
     return PwfHoverable(
-      onTap: () => context.go(UnitRoutes.newsDetail(unitSlug, article.id)),
+      onTap: () => context.go(UnitRoutes.newsDetail(unitSlug, article.publicDetailId)),
       hoverTranslate: const Offset(0, -4),
       borderRadius: PwfHomeRadii.br16,
       child: ClipRRect(
@@ -444,7 +448,7 @@ class _SideNewsCard extends StatelessWidget {
     final img = article.imageUrl;
 
     return PwfHoverable(
-      onTap: () => context.go(UnitRoutes.newsDetail(unitSlug, article.id)),
+      onTap: () => context.go(UnitRoutes.newsDetail(unitSlug, article.publicDetailId)),
       hoverTranslate: const Offset(-5, 0),
       borderRadius: PwfHomeRadii.br16,
       child: ClipRRect(
@@ -549,19 +553,40 @@ class _NewsThumbnailFallback extends StatelessWidget {
 class _MoreBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(
-          'قراءة المزيد',
-          style: GoogleFonts.cairo(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: PwfHomePalette.secondary,
-          ),
-        ),
-        const SizedBox(width: 6),
-        const Icon(Icons.arrow_back, size: 16, color: PwfHomePalette.secondary),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final compact = width < 86;
+
+        return Row(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Flexible(
+              child: Text(
+                'قراءة المزيد',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                softWrap: false,
+                style: GoogleFonts.cairo(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: PwfHomePalette.secondary,
+                ),
+              ),
+            ),
+            if (!compact) ...[
+              const SizedBox(width: 6),
+              const Icon(
+                Icons.arrow_back,
+                size: 16,
+                color: PwfHomePalette.secondary,
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }
@@ -573,47 +598,81 @@ class _MetaRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 14,
-      runSpacing: 6,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const FaIcon(
-              FontAwesomeIcons.calendarAlt,
-              size: 14,
-              color: PwfHomePalette.gray,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              _formatArabicDate(date),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final boundedWidth = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final narrow = boundedWidth < 180;
+        final itemWidth = narrow
+            ? boundedWidth.clamp(56.0, 180.0).toDouble()
+            : boundedWidth.clamp(120.0, 220.0).toDouble();
+        final items = [
+          _MetaItem(
+            icon: FontAwesomeIcons.calendarAlt,
+            label: _formatArabicDate(date),
+            maxWidth: itemWidth,
+          ),
+          _MetaItem(
+            icon: FontAwesomeIcons.eye,
+            label: '$views مشاهدات',
+            maxWidth: itemWidth,
+          ),
+        ];
+
+        if (narrow) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (int i = 0; i < items.length; i++) ...[
+                items[i],
+                if (i != items.length - 1) const SizedBox(height: 6),
+              ],
+            ],
+          );
+        }
+
+        return Wrap(spacing: 14, runSpacing: 6, children: items);
+      },
+    );
+  }
+}
+
+class _MetaItem extends StatelessWidget {
+  const _MetaItem({
+    required this.icon,
+    required this.label,
+    required this.maxWidth,
+  });
+
+  final FaIconData icon;
+  final String label;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FaIcon(icon, size: 14, color: PwfHomePalette.gray),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
               style: GoogleFonts.cairo(
                 fontSize: 12.5,
                 color: PwfHomePalette.gray,
               ),
             ),
-          ],
-        ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const FaIcon(
-              FontAwesomeIcons.eye,
-              size: 14,
-              color: PwfHomePalette.gray,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              '$views مشاهدات',
-              style: GoogleFonts.cairo(
-                fontSize: 12.5,
-                color: PwfHomePalette.gray,
-              ),
-            ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -652,10 +711,10 @@ class _ComplementaryNewsStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = isHomeScope
         ? 'من أخبار المحافظات والوحدات'
-        : 'من أخبار الوزارة';
+        : 'أخبار مرتبطة';
     final subtitle = isHomeScope
         ? 'نافذة إضافية تُبرز أخبار الجهات والوحدات خارج الصفحة الرئيسية.'
-        : 'مساحة مختصرة تُبقي أخبار الوزارة حاضرة داخل صفحة الوحدة أو النظام.';
+        : 'مساحة مختصرة للأخبار المرتبطة بهذه الجهة فقط دون fallback وزاري.';
 
     return Container(
       width: double.infinity,
@@ -695,7 +754,7 @@ class _ComplementaryNewsStrip extends StatelessWidget {
                   width: 280,
                   child: PwfHoverable(
                     onTap: () => context.go(
-                      UnitRoutes.newsDetail(unitSlug, item.id),
+                      UnitRoutes.newsDetail(unitSlug, item.publicDetailId),
                       extra: item,
                     ),
                     hoverTranslate: const Offset(0, -4),

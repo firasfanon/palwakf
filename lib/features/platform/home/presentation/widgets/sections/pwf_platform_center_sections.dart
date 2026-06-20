@@ -11,6 +11,7 @@ import 'package:waqf/features/platform/media_center/presentation/providers/pwf_p
 import '../../theme/pwf_home_palette.dart';
 import '../pwf_section_container.dart';
 import '../shared/pwf_section_title.dart';
+import 'package:waqf/features/platform/home/presentation/widgets/shared/pwf_public_safe_error.dart';
 
 class PwfMediaCenterHighlightsSection extends StatelessWidget {
   const PwfMediaCenterHighlightsSection({
@@ -327,7 +328,7 @@ class _HomepagePublishedItemsStrip extends ConsumerWidget {
       loading: () => const LinearProgressIndicator(minHeight: 3),
       error: (error, stackTrace) => _HomepageDataBindingNote(
         title: 'تعذر تحميل العناصر المنشورة',
-        body: error.toString(),
+        body: PwfPublicSafeError.messageFor(error),
       ),
       data: (items) {
         if (items.isEmpty) {

@@ -1,6 +1,7 @@
 // lib/presentation/screens/public/search/web_search_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:waqf/core/unit/pwf_unit_slug_registry.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../widgets/web/web_app_bar.dart';
 import '../../../widgets/web/web_container.dart';
@@ -758,7 +759,7 @@ class _WebSearchScreenState extends State<WebSearchScreen> {
     final slug = widget.unitSlug.trim().isEmpty
         ? 'home'
         : widget.unitSlug.trim().toLowerCase();
-    return slug == 'home' ? '/home' : '/$slug';
+    return PwfUnitSlugRegistry.publicBasePathFor(slug);
   }
 
   String _normalizeSearch(String value) {

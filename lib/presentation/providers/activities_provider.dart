@@ -4,6 +4,7 @@ import '../../data/models/activity.dart';
 import '../../data/repositories/activity_repository.dart';
 import '../../data/services/supabase_service.dart';
 import '../../core/utils/text_normalize.dart';
+import 'unit_context_provider.dart';
 
 final activityRepositoryProvider = Provider<ActivityRepository>((ref) {
   return ActivityRepository(SupabaseService());
@@ -62,12 +63,23 @@ final filteredActivitiesProvider = FutureProvider<List<Activity>>((ref) async {
 
   List<Activity> items;
 
+  final homeUnitId = await ref.watch(unitIdBySlugExactProvider('home').future);
+  if (homeUnitId == null || homeUnitId.isEmpty) return const <Activity>[];
+
   if (filter.category != null) {
-    items = await repo.getActivitiesByCategory(filter.category!);
+    items = await repo.getActivitiesByCategoryForUnit(
+      filter.category!,
+      homeUnitId,
+      unitSlug: 'home',
+    );
   } else if (filter.status != null) {
-    items = await repo.getActivitiesByStatus(filter.status!);
+    items = await repo.getActivitiesByStatusForUnit(
+      filter.status!,
+      homeUnitId,
+      unitSlug: 'home',
+    );
   } else {
-    items = await repo.getAllActivities();
+    items = await repo.getAllActivitiesForUnit(homeUnitId, unitSlug: 'home');
   }
 
   final q = filter.searchQuery.trim();

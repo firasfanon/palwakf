@@ -164,7 +164,7 @@ class _WebNewsScreenState extends ConsumerState<WebNewsScreen> {
       child: InkWell(
         onTap: () {
           context.push(
-            UnitRoutes.newsDetail(widget.unitSlug, article.id),
+            UnitRoutes.newsDetail(widget.unitSlug, article.publicDetailId),
             extra: article,
           );
         },

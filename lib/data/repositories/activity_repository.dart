@@ -5,6 +5,7 @@ import '../models/activity.dart';
 import '../services/media_compat_mapper.dart';
 import '../services/supabase_service.dart';
 import 'package:waqf/core/database/pwf_database_owner_surfaces.dart';
+import 'package:waqf/core/public_runtime/pwf_public_media_runtime_gateway.dart';
 
 /// Repository for managing Activity data
 /// Provides CRUD operations following DRY principles
@@ -24,6 +25,8 @@ class ActivityRepository {
     int? limit,
     int? offset,
     String? unitSlug,
+    String? ownerOrgUnitId,
+    Set<String>? unitScopeKeys,
     ActivityCategory? category,
     ActivityStatus? status,
     String? searchQuery,
@@ -37,66 +40,61 @@ class ActivityRepository {
     }
 
     try {
-      final response = await _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.vMediaActivitiesCompatV1)
-          .select('*')
-          .timeout(_mediaOwnerRuntimeTimeout);
+      final unitRef = unitSlug?.trim().isNotEmpty == true
+          ? unitSlug!.trim()
+          : (ownerOrgUnitId?.trim().isNotEmpty == true
+              ? ownerOrgUnitId!.trim()
+              : 'home');
+      final rows = await PwfPublicMediaRuntimeGateway(
+        _supabaseService.client,
+      ).fetchFeed(
+        unitRef: unitRef,
+        familyKey: 'activities',
+        limit: (limit ?? 50).clamp(1, 50).toInt(),
+        offset: 0,
+      ).timeout(_mediaOwnerRuntimeTimeout);
 
-      var items = (response as List<dynamic>)
-          .map(
-            (json) => MediaCompatMapper.activityFromCompatRow(
-              json as Map<String, dynamic>,
-            ),
-          )
+      var items = rows
+          .map(MediaCompatMapper.activityFromCompatRow)
+          .where((activity) => activity.status != ActivityStatus.cancelled)
           .toList();
 
-      final normalizedUnitSlug = unitSlug?.trim().toLowerCase();
-      if (normalizedUnitSlug != null &&
-          normalizedUnitSlug.isNotEmpty &&
-          normalizedUnitSlug != 'home') {
-        items = items
-            .where(
-              (item) =>
-                  (item.unitId ?? '').trim().toLowerCase() ==
-                  normalizedUnitSlug,
-            )
-            .toList();
-      }
       if (category != null) {
         items = items.where((item) => item.category == category).toList();
       }
       if (status != null) {
         items = items.where((item) => item.status == status).toList();
       }
+
       final q = searchQuery?.trim().toLowerCase();
       if (q != null && q.isNotEmpty) {
-        items = items.where((item) {
-          return item.title.toLowerCase().contains(q) ||
-              item.description.toLowerCase().contains(q) ||
-              item.location.toLowerCase().contains(q) ||
-              item.organizer.toLowerCase().contains(q);
+        items = items.where((activity) {
+          return activity.title.toLowerCase().contains(q) ||
+              activity.description.toLowerCase().contains(q) ||
+              activity.location.toLowerCase().contains(q);
         }).toList();
       }
-
       _sortActivityOwnerRows(items);
       final windowed = _window(items, limit: limit, offset: offset);
       _logMediaRuntimeSource(
         family: 'activities',
-        surface: PwfDatabaseOwnerSurfaces.vMediaActivitiesCompatV1,
+        surface: PwfDatabaseOwnerSurfaces.publicMediaRuntimeFeedRpcV2,
         rows: windowed.length,
       );
       return windowed;
     } on TimeoutException {
-      _logMediaRuntimeFallback(family: 'activities', reason: 'owner-timeout');
+      _logMediaRuntimeFallback(family: 'activities', reason: 'public-rpc-timeout');
       return const <Activity>[];
-    } catch (e, stackTrace) {
-      dev.log(
-        'Media Center owner-read activities runtime failed; legacy fallback may run.',
-        name: 'ActivityRepository',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      _logMediaRuntimeFallback(family: 'activities', reason: 'owner-failure');
+    } catch (_) {
+      if (kDebugMode) {
+        debugPrint(
+          'PWF_MEDIA_CENTER_PUBLIC_RPC_UNAVAILABLE '
+          'family=activities '
+          'rpc=${PwfDatabaseOwnerSurfaces.publicMediaRuntimeFeedRpcV2} '
+          'fallback=false',
+        );
+      }
+      _logMediaRuntimeFallback(family: 'activities', reason: 'public-rpc-failure');
       return const <Activity>[];
     }
   }
@@ -131,11 +129,11 @@ class ActivityRepository {
     debugPrint(
       'PWF_MEDIA_CENTER_ROOT_CUTOVER '
       'family=$family '
-      'owner_read=true '
-      'surface=public.$surface '
-      'projection=* '
-      'filtering=client-side '
-      'ordering=client-side '
+      'public_rpc=true '
+      'surface=$surface '
+      'projection=allow-listed '
+      'filtering=server-resolved-unit '
+      'ordering=server-side '
       'rows=$rows '
       'decision=media-center-owner-read-default-root-cutover',
     );
@@ -149,227 +147,133 @@ class ActivityRepository {
     debugPrint(
       'PWF_MEDIA_CENTER_LEGACY_FALLBACK_ONLY '
       'family=$family '
-      'legacy_public_fallback=true '
+      'legacy_public_fallback=false '
       'reason=$reason '
-      'decision=media-center-legacy-public-fallback-only',
+      'decision=media-center-owner-read-no-public-fallback',
     );
   }
 
-  Future<Activity?> _getCompatActivityById(int id, {String? unitSlug}) async {
-    final items = await _getCompatActivities(limit: 500, unitSlug: unitSlug);
-    for (final item in items) {
-      if (item.id == id) return item;
+  Future<Activity?> _getCompatActivityByContentId(
+    String contentId, {
+    String? unitSlug,
+    String? ownerOrgUnitId,
+  }) async {
+    if (!_mediaOwnerReadDefault) return null;
+    final safeContentId = contentId.trim();
+    if (safeContentId.isEmpty) return null;
+    final unitRef = unitSlug?.trim().isNotEmpty == true
+        ? unitSlug!.trim()
+        : (ownerOrgUnitId?.trim().isNotEmpty == true
+            ? ownerOrgUnitId!.trim()
+            : 'home');
+    try {
+      final rows = await PwfPublicMediaRuntimeGateway(_supabaseService.client)
+          .fetchDetail(
+            unitRef: unitRef,
+            contentId: safeContentId,
+            familyKey: 'activities',
+          )
+          .timeout(_mediaOwnerRuntimeTimeout);
+      if (rows.isEmpty) return null;
+      final item = MediaCompatMapper.activityFromCompatRow(rows.first);
+      if (item.status == ActivityStatus.cancelled) return null;
+      if (item != null) {
+        _logMediaRuntimeSource(
+          family: 'activities',
+          surface: PwfDatabaseOwnerSurfaces.publicMediaRuntimeDetailRpcV2,
+          rows: 1,
+        );
+      }
+      return item;
+    } on TimeoutException {
+      _logMediaRuntimeFallback(
+        family: 'activities',
+        reason: 'public-detail-rpc-timeout',
+      );
+      return null;
+    } catch (e, stackTrace) {
+      dev.log(
+        'Media Center public activity detail RPC failed without feed fallback',
+        name: 'ActivityRepository',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      _logMediaRuntimeFallback(
+        family: 'activities',
+        reason: 'public-detail-rpc-failure',
+      );
+      return null;
     }
-    return null;
   }
+
 
   // ============================================
   // READ OPERATIONS
   // ============================================
 
-  /// Get all activities with optional pagination
-  Future<List<Activity>> getAllActivities({int? limit, int? offset}) async {
-    final compat = await _getCompatActivities(limit: limit, offset: offset);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      dev.log('Fetching activities', name: 'ActivityRepository');
-
-      var query = _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.activities)
-          .select()
-          .order('start_date', ascending: false);
-
-      if (limit != null) query = query.limit(limit);
-      if (offset != null)
-        query = query.range(offset, offset + (limit ?? 10) - 1);
-
-      final response = await query;
-
-      dev.log(
-        'Successfully fetched ${(response as List).length} activities',
-        name: 'ActivityRepository',
-      );
-
-      return (response as List<dynamic>)
-          .map((json) => Activity.fromDb(json as Map<String, dynamic>))
-          .toList();
-    } catch (e, stackTrace) {
-      dev.log(
-        'Error fetching activities',
-        name: 'ActivityRepository',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      throw Exception('Failed to load activities: $e');
-    }
+  /// Get all activities with optional pagination.
+  Future<List<Activity>> getAllActivities({int? limit, int? offset}) {
+    return _getCompatActivities(limit: limit, offset: offset);
   }
 
-  /// Get activity by ID
-  Future<Activity?> getActivityById(int id) async {
-    final compat = await _getCompatActivityById(id);
-    if (compat != null) return compat;
+  /// Get activity by ID.
+  Future<Activity?> getActivityById(int id) {
+    return _getCompatActivityByContentId(id.toString());
+  }
 
-    try {
-      dev.log('Fetching activity with ID: $id', name: 'ActivityRepository');
-
-      final response = await _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.activities)
-          .select()
-          .eq('id', id)
-          .maybeSingle();
-
-      if (response == null) {
-        dev.log('Activity not found with ID: $id', name: 'ActivityRepository');
-        return null;
-      }
-
-      return Activity.fromDb(response);
-    } catch (e, stackTrace) {
-      dev.log(
-        'Error fetching activity by ID',
-        name: 'ActivityRepository',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      throw Exception('Failed to load activity: $e');
-    }
+  Future<Activity?> getActivityByContentIdForUnit(
+    String contentId,
+    String unitId, {
+    String? unitSlug,
+  }) {
+    return _getCompatActivityByContentId(
+      contentId,
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+    );
   }
 
   /// Get activity by ID scoped to a specific unit.
   ///
-  /// Fail-open: if unit scoping is not available (e.g., missing column) or
-  /// any error happens, this falls back to global getActivityById.
-  Future<Activity?> getActivityByIdForUnit(int id, String unitId) async {
-    final compat = await _getCompatActivityById(id, unitSlug: unitId);
-    if (compat != null) return compat;
-
-    try {
-      final response = await _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.activities)
-          .select()
-          .eq('id', id)
-          .eq('unit_id', unitId)
-          .maybeSingle();
-
-      if (response == null) return null;
-      return Activity.fromDb(response);
-    } catch (e) {
-      dev.log(
-        'Fail-open: getActivityByIdForUnit fallback: $e',
-        name: 'ActivityRepository',
-      );
-      return getActivityById(id);
-    }
+  /// Unit-scoped detail lookup.
+  ///
+  /// If the item is not owned by the requested unit, return null instead of
+  /// falling back to global/ministry content.
+  Future<Activity?> getActivityByIdForUnit(
+    int id,
+    String unitId, {
+    String? unitSlug,
+  }) async {
+    final compat = await _getCompatActivityByContentId(
+      id.toString(),
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+    );
+    return compat;
   }
 
-  /// Get activities by category
+  /// Get activities by category.
   Future<List<Activity>> getActivitiesByCategory(
     ActivityCategory category, {
     int? limit,
-  }) async {
-    final compat = await _getCompatActivities(limit: limit, category: category);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      dev.log(
-        'Fetching activities for category: ${category.name}',
-        name: 'ActivityRepository',
-      );
-
-      var query = _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.activities)
-          .select()
-          .eq('category', category.name)
-          .order('start_date', ascending: false);
-
-      if (limit != null) query = query.limit(limit);
-
-      final response = await query;
-
-      return (response as List<dynamic>)
-          .map((json) => Activity.fromDb(json as Map<String, dynamic>))
-          .toList();
-    } catch (e, stackTrace) {
-      dev.log(
-        'Error fetching activities by category',
-        name: 'ActivityRepository',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      throw Exception('Failed to load activities by category: $e');
-    }
+  }) {
+    return _getCompatActivities(limit: limit, category: category);
   }
 
-  /// Get activities by status
+  /// Get activities by status.
   Future<List<Activity>> getActivitiesByStatus(
     ActivityStatus status, {
     int? limit,
-  }) async {
-    final compat = await _getCompatActivities(limit: limit, status: status);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      dev.log(
-        'Fetching activities with status: ${status.name}',
-        name: 'ActivityRepository',
-      );
-
-      var query = _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.activities)
-          .select()
-          .eq('status', status.name)
-          .order('start_date', ascending: false);
-
-      if (limit != null) query = query.limit(limit);
-
-      final response = await query;
-
-      return (response as List<dynamic>)
-          .map((json) => Activity.fromDb(json as Map<String, dynamic>))
-          .toList();
-    } catch (e, stackTrace) {
-      dev.log(
-        'Error fetching activities by status',
-        name: 'ActivityRepository',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      throw Exception('Failed to load activities by status: $e');
-    }
+  }) {
+    return _getCompatActivities(limit: limit, status: status);
   }
 
-  /// Get upcoming activities
-  Future<List<Activity>> getUpcomingActivities({int limit = 10}) async {
-    final compat = await _getCompatActivities(
+  /// Get upcoming activities.
+  Future<List<Activity>> getUpcomingActivities({int limit = 10}) {
+    return _getCompatActivities(
       limit: limit,
       status: ActivityStatus.upcoming,
     );
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      dev.log('Fetching upcoming activities', name: 'ActivityRepository');
-
-      final response = await _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.activities)
-          .select()
-          .eq('status', 'upcoming')
-          .gte('start_date', DateTime.now().toIso8601String())
-          .order('start_date', ascending: true)
-          .limit(limit);
-
-      return (response as List<dynamic>)
-          .map((json) => Activity.fromDb(json as Map<String, dynamic>))
-          .toList();
-    } catch (e, stackTrace) {
-      dev.log(
-        'Error fetching upcoming activities',
-        name: 'ActivityRepository',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      throw Exception('Failed to load upcoming activities: $e');
-    }
   }
 
   /// Get upcoming activities scoped to a specific unit (org_units)
@@ -380,55 +284,16 @@ class ActivityRepository {
   /// Fail-open: returns empty list if unit scoping isn't available yet or on error.
   Future<List<Activity>> getUpcomingActivitiesForUnit(
     String unitId, {
+    String? unitSlug,
     int limit = 6,
   }) async {
     final compat = await _getCompatActivities(
-      unitSlug: unitId,
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
       limit: limit,
       status: ActivityStatus.upcoming,
     );
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      // NOTE: Many schemas model start_date as DATE (not TIMESTAMP).
-      // Sending a full ISO timestamp can cause PostgREST 400 for DATE columns.
-      final today = DateTime.now();
-      final todayIsoDate =
-          '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-
-      // Try unit-scoped query first. If unit_id column is missing, fall back
-      // to the non-scoped query (home/global) to avoid breaking the homepage.
-      dynamic response;
-      try {
-        response = await _supabaseService.client
-            .from(PwfDatabaseOwnerSurfaces.activities)
-            .select()
-            .eq('unit_id', unitId)
-            .eq('status', 'upcoming')
-            .gte('start_date', todayIsoDate)
-            .order('start_date', ascending: true)
-            .limit(limit);
-      } catch (e) {
-        // Fallback (no unit_id)
-        response = await _supabaseService.client
-            .from(PwfDatabaseOwnerSurfaces.activities)
-            .select()
-            .eq('status', 'upcoming')
-            .gte('start_date', todayIsoDate)
-            .order('start_date', ascending: true)
-            .limit(limit);
-      }
-
-      return (response as List)
-          .map((e) => Activity.fromDb(e as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      dev.log(
-        'Error fetching upcoming unit activities: $e',
-        name: 'ActivityRepository',
-      );
-      return [];
-    }
+    return compat;
   }
 
   /// Get activities by governorate
@@ -466,35 +331,9 @@ class ActivityRepository {
     }
   }
 
-  /// Search activities by title or description
-  Future<List<Activity>> searchActivities(String query) async {
-    final compat = await _getCompatActivities(searchQuery: query, limit: 50);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      dev.log(
-        'Searching activities with query: $query',
-        name: 'ActivityRepository',
-      );
-
-      final response = await _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.activities)
-          .select()
-          .or('title.ilike.%$query%,description.ilike.%$query%')
-          .order('start_date', ascending: false);
-
-      return (response as List<dynamic>)
-          .map((json) => Activity.fromDb(json as Map<String, dynamic>))
-          .toList();
-    } catch (e, stackTrace) {
-      dev.log(
-        'Error searching activities',
-        name: 'ActivityRepository',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      throw Exception('Failed to search activities: $e');
-    }
+  /// Search activities by title or description.
+  Future<List<Activity>> searchActivities(String query) {
+    return _getCompatActivities(searchQuery: query, limit: 50);
   }
 
   // ============================================
@@ -502,90 +341,43 @@ class ActivityRepository {
   /// Get all activities scoped to a specific unit (org_units)
   Future<List<Activity>> getAllActivitiesForUnit(
     String unitId, {
+    String? unitSlug,
     int? limit,
     int? offset,
   }) async {
     final compat = await _getCompatActivities(
-      unitSlug: unitId,
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
       limit: limit,
       offset: offset,
     );
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      var query = _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.activities)
-          .select()
-          .eq('unit_id', unitId)
-          .order('start_date', ascending: false);
-
-      if (limit != null) query = query.limit(limit);
-      if (offset != null)
-        query = query.range(offset, offset + (limit ?? 50) - 1);
-
-      final response = await query;
-      return (response as List)
-          .map((e) => Activity.fromDb(e as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      dev.log('Error fetching unit activities: $e', name: 'ActivityRepository');
-      return [];
-    }
+    return compat;
   }
 
   Future<List<Activity>> getActivitiesByCategoryForUnit(
     ActivityCategory category,
-    String unitId,
-  ) async {
+    String unitId, {
+    String? unitSlug,
+  }) async {
     final compat = await _getCompatActivities(
-      unitSlug: unitId,
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
       category: category,
     );
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      final response = await _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.activities)
-          .select()
-          .eq('unit_id', unitId)
-          .eq('category', category.name)
-          .order('start_date', ascending: false);
-      return (response as List)
-          .map((e) => Activity.fromDb(e as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      dev.log(
-        'Error fetching unit activities by category: $e',
-        name: 'ActivityRepository',
-      );
-      return [];
-    }
+    return compat;
   }
 
   Future<List<Activity>> getActivitiesByStatusForUnit(
     ActivityStatus status,
-    String unitId,
-  ) async {
-    final compat = await _getCompatActivities(unitSlug: unitId, status: status);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      final response = await _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.activities)
-          .select()
-          .eq('unit_id', unitId)
-          .eq('status', status.name)
-          .order('start_date', ascending: false);
-      return (response as List)
-          .map((e) => Activity.fromDb(e as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      dev.log(
-        'Error fetching unit activities by status: $e',
-        name: 'ActivityRepository',
-      );
-      return [];
-    }
+    String unitId, {
+    String? unitSlug,
+  }) async {
+    final compat = await _getCompatActivities(
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+      status: status,
+    );
+    return compat;
   }
 
   // CREATE OPERATIONS

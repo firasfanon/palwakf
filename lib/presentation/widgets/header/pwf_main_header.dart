@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:waqf/app/routing/app_routes.dart';
+import 'package:waqf/app/routing/unit_routes.dart';
 import 'package:waqf/features/platform/home/presentation/theme/pwf_home_palette.dart';
 import 'package:waqf/features/platform/home/presentation/widgets/pwf_web_container.dart';
 
@@ -112,7 +113,7 @@ class _SearchBoxState extends State<_SearchBox> {
     final slug = widget.unitSlug.trim().isEmpty
         ? 'home'
         : widget.unitSlug.trim().toLowerCase();
-    final path = slug == 'home' ? '/home/search' : '/$slug/search';
+    final path = UnitRoutes.search(slug);
     if (query.isEmpty) {
       context.go(path);
       return;

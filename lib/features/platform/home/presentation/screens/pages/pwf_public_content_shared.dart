@@ -5,7 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:waqf/presentation/providers/unit_context_provider.dart';
 
 import '../../theme/pwf_home_palette.dart';
-import '../../widgets/shared/pwf_home_visual_contract.dart';
+import 'package:waqf/features/platform/home/presentation/widgets/shared/pwf_home_visual_contract.dart';
+import 'package:waqf/features/platform/home/presentation/widgets/shared/pwf_public_safe_error.dart';
 
 String pwfFormatArabicDate(DateTime? dt) {
   if (dt == null) return 'غير محدد';
@@ -36,21 +37,101 @@ String pwfResolveScopeLabel({
       ? 'home'
       : unitSlug.trim().toLowerCase();
   final contextual = (contextualLabel ?? '').trim();
-  if (contextual.isNotEmpty) return contextual;
-  if (normalizedSlug == 'home') return 'الوزارة';
+  if (normalizedSlug == 'home') {
+    return contextual.isNotEmpty ? contextual : 'الوزارة';
+  }
 
+  final unitLabel = pwfUnitNameFromRow(unit);
+  if (unitLabel != null) return unitLabel;
+
+  final fallbackLabel = pwfFallbackUnitNameFromSlug(normalizedSlug);
+  if (fallbackLabel != null) return fallbackLabel;
+
+  if (contextual.isNotEmpty && !pwfLooksLikeGenericMinistryLabel(contextual)) {
+    return contextual;
+  }
+
+  return 'الجهة الحالية';
+}
+
+String? pwfUnitNameFromRow(Map<String, dynamic>? unit) {
+  final profile = _firstProfile(unit);
   final candidates = [
     unit?['name_ar'],
     unit?['title_ar'],
+    profile?['display_name_ar'],
+    profile?['name_ar'],
+    profile?['title_ar'],
     unit?['name'],
     unit?['name_en'],
   ];
   for (final candidate in candidates) {
     final value = (candidate ?? '').toString().trim();
-    if (value.isNotEmpty) return value;
+    if (value.isNotEmpty && !pwfLooksLikeGenericMinistryLabel(value)) {
+      return value;
+    }
   }
+  return null;
+}
 
-  return 'الوحدة الحالية';
+Map<String, dynamic>? _firstProfile(Map<String, dynamic>? unit) {
+  final raw = unit?['org_unit_profiles'];
+  if (raw is List && raw.isNotEmpty && raw.first is Map) {
+    return Map<String, dynamic>.from(raw.first as Map);
+  }
+  if (raw is Map) return Map<String, dynamic>.from(raw);
+  return null;
+}
+
+String? pwfFallbackUnitNameFromSlug(String unitSlug) {
+  switch (unitSlug.trim().toLowerCase()) {
+    case 'home':
+      return 'وزارة الأوقاف والشؤون الدينية';
+    case 'jer':
+    case 'jerusalem':
+      return 'مديرية أوقاف القدس';
+    case 'ram':
+    case 'ramallah':
+      return 'مديرية أوقاف رام الله والبيرة';
+    case 'nbl':
+    case 'nablus':
+      return 'مديرية أوقاف نابلس';
+    case 'jen':
+    case 'jenin':
+      return 'مديرية أوقاف جنين';
+    case 'tlk':
+    case 'tulkarm':
+      return 'مديرية أوقاف طولكرم';
+    case 'qalq':
+    case 'qalqilya':
+      return 'مديرية أوقاف قلقيلية';
+    case 'slf':
+    case 'salfit':
+      return 'مديرية أوقاف سلفيت';
+    case 'tub':
+    case 'tubas':
+      return 'مديرية أوقاف طوباس';
+    case 'jrh':
+    case 'jericho':
+      return 'مديرية أوقاف أريحا والأغوار';
+    case 'bth':
+    case 'bethlehem':
+      return 'مديرية أوقاف بيت لحم';
+    case 'hbr':
+    case 'hebron':
+      return 'مديرية أوقاف الخليل';
+    default:
+      return null;
+  }
+}
+
+bool pwfLooksLikeGenericMinistryLabel(String value) {
+  final normalized = value.trim();
+  if (normalized.isEmpty) return false;
+  return normalized == 'وزارة الأوقاف والشؤون الدينية' ||
+      normalized == 'وزارة الاوقاف والشؤون الدينية' ||
+      normalized == 'الوزارة' ||
+      normalized.toLowerCase() == 'ministry';
 }
 
 String pwfScopeLabel(String unitSlug) =>
@@ -467,8 +548,7 @@ class PwfErrorBlock extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              message ??
-                  'حدث خطأ أثناء جلب البيانات. يمكنك إعادة المحاولة الآن.',
+              PwfPublicSafeError.messageFor(message),
               textAlign: TextAlign.center,
               style: GoogleFonts.cairo(
                 fontSize: 13.5,

@@ -477,8 +477,11 @@ class _PwfPublicRequestEntrySection extends StatelessWidget {
   final String unitSlug;
 
   String _unitRoute(String suffix) {
-    if (unitSlug == 'home') return suffix;
-    return '/$unitSlug$suffix';
+    final base = PwfUnitSlugRegistry.publicBasePathFor(unitSlug);
+    if (base == '/home' && !suffix.startsWith('/home')) {
+      return suffix;
+    }
+    return '$base$suffix';
   }
 
   @override
@@ -517,25 +520,34 @@ class _PwfPublicRequestEntrySection extends StatelessWidget {
             ),
           ],
         );
-        final actions = Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            FilledButton.icon(
-              onPressed: () => context.go(_unitRoute('/services/request')),
-              icon: const Icon(Icons.assignment_outlined),
-              label: const Text('تقديم طلب خدمة'),
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF0B3A70),
-              ),
+        final actionButtons = [
+          FilledButton.icon(
+            onPressed: () => context.go(_unitRoute('/services/request')),
+            icon: const Icon(Icons.assignment_outlined),
+            label: const Text(
+              'تقديم طلب خدمة',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
             ),
-            OutlinedButton.icon(
-              onPressed: () => context.go(_unitRoute('/services/track')),
-              icon: const Icon(Icons.manage_search_outlined),
-              label: const Text('تتبع طلب'),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF0B3A70),
             ),
-          ],
-        );
+          ),
+          OutlinedButton.icon(
+            onPressed: () => context.go(_unitRoute('/services/track')),
+            icon: const Icon(Icons.manage_search_outlined),
+            label: const Text(
+              'تتبع طلب',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ];
+        final actions = compact
+            ? PwfVisualActionStack(children: actionButtons)
+            : Wrap(spacing: 10, runSpacing: 10, children: actionButtons);
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -717,7 +729,7 @@ class _PwfContactWebScreenState extends ConsumerState<PwfContactWebScreen> {
         ref
             .watch(publicFooterSettingsProvider(widget.unitSlug))
             .maybeWhen(data: (value) => value, orElse: () => null) ??
-        _pwfFallbackFooterSettings();
+        _pwfFallbackFooterSettings(widget.unitSlug);
     final page = ref
         .watch(
           pwfSitePageProvider(
@@ -736,23 +748,26 @@ class _PwfContactWebScreenState extends ConsumerState<PwfContactWebScreen> {
       fallbackAr: 'اتصل بنا',
       fallbackEn: 'Contact us',
     );
+    final isHomeContact = widget.unitSlug.trim().toLowerCase() == 'home';
     final subtitle = _cmsPreferredValue(
       isAr: isAr,
       ar: page?.subtitleAr,
       en: page?.subtitleEn,
-      fallbackAr:
-          'استخدم القنوات التالية للتواصل مع الوزارة أو الانتقال إلى نظام الشكاوى والمتابعة.',
-      fallbackEn:
-          'Use the following channels to contact the ministry or move to the complaints and follow-up service.',
+      fallbackAr: isHomeContact
+          ? 'استخدم القنوات التالية للتواصل مع الوزارة أو الانتقال إلى نظام الشكاوى والمتابعة.'
+          : 'استخدم القنوات التالية للتواصل مع الوحدة المختارة أو الانتقال إلى نظام الشكاوى والمتابعة.',
+      fallbackEn: isHomeContact
+          ? 'Use the following channels to contact the ministry or move to the complaints and follow-up service.'
+          : 'Use the following channels to contact the selected unit or move to the complaints and follow-up service.',
     );
     final introBody = _cmsPreferredBody(
       isAr: isAr,
       ar: page?.bodyAr,
       en: page?.bodyEn,
       fallbackAr:
-          'يمكنك استخدام هذه الصفحة للوصول إلى قنوات التواصل الرسمية المعتمدة، أو الانتقال إلى نظام الشكاوى والمتابعة عند الحاجة إلى متابعة رسمية.',
+          'يمكنك استخدام هذه الصفحة للوصول إلى قنوات التواصل الرسمية المعتمدة حسب نطاق الصفحة الحالي، أو الانتقال إلى نظام الشكاوى والمتابعة عند الحاجة إلى متابعة رسمية.',
       fallbackEn:
-          'Use this page to access the approved public contact channels, or move to the complaints service whenever an official follow-up is required.',
+          'Use this page to access the approved public contact channels for the current page scope, or move to the complaints service whenever an official follow-up is required.',
     );
 
     return PwfWebPageScaffold(
@@ -803,9 +818,7 @@ class _PwfContactWebScreenState extends ConsumerState<PwfContactWebScreen> {
               ],
             ),
             const SizedBox(height: 18),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
+            PwfVisualActionStack(
               children: [
                 if (phone.isNotEmpty)
                   _PwfPrimaryLinkButton(
@@ -1170,8 +1183,30 @@ String _initials(String name) {
   return '${firstChar(parts.first)}${firstChar(parts.last)}'.toUpperCase();
 }
 
-FooterSettings _pwfFallbackFooterSettings() {
+FooterSettings _pwfFallbackFooterSettings([String unitSlug = 'home']) {
   final now = DateTime.now();
+  final isHome = unitSlug.trim().toLowerCase() == 'home';
+  if (!isHome) {
+    return FooterSettings(
+      id: 'fallback-unit-contact',
+      ministryName: 'بيانات الوحدة غير منشورة',
+      ministrySubtitle: 'بوابة الوحدة العامة',
+      ministryDescription:
+          'لم تنشر هذه الوحدة بيانات الاتصال أو وسائل التواصل الاجتماعي الخاصة بها بعد.',
+      contactPhone: null,
+      contactEmail: null,
+      contactAddress: null,
+      workingDays: 'غير منشور',
+      workingHours: 'غير منشور',
+      quickLinks: const [],
+      servicesLinks: const [],
+      bottomLinks: const [],
+      copyrightText: 'بوابة الوحدة العامة - بيانات الاتصال بانتظار الاعتماد.',
+      developerCredit: '',
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
   return FooterSettings(
     id: 'fallback',
     ministryName: 'وزارة الأوقاف والشؤون الدينية',
@@ -1293,7 +1328,7 @@ class _PwfUnitCard extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: _PwfSecondaryLinkButton(
                 label: 'فتح صفحة الوحدة',
-                onTap: () => context.go('/$slug'),
+                onTap: () => context.go(PwfUnitSlugRegistry.publicBasePathFor(slug)),
               ),
             ),
           ],
@@ -1372,14 +1407,18 @@ class _PwfContactInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardWidth = (MediaQuery.sizeOf(context).width - 64)
+        .clamp(240.0, 320.0)
+        .toDouble();
+    final compact = cardWidth < 300;
     return SizedBox(
-      width: 320,
+      width: cardWidth,
       child: PwfSurfaceCard(
         child: Row(
           children: [
             Container(
-              width: 46,
-              height: 46,
+              width: compact ? 42 : 46,
+              height: compact ? 42 : 46,
               decoration: BoxDecoration(
                 color: const Color(0x110F2C55),
                 borderRadius: BorderRadius.circular(14),
@@ -1400,6 +1439,8 @@ class _PwfContactInfoCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     value,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(height: 1.6),
@@ -1420,7 +1461,15 @@ class _PwfPrimaryLinkButton extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
-    return FilledButton(onPressed: onTap, child: Text(label));
+    return FilledButton(
+      onPressed: onTap,
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
   }
 }
 
@@ -1430,6 +1479,14 @@ class _PwfSecondaryLinkButton extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(onPressed: onTap, child: Text(label));
+    return OutlinedButton(
+      onPressed: onTap,
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
   }
 }

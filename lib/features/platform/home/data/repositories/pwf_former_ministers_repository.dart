@@ -13,12 +13,13 @@ class PwfFormerMinistersRepository {
     String? unitId,
     String? homeUnitId,
     bool includeInactive = false,
+    bool strictUnitOnly = false,
   }) async {
     for (final candidate in <String?>[
       unitId,
-      if (homeUnitId != unitId) homeUnitId,
-      _globalUnitId,
-      null,
+      if (!strictUnitOnly && homeUnitId != unitId) homeUnitId,
+      if (!strictUnitOnly) _globalUnitId,
+      if (!strictUnitOnly) null,
     ]) {
       final list = await _fetchByUnitId(
         candidate,
@@ -32,6 +33,7 @@ class PwfFormerMinistersRepository {
   Future<List<PwfFormerMinister>> fetchForEdit({
     String? unitId,
     String? homeUnitId,
+    bool strictUnitOnly = false,
   }) async {
     final normalizedUnitId = unitId?.trim().isEmpty ?? true
         ? null
@@ -42,6 +44,7 @@ class PwfFormerMinistersRepository {
       unitId: normalizedUnitId,
       homeUnitId: homeUnitId,
       includeInactive: true,
+      strictUnitOnly: strictUnitOnly,
     );
   }
 

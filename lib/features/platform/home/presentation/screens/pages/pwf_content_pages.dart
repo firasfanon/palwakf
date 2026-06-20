@@ -4,15 +4,17 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:waqf/app/routing/app_routes.dart';
+import 'package:waqf/core/unit/pwf_unit_slug_registry.dart';
 import 'package:waqf/data/models/footer_settings.dart';
 import 'package:waqf/presentation/providers/footer_settings_provider.dart';
 import 'package:waqf/presentation/providers/org_units_provider.dart';
+import 'package:waqf/presentation/providers/unit_context_provider.dart';
 
 import '../../providers/pwf_ui_prefs_provider.dart';
 import '../../theme/pwf_theme_tokens.dart';
 import '../pwf_web_page_scaffold.dart';
 import '../../widgets/pwf_section_container.dart';
-import '../../widgets/shared/pwf_home_visual_contract.dart';
+import 'package:waqf/features/platform/home/presentation/widgets/shared/pwf_home_visual_contract.dart';
 import '../../theme/pwf_home_palette.dart';
 import '../../widgets/pwf_important_links_section.dart';
 import '../../widgets/sections/pwf_eservices_portal_section.dart';

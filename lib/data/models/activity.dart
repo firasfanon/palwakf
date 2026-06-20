@@ -85,6 +85,15 @@ class Activity {
   final DateTime updatedAt;
   final String? unitId;
 
+  /// Opaque `content_id` returned by the allow-listed public media RPC.
+  /// It is not persisted by legacy JSON serializers.
+  final String? runtimeContentId;
+
+  String get publicDetailId {
+    final value = runtimeContentId?.trim();
+    return value == null || value.isEmpty ? id.toString() : value;
+  }
+
   const Activity({
     required this.id,
     required this.title,
@@ -117,6 +126,7 @@ class Activity {
     required this.createdAt,
     required this.updatedAt,
     this.unitId,
+    this.runtimeContentId,
   });
 
   factory Activity.fromJson(Map<String, dynamic> json) =>
@@ -401,9 +411,11 @@ class Activity {
     DateTime? createdAt,
     DateTime? updatedAt,
     String? unitId,
+    String? runtimeContentId,
   }) {
     return Activity(
       id: id ?? this.id,
+      runtimeContentId: runtimeContentId ?? this.runtimeContentId,
       title: title ?? this.title,
       description: description ?? this.description,
       category: category ?? this.category,

@@ -41,6 +41,15 @@ class Announcement {
   @JsonKey(name: 'sort_order')
   final int sortOrder;
 
+  /// Opaque `content_id` returned by the allow-listed public media RPC.
+  /// It is not persisted by legacy JSON serializers.
+  final String? runtimeContentId;
+
+  String get publicDetailId {
+    final value = runtimeContentId?.trim();
+    return value == null || value.isEmpty ? id.toString() : value;
+  }
+
   const Announcement({
     required this.id,
     required this.title,
@@ -57,6 +66,7 @@ class Announcement {
     this.isPinned = false,
     this.publishAt,
     this.sortOrder = 0,
+    this.runtimeContentId,
   });
 
   factory Announcement.fromJson(Map<String, dynamic> json) =>
@@ -155,9 +165,11 @@ class Announcement {
     bool? isPinned,
     DateTime? publishAt,
     int? sortOrder,
+    String? runtimeContentId,
   }) {
     return Announcement(
       id: id ?? this.id,
+      runtimeContentId: runtimeContentId ?? this.runtimeContentId,
       title: title ?? this.title,
       content: content ?? this.content,
       priority: priority ?? this.priority,

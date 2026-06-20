@@ -7,7 +7,7 @@ import '../models/news_article.dart';
 /// models that current public Flutter surfaces already render.
 ///
 /// This is a controlled runtime bridge, not a domain extraction layer. It reads
-/// from public.v_media_*_compat_v1 / rpc_media_content_compat_v1 and keeps the
+/// from owner-schema media_center.v_unit_public_*_runtime_v1 surfaces and keeps the
 /// old public models stable until the media_center domain receives native UI
 /// models in a later wave.
 class MediaCompatMapper {
@@ -64,12 +64,14 @@ class MediaCompatMapper {
     return NewsArticle(
       id: _stableIntId(
         _firstRaw(row, legacy, const [
+          'content_id',
           'legacy_source_id',
           'legacy_id',
           'id',
           'content_key',
         ]),
       ),
+      runtimeContentId: _runtimeContentId(row, legacy),
       title: title,
       excerpt: summary,
       content: body,
@@ -90,7 +92,21 @@ class MediaCompatMapper {
         'author_ar',
         'created_by_name',
       ], fallback: 'مركز الإعلام'),
-      unitId: _firstNullableText(row, legacy, const ['unit_slug', 'unit_id']),
+      unitId: _firstNullableText(row, legacy, const [
+        'owner_org_unit_id',
+        'org_unit_id',
+        'owner_unit_id',
+        'unit_id',
+        'owner_unit_slug',
+        'unit_slug',
+        'scope_slug',
+        'public_slug',
+        'canonical_slug',
+        'directorate_slug',
+        'directorate_name',
+        'unit_name_ar',
+        'owner_name',
+      ]),
       category: _newsCategory(
         _firstNullableText(row, legacy, const [
           'category_key',
@@ -139,12 +155,14 @@ class MediaCompatMapper {
     return Announcement(
       id: _stableIntId(
         _firstRaw(row, legacy, const [
+          'content_id',
           'legacy_source_id',
           'legacy_id',
           'id',
           'content_key',
         ]),
       ),
+      runtimeContentId: _runtimeContentId(row, legacy),
       title: title,
       content: content,
       priority: _priority(
@@ -159,6 +177,19 @@ class MediaCompatMapper {
       targetAudience: _firstText(row, legacy, const [
         'target_audience',
         'audience',
+        'owner_org_unit_id',
+        'org_unit_id',
+        'owner_unit_id',
+        'unit_id',
+        'owner_unit_slug',
+        'unit_slug',
+        'scope_slug',
+        'public_slug',
+        'canonical_slug',
+        'directorate_slug',
+        'directorate_name',
+        'unit_name_ar',
+        'owner_name',
       ], fallback: 'public'),
       createdBy: _firstInt(row, legacy, const ['created_by']) ?? 0,
       createdAt: createdAt,
@@ -224,12 +255,14 @@ class MediaCompatMapper {
     return Activity(
       id: _stableIntId(
         _firstRaw(row, legacy, const [
+          'content_id',
           'legacy_source_id',
           'legacy_id',
           'id',
           'content_key',
         ]),
       ),
+      runtimeContentId: _runtimeContentId(row, legacy),
       title: title,
       description: description,
       category: _activityCategory(
@@ -317,7 +350,21 @@ class MediaCompatMapper {
       updatedAt:
           _firstDate(row, legacy, const ['updated_at', 'modified_at']) ??
           createdAt,
-      unitId: _firstNullableText(row, legacy, const ['unit_slug', 'unit_id']),
+      unitId: _firstNullableText(row, legacy, const [
+        'owner_org_unit_id',
+        'org_unit_id',
+        'owner_unit_id',
+        'unit_id',
+        'owner_unit_slug',
+        'unit_slug',
+        'scope_slug',
+        'public_slug',
+        'canonical_slug',
+        'directorate_slug',
+        'directorate_name',
+        'unit_name_ar',
+        'owner_name',
+      ]),
     );
   }
 
@@ -344,13 +391,28 @@ class MediaCompatMapper {
 
     return <String, dynamic>{
       'id': _firstRaw(row, legacy, const [
+        'content_id',
         'legacy_source_id',
         'legacy_id',
         'id',
         'content_key',
       ]).toString(),
       'unit_id':
-          _firstNullableText(row, legacy, const ['unit_slug', 'unit_id']) ?? '',
+          _firstNullableText(row, legacy, const [
+        'owner_org_unit_id',
+        'org_unit_id',
+        'owner_unit_id',
+        'unit_id',
+        'owner_unit_slug',
+        'unit_slug',
+        'scope_slug',
+        'public_slug',
+        'canonical_slug',
+        'directorate_slug',
+        'directorate_name',
+        'unit_name_ar',
+        'owner_name',
+      ]) ?? '',
       'media_type': _galleryMediaType(contentType).dbValue,
       'title': _firstText(row, legacy, const [
         'title_ar',
@@ -397,6 +459,7 @@ class MediaCompatMapper {
     final legacy = _legacyPayload(row);
     return _stableIntId(
       _firstRaw(row, legacy, const [
+        'content_id',
         'legacy_source_id',
         'legacy_id',
         'id',
@@ -406,16 +469,55 @@ class MediaCompatMapper {
   }
 
   static Map<String, dynamic> _legacyPayload(Map<String, dynamic> row) {
+    final merged = <String, dynamic>{};
+
+    final sourcePayload = row['source_payload'];
+    if (sourcePayload is Map<String, dynamic>) {
+      merged.addAll(sourcePayload);
+      final sourceMetadata = sourcePayload['metadata'];
+      if (sourceMetadata is Map<String, dynamic>) {
+        final nested = sourceMetadata['legacy_payload'];
+        if (nested is Map<String, dynamic>) merged.addAll(nested);
+        if (nested is Map) merged.addAll(Map<String, dynamic>.from(nested));
+      }
+    } else if (sourcePayload is Map) {
+      final sourceMap = Map<String, dynamic>.from(sourcePayload);
+      merged.addAll(sourceMap);
+      final sourceMetadata = sourceMap['metadata'];
+      if (sourceMetadata is Map<String, dynamic>) {
+        final nested = sourceMetadata['legacy_payload'];
+        if (nested is Map<String, dynamic>) merged.addAll(nested);
+        if (nested is Map) merged.addAll(Map<String, dynamic>.from(nested));
+      }
+    }
+
     final metadata = row['metadata'];
     if (metadata is Map<String, dynamic>) {
       final payload = metadata['legacy_payload'];
-      if (payload is Map<String, dynamic>) return payload;
-    }
-    if (metadata is Map) {
+      if (payload is Map<String, dynamic>) merged.addAll(payload);
+      if (payload is Map) merged.addAll(Map<String, dynamic>.from(payload));
+    } else if (metadata is Map) {
       final payload = metadata['legacy_payload'];
-      if (payload is Map) return Map<String, dynamic>.from(payload);
+      if (payload is Map<String, dynamic>) merged.addAll(payload);
+      if (payload is Map) merged.addAll(Map<String, dynamic>.from(payload));
     }
-    return const <String, dynamic>{};
+
+    return merged;
+  }
+
+  static String? _runtimeContentId(
+    Map<String, dynamic> row,
+    Map<String, dynamic> legacy,
+  ) {
+    final raw = _firstRaw(row, legacy, const [
+      'content_id',
+      'legacy_source_id',
+      'legacy_id',
+      'id',
+      'content_key',
+    ]);
+    final value = raw.toString().trim();
+    return value.isEmpty ? null : value;
   }
 
   static dynamic _firstRaw(

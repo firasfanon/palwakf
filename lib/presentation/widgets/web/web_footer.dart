@@ -5,9 +5,17 @@ import '../../../core/constants/app_constants.dart';
 import '../../../app/routing/app_routes.dart';
 import 'web_container.dart';
 
-/// Web Footer with sitemap and contact information
+/// Web Footer with sitemap and contact information.
+///
+/// Platform 12 closure note:
+/// The footer is rendered inside the public shell and can be constrained by
+/// browser DevTools. The layout must therefore never rely on a single fixed
+/// horizontal row for legal/copyright actions.
 class WebFooter extends StatelessWidget {
   const WebFooter({super.key});
+
+  static const double _compactFooterBreakpoint = 760;
+  static const double _stackedSectionsBreakpoint = 860;
 
   @override
   Widget build(BuildContext context) {
@@ -17,142 +25,79 @@ class WebFooter extends StatelessWidget {
       child: WebContainer(
         child: Column(
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // About Section
-                Expanded(
-                  child: _buildFooterSection(
-                    context,
-                    title: 'عن الوزارة',
-                    items: [
-                      {'label': 'كلمة الوزير', 'route': AppRoutes.minister},
-                      {
-                        'label': 'الرؤية والرسالة',
-                        'route': AppRoutes.visionMission,
-                      },
-                      {
-                        'label': 'الهيكل التنظيمي',
-                        'route': AppRoutes.structure,
-                      },
-                      {
-                        'label': 'الوزراء السابقون',
-                        'route': AppRoutes.formerMinisters,
-                      },
-                    ],
-                  ),
-                ),
-
-                // Services Section
-                Expanded(
-                  child: _buildFooterSection(
-                    context,
-                    title: 'الخدمات',
-                    items: [
-                      {
-                        'label': 'الخدمات الإلكترونية',
-                        'route': AppRoutes.eservices,
-                      },
-                      {'label': 'دليل المساجد', 'route': AppRoutes.mosques},
-                      {
-                        'label': 'الأنشطة والفعاليات',
-                        'route': AppRoutes.activities,
-                      },
-                      {'label': 'المشاريع', 'route': AppRoutes.projects},
-                    ],
-                  ),
-                ),
-
-                // News Section
-                Expanded(
-                  child: _buildFooterSection(
-                    context,
-                    title: 'الأخبار والإعلانات',
-                    items: [
-                      {'label': 'الأخبار', 'route': AppRoutes.news},
-                      {'label': 'الإعلانات', 'route': AppRoutes.announcements},
-                    ],
-                  ),
-                ),
-
-                // Contact Section
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'تواصل معنا',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildContactItem(Icons.location_on, 'رام الله - فلسطين'),
-                      const SizedBox(height: 12),
-                      _buildContactItem(Icons.phone, '+970-2-2406340'),
-                      const SizedBox(height: 12),
-                      _buildContactItem(Icons.email, 'info@awqaf.ps'),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          _buildSocialIcon(
-                            Icons.facebook,
-                            'https://facebook.com',
-                          ),
-                          const SizedBox(width: 12),
-                          _buildSocialIcon(Icons.public, 'https://twitter.com'),
-                          const SizedBox(width: 12),
-                          _buildSocialIcon(
-                            Icons.video_library,
-                            'https://youtube.com',
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
+            _buildResponsiveFooterSections(context),
             const SizedBox(height: 40),
             const Divider(color: Colors.white24),
             const SizedBox(height: 20),
-
-            // Copyright
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '© 2025 وزارة الأوقاف والشؤون الدينية الفلسطينية. جميع الحقوق محفوظة.',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-                ),
-                Row(
-                  children: [
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'سياسة الخصوصية',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'شروط الاستخدام',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            _buildResponsiveCopyright(context),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildResponsiveFooterSections(BuildContext context) {
+    final sections = <Widget>[
+      _buildFooterSection(
+        context,
+        title: 'عن الوزارة',
+        items: [
+          {'label': 'كلمة الوزير', 'route': AppRoutes.minister},
+          {'label': 'الرؤية والرسالة', 'route': AppRoutes.visionMission},
+          {'label': 'الهيكل التنظيمي', 'route': AppRoutes.structure},
+          {'label': 'الوزراء السابقون', 'route': AppRoutes.formerMinisters},
+        ],
+      ),
+      _buildFooterSection(
+        context,
+        title: 'الخدمات',
+        items: [
+          {'label': 'الخدمات الإلكترونية', 'route': AppRoutes.eservices},
+          {'label': 'دليل المساجد', 'route': AppRoutes.mosques},
+          {'label': 'الأنشطة والفعاليات', 'route': AppRoutes.activities},
+          {'label': 'المشاريع', 'route': AppRoutes.projects},
+        ],
+      ),
+      _buildFooterSection(
+        context,
+        title: 'الأخبار والإعلانات',
+        items: [
+          {'label': 'الأخبار', 'route': AppRoutes.news},
+          {'label': 'الإعلانات', 'route': AppRoutes.announcements},
+        ],
+      ),
+      _buildContactSection(context),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        if (maxWidth < _stackedSectionsBreakpoint) {
+          final itemWidth = maxWidth < 560 ? maxWidth : (maxWidth - 24) / 2;
+          return Wrap(
+            spacing: 24,
+            runSpacing: 32,
+            alignment: WrapAlignment.start,
+            children: sections
+                .map((section) => SizedBox(width: itemWidth, child: section))
+                .toList(growable: false),
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: sections
+              .map(
+                (section) => Expanded(
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 24),
+                    child: section,
+                  ),
+                ),
+              )
+              .toList(growable: false),
+        );
+      },
     );
   }
 
@@ -163,6 +108,7 @@ class WebFooter extends StatelessWidget {
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           title,
@@ -180,11 +126,103 @@ class WebFooter extends StatelessWidget {
               child: Text(
                 item['label']!,
                 style: const TextStyle(color: Colors.white70, fontSize: 15),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildContactSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'تواصل معنا',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildContactItem(Icons.location_on, 'رام الله - فلسطين'),
+        const SizedBox(height: 12),
+        _buildContactItem(Icons.phone, '+970-2-2406340'),
+        const SizedBox(height: 12),
+        _buildContactItem(Icons.email, 'info@awqaf.ps'),
+        const SizedBox(height: 20),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _buildSocialIcon(Icons.facebook, 'https://facebook.com'),
+            _buildSocialIcon(Icons.public, 'https://twitter.com'),
+            _buildSocialIcon(Icons.video_library, 'https://youtube.com'),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResponsiveCopyright(BuildContext context) {
+    final copyright = Text(
+      '© 2025 وزارة الأوقاف والشؤون الدينية الفلسطينية. جميع الحقوق محفوظة.',
+      textAlign: TextAlign.center,
+      softWrap: true,
+      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+        color: Colors.white70,
+      ),
+    );
+
+    final policyActions = Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      alignment: WrapAlignment.center,
+      children: [
+        TextButton(
+          onPressed: () {},
+          child: const Text(
+            'سياسة الخصوصية',
+            style: TextStyle(color: Colors.white70),
+          ),
+        ),
+        TextButton(
+          onPressed: () {},
+          child: const Text(
+            'شروط الاستخدام',
+            style: TextStyle(color: Colors.white70),
+          ),
+        ),
+      ],
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < _compactFooterBreakpoint) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              copyright,
+              const SizedBox(height: 12),
+              policyActions,
+            ],
+          );
+        }
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(child: copyright),
+            const SizedBox(width: 16),
+            Flexible(child: policyActions),
+          ],
+        );
+      },
     );
   }
 
@@ -197,6 +235,7 @@ class WebFooter extends StatelessWidget {
           child: Text(
             text,
             style: const TextStyle(color: Colors.white70, fontSize: 15),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
@@ -214,7 +253,7 @@ class WebFooter extends StatelessWidget {
       child: IconButton(
         icon: Icon(icon, color: Colors.white70, size: 20),
         onPressed: () {
-          // Open URL
+          // Open URL.
         },
         padding: EdgeInsets.zero,
       ),

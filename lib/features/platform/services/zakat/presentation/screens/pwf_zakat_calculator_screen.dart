@@ -145,7 +145,7 @@ class _PwfZakatCalculatorScreenState
                 _snack(context, l10n.zakatDonationSentSuccess, isError: false);
               } catch (e) {
                 setLocal(() => loading = false);
-                _snack(context, '${l10n.zakatDonationSendFailed}: $e');
+                _snack(context, l10n.zakatDonationSendFailed);
               }
             }
 
@@ -240,11 +240,10 @@ class _PwfZakatCalculatorScreenState
 
     if (unitId == null) {
       try {
-        final row = await client
-            .from(PwfDatabaseOwnerSurfaces.orgUnits)
-            .select('id')
-            .eq('slug', 'home')
-            .maybeSingle();
+        final row = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+          client,
+          PwfDatabaseOwnerSurfaces.orgUnits,
+        ).select('id').eq('slug', 'home').maybeSingle();
         unitId = row?['id']?.toString();
       } catch (_) {
         // ignore
@@ -960,9 +959,15 @@ class _ZakatOfficialConfigStrip extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             configState.when(
-              data: (config) => reference.isOfficialRuntimeSource
-                  ? 'تعتمد الحاسبة على إعدادات منشورة لاحتساب تقدير أولي للزكاة. ${config.notesAr ?? ''}'
-                  : 'تستخدم الحاسبة إعدادات تقديرية واضحة للجمهور إلى حين اكتمال ربط الإعدادات المنشورة.',
+              data: (config) {
+                final publicNotes = pwfPublicCopyOrFallback(
+                  config.notesAr ?? '',
+                  '',
+                );
+                return reference.isOfficialRuntimeSource
+                    ? 'تعتمد الحاسبة على إعدادات منشورة لاحتساب تقدير أولي للزكاة.${publicNotes.isEmpty ? '' : ' $publicNotes'}'
+                    : 'تستخدم الحاسبة إعدادات تقديرية واضحة للجمهور إلى حين اكتمال ربط الإعدادات المنشورة.';
+              },
               loading: () => 'جاري تجهيز إعدادات الحاسبة...',
               error: (_, __) =>
                   'تعذر تحميل الإعدادات المنشورة؛ يمكنك استخدام القيم التقديرية الظاهرة في الصفحة.',
@@ -999,7 +1004,7 @@ class _ResponsiveFormGrid extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: 2.55,
+          childAspectRatio: c.maxWidth < 640 ? 2.05 : 2.55,
           children: children,
         );
       },

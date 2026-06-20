@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:developer' as dev;
 import 'package:flutter/foundation.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/news_article.dart';
 import 'media_compat_mapper.dart';
 import 'package:waqf/core/database/pwf_database_owner_surfaces.dart';
+import 'package:waqf/core/public_runtime/pwf_public_media_runtime_gateway.dart';
 
 class NewsService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -15,16 +15,14 @@ class NewsService {
     defaultValue: false,
   );
   static const bool _mediaOwnerReadDefault = !_forceLegacyPublicMedia;
-  static const bool _allowLegacyPublicBaseFallback = bool.fromEnvironment(
-    'PWF_ALLOW_LEGACY_PUBLIC_MEDIA_BASE_FALLBACK',
-    defaultValue: false,
-  );
   static const Duration _mediaOwnerRuntimeTimeout = Duration(seconds: 8);
 
   Future<List<NewsArticle>> _getCompatNews({
     int? limit,
     int? offset,
     String? unitSlug,
+    String? ownerOrgUnitId,
+    Set<String>? unitScopeKeys,
     NewsCategory? category,
     String? searchQuery,
   }) async {
@@ -37,32 +35,24 @@ class NewsService {
     }
 
     try {
-      final response = await _supabase
-          .from(PwfDatabaseOwnerSurfaces.vMediaNewsCompatV1)
-          .select('*')
-          .timeout(_mediaOwnerRuntimeTimeout);
+      final unitRef = unitSlug?.trim().isNotEmpty == true
+          ? unitSlug!.trim()
+          : (ownerOrgUnitId?.trim().isNotEmpty == true
+              ? ownerOrgUnitId!.trim()
+              : 'home');
+      final rows = await PwfPublicMediaRuntimeGateway(
+        _supabase,
+      ).fetchFeed(
+        unitRef: unitRef,
+        familyKey: 'news',
+        limit: (limit ?? 50).clamp(1, 50).toInt(),
+        offset: 0,
+      ).timeout(_mediaOwnerRuntimeTimeout);
 
-      var items = (response as List<dynamic>)
-          .map(
-            (json) => MediaCompatMapper.newsFromCompatRow(
-              json as Map<String, dynamic>,
-            ),
-          )
+      var items = rows
+          .map(MediaCompatMapper.newsFromCompatRow)
           .where((article) => article.status == PublishStatus.published)
           .toList();
-
-      final normalizedUnitSlug = unitSlug?.trim().toLowerCase();
-      if (normalizedUnitSlug != null &&
-          normalizedUnitSlug.isNotEmpty &&
-          normalizedUnitSlug != 'home') {
-        items = items
-            .where(
-              (article) =>
-                  (article.unitId ?? '').trim().toLowerCase() ==
-                  normalizedUnitSlug,
-            )
-            .toList();
-      }
 
       if (category != null && category != NewsCategory.general) {
         items = items.where((article) => article.category == category).toList();
@@ -76,26 +66,27 @@ class NewsService {
               article.excerpt.toLowerCase().contains(q);
         }).toList();
       }
-
       _sortNewsOwnerRows(items);
       final windowed = _window(items, limit: limit, offset: offset);
       _logMediaRuntimeSource(
         family: 'news',
-        surface: PwfDatabaseOwnerSurfaces.vMediaNewsCompatV1,
+        surface: PwfDatabaseOwnerSurfaces.publicMediaRuntimeFeedRpcV2,
         rows: windowed.length,
       );
       return windowed;
     } on TimeoutException {
-      _logMediaRuntimeFallback(family: 'news', reason: 'owner-timeout');
+      _logMediaRuntimeFallback(family: 'news', reason: 'public-rpc-timeout');
       return const <NewsArticle>[];
-    } catch (e, stackTrace) {
-      dev.log(
-        'Media Center owner-read news runtime failed; legacy fallback may run.',
-        name: 'NewsService',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      _logMediaRuntimeFallback(family: 'news', reason: 'owner-failure');
+    } catch (_) {
+      if (kDebugMode) {
+        debugPrint(
+          'PWF_MEDIA_CENTER_PUBLIC_RPC_UNAVAILABLE '
+          'family=news '
+          'rpc=${PwfDatabaseOwnerSurfaces.publicMediaRuntimeFeedRpcV2} '
+          'fallback=false',
+        );
+      }
+      _logMediaRuntimeFallback(family: 'news', reason: 'public-rpc-failure');
       return const <NewsArticle>[];
     }
   }
@@ -132,11 +123,11 @@ class NewsService {
     debugPrint(
       'PWF_MEDIA_CENTER_ROOT_CUTOVER '
       'family=$family '
-      'owner_read=true '
-      'api_edge=public.$surface '
-      'owner_schema=media_center projection=* '
-      'filtering=client-side '
-      'ordering=client-side '
+      'public_rpc=true '
+      'surface=$surface '
+      'projection=allow-listed '
+      'filtering=server-resolved-unit '
+      'ordering=server-side '
       'rows=$rows '
       'decision=media-center-owner-read-default-root-cutover',
     );
@@ -150,252 +141,112 @@ class NewsService {
     debugPrint(
       'PWF_MEDIA_CENTER_LEGACY_FALLBACK_ONLY '
       'family=$family '
-      'legacy_public_fallback=true '
+      'legacy_public_fallback=false '
       'reason=$reason '
-      'decision=media-center-legacy-public-fallback-only',
+      'decision=media-center-owner-read-no-public-fallback',
     );
   }
 
-  Future<NewsArticle?> _getCompatNewsById(int id, {String? unitSlug}) async {
+  Future<NewsArticle?> _getCompatNewsByContentId(
+    String contentId, {
+    String? unitSlug,
+    String? ownerOrgUnitId,
+  }) async {
     if (!_mediaOwnerReadDefault) return null;
+    final safeContentId = contentId.trim();
+    if (safeContentId.isEmpty) return null;
+    final unitRef = unitSlug?.trim().isNotEmpty == true
+        ? unitSlug!.trim()
+        : (ownerOrgUnitId?.trim().isNotEmpty == true
+            ? ownerOrgUnitId!.trim()
+            : 'home');
     try {
-      final items = await _getCompatNews(limit: 500, unitSlug: unitSlug);
-      for (final item in items) {
-        if (item.id == id) return item;
+      final rows = await PwfPublicMediaRuntimeGateway(_supabase)
+          .fetchDetail(
+            unitRef: unitRef,
+            contentId: safeContentId,
+            familyKey: 'news',
+          )
+          .timeout(_mediaOwnerRuntimeTimeout);
+      if (rows.isEmpty) return null;
+      final article = MediaCompatMapper.newsFromCompatRow(rows.first);
+      if (article.status != PublishStatus.published) return null;
+      if (article != null) {
+        _logMediaRuntimeSource(
+          family: 'news',
+          surface: PwfDatabaseOwnerSurfaces.publicMediaRuntimeDetailRpcV2,
+          rows: 1,
+        );
       }
+      return article;
+    } on TimeoutException {
+      _logMediaRuntimeFallback(family: 'news', reason: 'public-detail-rpc-timeout');
       return null;
     } catch (_) {
+      if (kDebugMode) {
+        debugPrint(
+          'PWF_MEDIA_CENTER_PUBLIC_DETAIL_RPC_UNAVAILABLE '
+          'family=news '
+          'rpc=${PwfDatabaseOwnerSurfaces.publicMediaRuntimeDetailRpcV2} '
+          'fallback=false',
+        );
+      }
+      _logMediaRuntimeFallback(family: 'news', reason: 'public-detail-rpc-failure');
       return null;
     }
   }
 
 
-  bool _canUseLegacyPublicBaseFallback(String operation) {
-    if (_allowLegacyPublicBaseFallback) return true;
-    _logMediaRuntimeFallback(
-      family: 'news',
-      reason: 'legacy-public-base-fallback-disabled:$operation',
-    );
-    return false;
+
+  // Public root reads are owner-runtime only. Empty is a valid result;
+  // sample/demo rows and public.* must never be substituted for real content.
+  Future<List<NewsArticle>> getAllNews({int? limit, int? offset}) {
+    return _getCompatNews(limit: limit, offset: offset);
   }
 
-  // news_service.dart - Clean version
-  Future<List<NewsArticle>> getAllNews({int? limit, int? offset}) async {
-    final compat = await _getCompatNews(limit: limit, offset: offset);
-    if (compat.isNotEmpty) return compat;
-    if (!_canUseLegacyPublicBaseFallback('getAllNews')) return _getSampleNews();
-
-    try {
-      var query = _supabase
-          .from(PwfDatabaseOwnerSurfaces.newsArticles)
-          .select()
-          .eq('status', 'published')
-          .order('published_at', ascending: false);
-
-      if (limit != null) {
-        query = query.limit(limit);
-      }
-
-      if (offset != null) {
-        query = query.range(offset, offset + (limit ?? 10) - 1);
-      }
-
-      final response = await query;
-
-      return (response as List<dynamic>)
-          .map((json) => NewsArticle.fromJson(json as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return _getSampleNews();
-    }
-  }
-
-  // Get featured news articles
   Future<List<NewsArticle>> getFeaturedNews({int limit = 5}) async {
-    final compat = await _getCompatNews(limit: limit);
-    if (compat.isNotEmpty) return compat.take(limit).toList();
-    if (!_canUseLegacyPublicBaseFallback('getFeaturedNews')) {
-      return _getSampleNews().where((article) => article.isFeatured).take(limit).toList();
-    }
-
-    try {
-      final response = await _supabase
-          .from(PwfDatabaseOwnerSurfaces.newsArticles)
-          .select()
-          .eq('status', 'published')
-          .eq('is_featured', true)
-          .order('published_at', ascending: false)
-          .limit(limit);
-
-      return (response as List<dynamic>)
-          .map((json) => NewsArticle.fromJson(json as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return _getSampleNews().where((article) => article.isFeatured).toList();
-    }
+    final items = await _getCompatNews(limit: limit);
+    return items.where((article) => article.isFeatured).take(limit).toList();
   }
 
-  // Get latest news articles
-  Future<List<NewsArticle>> getLatestNews({int limit = 10}) async {
-    final compat = await _getCompatNews(limit: limit);
-    if (compat.isNotEmpty) return compat;
-    if (!_canUseLegacyPublicBaseFallback('getLatestNews')) {
-      return _getSampleNews().take(limit).toList();
-    }
-
-    try {
-      final response = await _supabase
-          .from(PwfDatabaseOwnerSurfaces.newsArticles)
-          .select()
-          .eq('status', 'published')
-          .order('published_at', ascending: false)
-          .limit(limit);
-
-      return (response as List<dynamic>)
-          .map((json) => NewsArticle.fromJson(json as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return _getSampleNews().take(limit).toList();
-    }
+  Future<List<NewsArticle>> getLatestNews({int limit = 10}) {
+    return _getCompatNews(limit: limit);
   }
 
-  // Get news by category
-  Future<List<NewsArticle>> getNewsByCategory(NewsCategory category) async {
-    final compat = await _getCompatNews(category: category);
-    if (compat.isNotEmpty) return compat;
-    if (!_canUseLegacyPublicBaseFallback('getNewsByCategory')) {
-      return _getSampleNews()
-          .where((article) => article.category == category)
-          .toList();
-    }
-
-    try {
-      final response = await _supabase
-          .from(PwfDatabaseOwnerSurfaces.newsArticles)
-          .select()
-          .eq('status', 'published')
-          .eq('category', category.name)
-          .order('published_at', ascending: false);
-
-      return (response as List<dynamic>)
-          .map((json) => NewsArticle.fromJson(json as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return _getSampleNews()
-          .where((article) => article.category == category)
-          .toList();
-    }
+  Future<List<NewsArticle>> getNewsByCategory(NewsCategory category) {
+    return _getCompatNews(category: category);
   }
 
-  // Get single news article by ID
-  Future<NewsArticle?> getNewsById(int id) async {
-    final compat = await _getCompatNewsById(id);
-    if (compat != null) return compat;
-    if (!_canUseLegacyPublicBaseFallback('getNewsById')) {
-      return _getSampleNews().firstWhere((article) => article.id == id);
-    }
-
-    try {
-      final response = await _supabase
-          .from(PwfDatabaseOwnerSurfaces.newsArticles)
-          .select()
-          .eq('id', id)
-          .eq('status', 'published')
-          .single();
-
-      return NewsArticle.fromJson(response);
-    } catch (e) {
-      return _getSampleNews().firstWhere((article) => article.id == id);
-    }
+  Future<NewsArticle?> getNewsById(int id) {
+    return _getCompatNewsByContentId(id.toString());
   }
 
-  // Search news articles
-  Future<List<NewsArticle>> searchNews(String query) async {
-    final compat = await _getCompatNews(searchQuery: query);
-    if (compat.isNotEmpty) return compat;
-    if (!_canUseLegacyPublicBaseFallback('searchNews')) {
-      return _getSampleNews()
-          .where(
-            (article) =>
-                article.title.toLowerCase().contains(query.toLowerCase()) ||
-                article.content.toLowerCase().contains(query.toLowerCase()),
-          )
-          .toList();
-    }
-
-    try {
-      final response = await _supabase
-          .from(PwfDatabaseOwnerSurfaces.newsArticles)
-          .select()
-          .eq('status', 'published')
-          .or('title.ilike.%$query%,content.ilike.%$query%')
-          .order('published_at', ascending: false);
-
-      return (response as List<dynamic>)
-          .map((json) => NewsArticle.fromJson(json as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return _getSampleNews()
-          .where(
-            (article) =>
-                article.title.toLowerCase().contains(query.toLowerCase()) ||
-                article.content.toLowerCase().contains(query.toLowerCase()),
-          )
-          .toList();
-    }
+  /// Scoped public detail resolver. No feed/cache/list fallback is permitted.
+  Future<NewsArticle?> getNewsByContentIdForUnit(
+    String contentId,
+    String unitId, {
+    String? unitSlug,
+  }) {
+    return _getCompatNewsByContentId(
+      contentId,
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+    );
   }
 
-  // Get news statistics
+  Future<List<NewsArticle>> searchNews(String query) {
+    return _getCompatNews(searchQuery: query);
+  }
+
   Future<Map<String, dynamic>> getNewsStatistics() async {
-    final compat = await _getCompatNews(limit: 1000);
-    if (compat.isNotEmpty) {
-      return {
-        'total_news': compat.length,
-        'featured_news': compat.where((a) => a.isFeatured).length,
-        'categories': NewsCategory.values.length,
-        'runtime_source': 'public.v_media_news_compat_v1',
-        'runtime_decision': 'media-center-owner-read-default-root-cutover',
-      };
-    }
-
-    if (!_canUseLegacyPublicBaseFallback('getNewsStatistics')) {
-      final sampleNews = _getSampleNews();
-      return {
-        'total_news': sampleNews.length,
-        'featured_news': sampleNews.where((a) => a.isFeatured).length,
-        'categories': NewsCategory.values.length,
-        'runtime_source': 'sample-news',
-        'runtime_decision': 'legacy-public-base-disabled',
-      };
-    }
-
-    try {
-      final totalNews = await _supabase
-          .from(PwfDatabaseOwnerSurfaces.newsArticles)
-          .select('id')
-          .eq('status', 'published')
-          .count(CountOption.exact);
-
-      final featuredNews = await _supabase
-          .from(PwfDatabaseOwnerSurfaces.newsArticles)
-          .select('id')
-          .eq('status', 'published')
-          .eq('is_featured', true)
-          .count(CountOption.exact);
-
-      return {
-        'total_news': totalNews.count,
-        'featured_news': featuredNews.count,
-        'categories': NewsCategory.values.length,
-      };
-    } catch (e) {
-      final sampleNews = _getSampleNews();
-      return {
-        'total_news': sampleNews.length,
-        'featured_news': sampleNews.where((a) => a.isFeatured).length,
-        'categories': NewsCategory.values.length,
-      };
-    }
+    final source = await _getCompatNews(limit: 1000);
+    return {
+      'total_news': source.length,
+      'featured_news': source.where((a) => a.isFeatured).length,
+      'categories': NewsCategory.values.length,
+      'runtime_source': PwfDatabaseOwnerSurfaces.unitPublicNewsRuntimeV1,
+      'runtime_decision': 'owner-runtime-only-no-sample-fallback',
+    };
   }
 
   // Increment view count
@@ -411,7 +262,7 @@ class NewsService {
   }
 
   // Sample data for development/demo purposes
-  List<NewsArticle> _getSampleNews() {
+  List<NewsArticle> sampleNewsForDevelopmentOnly() {
     return [
       NewsArticle(
         id: 1,
@@ -572,191 +423,81 @@ class NewsService {
 
   Future<List<NewsArticle>> getAllNewsForUnit(
     String unitId, {
+    String? unitSlug,
     int? limit,
     int? offset,
   }) async {
-    final compat = await _getCompatNews(limit: limit, offset: offset);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      // Try unit-scoped query first. If unit_id column doesn't exist yet,
-      // fall back to global (home) news to avoid breaking the homepage.
-      dynamic response;
-      try {
-        response = await _supabase
-            .from(PwfDatabaseOwnerSurfaces.newsArticles)
-            .select()
-            .eq('status', 'published')
-            .eq('unit_id', unitId)
-            .order('published_at', ascending: false)
-            .limit(limit ?? 1000);
-      } catch (_) {
-        response = await _supabase
-            .from(PwfDatabaseOwnerSurfaces.newsArticles)
-            .select()
-            .eq('status', 'published')
-            .order('published_at', ascending: false)
-            .limit(limit ?? 1000);
-      }
-      return (response as List).map((e) => NewsArticle.fromJson(e)).toList();
-    } catch (_) {
-      return [];
-    }
+    final compat = await _getCompatNews(
+      limit: limit,
+      offset: offset,
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+    );
+    return compat;
   }
 
   Future<List<NewsArticle>> getLatestNewsForUnit(
     String unitId, {
+    String? unitSlug,
     int limit = 10,
   }) async {
-    final compat = await _getCompatNews(limit: limit);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      dynamic response;
-      try {
-        response = await _supabase
-            .from(PwfDatabaseOwnerSurfaces.newsArticles)
-            .select()
-            .eq('status', 'published')
-            .eq('unit_id', unitId)
-            .order('published_at', ascending: false)
-            .limit(limit);
-      } catch (_) {
-        response = await _supabase
-            .from(PwfDatabaseOwnerSurfaces.newsArticles)
-            .select()
-            .eq('status', 'published')
-            .order('published_at', ascending: false)
-            .limit(limit);
-      }
-      return (response as List).map((e) => NewsArticle.fromJson(e)).toList();
-    } catch (_) {
-      return [];
-    }
+    final compat = await _getCompatNews(
+      limit: limit,
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+    );
+    return compat;
   }
 
   Future<List<NewsArticle>> getFeaturedNewsForUnit(
     String unitId, {
+    String? unitSlug,
     int limit = 5,
   }) async {
-    final compat = await _getCompatNews(limit: limit);
-    if (compat.isNotEmpty) return compat.take(limit).toList();
-
-    try {
-      dynamic response;
-      try {
-        response = await _supabase
-            .from(PwfDatabaseOwnerSurfaces.newsArticles)
-            .select()
-            .eq('status', 'published')
-            .eq('unit_id', unitId)
-            .eq('is_featured', true)
-            .order('published_at', ascending: false)
-            .limit(limit);
-      } catch (_) {
-        response = await _supabase
-            .from(PwfDatabaseOwnerSurfaces.newsArticles)
-            .select()
-            .eq('status', 'published')
-            .eq('is_featured', true)
-            .order('published_at', ascending: false)
-            .limit(limit);
-      }
-      return (response as List).map((e) => NewsArticle.fromJson(e)).toList();
-    } catch (_) {
-      return [];
-    }
+    final compat = await _getCompatNews(
+      limit: limit,
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+    );
+    return compat.take(limit).toList();
   }
 
   Future<List<NewsArticle>> getNewsByCategoryForUnit(
     NewsCategory category,
-    String unitId,
-  ) async {
-    final compat = await _getCompatNews(category: category);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      dynamic response;
-      try {
-        response = await _supabase
-            .from(PwfDatabaseOwnerSurfaces.newsArticles)
-            .select()
-            .eq('status', 'published')
-            .eq('unit_id', unitId)
-            .eq('category', category.name)
-            .order('published_at', ascending: false);
-      } catch (_) {
-        response = await _supabase
-            .from(PwfDatabaseOwnerSurfaces.newsArticles)
-            .select()
-            .eq('status', 'published')
-            .eq('category', category.name)
-            .order('published_at', ascending: false);
-      }
-      return (response as List).map((e) => NewsArticle.fromJson(e)).toList();
-    } catch (_) {
-      return [];
-    }
+    String unitId, {
+    String? unitSlug,
+  }) async {
+    final compat = await _getCompatNews(
+      category: category,
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+    );
+    return compat;
   }
 
-  Future<NewsArticle?> getNewsByIdForUnit(int id, String unitId) async {
-    final compat = await _getCompatNewsById(id);
-    if (compat != null) return compat;
-
-    try {
-      dynamic response;
-      try {
-        response = await _supabase
-            .from(PwfDatabaseOwnerSurfaces.newsArticles)
-            .select()
-            .eq('id', id)
-            .eq('unit_id', unitId)
-            .eq('status', 'published')
-            .maybeSingle();
-      } catch (_) {
-        // Fallback when unit_id is not available in schema.
-        response = await _supabase
-            .from(PwfDatabaseOwnerSurfaces.newsArticles)
-            .select()
-            .eq('id', id)
-            .eq('status', 'published')
-            .maybeSingle();
-      }
-      if (response == null) return null;
-      return NewsArticle.fromJson(response);
-    } catch (_) {
-      return null;
-    }
+  Future<NewsArticle?> getNewsByIdForUnit(
+    int id,
+    String unitId, {
+    String? unitSlug,
+  }) async {
+    final compat = await _getCompatNewsByContentId(
+      id.toString(),
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+    );
+    return compat;
   }
 
   Future<List<NewsArticle>> searchNewsForUnit(
     String query,
-    String unitId,
-  ) async {
-    final compat = await _getCompatNews(searchQuery: query);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      dynamic response;
-      try {
-        response = await _supabase
-            .from(PwfDatabaseOwnerSurfaces.newsArticles)
-            .select()
-            .eq('status', 'published')
-            .eq('unit_id', unitId)
-            .or('title.ilike.%$query%,content.ilike.%$query%')
-            .order('published_at', ascending: false);
-      } catch (_) {
-        response = await _supabase
-            .from(PwfDatabaseOwnerSurfaces.newsArticles)
-            .select()
-            .eq('status', 'published')
-            .or('title.ilike.%$query%,content.ilike.%$query%')
-            .order('published_at', ascending: false);
-      }
-      return (response as List).map((e) => NewsArticle.fromJson(e)).toList();
-    } catch (_) {
-      return [];
-    }
+    String unitId, {
+    String? unitSlug,
+  }) async {
+    final compat = await _getCompatNews(
+      searchQuery: query,
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+    );
+    return compat;
   }
 }

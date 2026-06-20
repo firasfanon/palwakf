@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../pwf_web_page_scaffold.dart';
 import '../../widgets/pwf_section_container.dart';
-import '../../widgets/shared/pwf_home_visual_contract.dart';
+import 'package:waqf/features/platform/home/presentation/widgets/shared/pwf_home_visual_contract.dart';
 import 'pwf_public_content_shared.dart';
 
 /// Generic HTML-identity page used for public static pages until full CMS binding is ready.

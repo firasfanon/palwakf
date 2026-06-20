@@ -262,7 +262,7 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
     return InkWell(
       borderRadius: BorderRadius.circular(AppConstants.radiusL),
       onTap: () =>
-          context.go(UnitRoutes.announcementDetail(widget.unitSlug, item.id)),
+          context.go(UnitRoutes.announcementDetail(widget.unitSlug, item.publicDetailId)),
       child: Card(
         elevation: isWeb ? 4 : 2,
         shape: RoundedRectangleBorder(

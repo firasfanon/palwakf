@@ -210,7 +210,7 @@ class MediaCenterRepository {
       adminRoute: '/admin/media-center/news',
       publicRoute: '/home/news',
       storageOrTableAr:
-          'media_center.content_items عبر public.v_media_news_compat_v1',
+          'media_center.content_items عبر media_center.v_unit_public_news_runtime_v1',
       statusAr: 'owner-read default؛ legacy public fallback فقط',
       editorialOwnerAr: 'الإعلام المركزي ومديرو الوحدات حسب نطاق النشر',
       runtimeNoteAr:
@@ -222,7 +222,7 @@ class MediaCenterRepository {
       adminRoute: '/admin/media-center/announcements',
       publicRoute: '/home/announcements',
       storageOrTableAr:
-          'media_center.content_items عبر public.v_media_announcements_compat_v1',
+          'media_center.content_items عبر media_center.v_unit_public_announcements_runtime_v1',
       statusAr: 'owner-read default؛ legacy public fallback فقط',
       editorialOwnerAr: 'الإعلام المركزي ومديرو الوحدات حسب الصلاحية',
       runtimeNoteAr: 'اختبر تاريخ النشر والأولوية وحالة الظهور.',
@@ -233,7 +233,7 @@ class MediaCenterRepository {
       adminRoute: '/admin/media-center/activities',
       publicRoute: '/home/activities',
       storageOrTableAr:
-          'media_center.content_items عبر public.v_media_activities_compat_v1',
+          'media_center.content_items عبر media_center.v_unit_public_activities_runtime_v1',
       statusAr: 'owner-read default؛ legacy public fallback فقط',
       editorialOwnerAr: 'الإعلام المركزي والوحدات',
       runtimeNoteAr: 'اختبر الفصل بين النشاط والفعالية حسب التصنيف التشغيلي.',

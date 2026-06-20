@@ -1,4 +1,6 @@
 import 'dart:developer';
+import 'package:waqf/core/database/pwf_database_owner_surfaces.dart';
+import 'package:waqf/core/unit/pwf_canonical_unit_identity.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/homepage_section.dart';
 
@@ -625,18 +627,9 @@ class HomepageRepository {
   }
 
   Future<List<HomepageSection>> fetchAllSectionsForAdmin() async {
-    final rows = await _client
-        .from(_sectionsLegacyWriteTable)
-        .select(
-          'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
-        )
-        .order('display_order', ascending: true)
-        .order('section_name', ascending: true);
-
-    return _parseHomepageSectionRows(
-      rows as List<dynamic>,
-      logPrefix: 'admin',
-    );
+    final homeId = await _resolveHomeOwnerUnitId();
+    if (homeId.isEmpty) return const <HomepageSection>[];
+    return _fetchOwnerCompositionAdminRows(homeId);
   }
 
 
@@ -678,242 +671,80 @@ class HomepageRepository {
     required String unitId,
     String? homeUnitId,
   }) async {
-    try {
-      const globalUnitId = '11111111-1111-1111-1111-111111111111';
+    return _fetchOwnerCompositionAdminRows(unitId);
+  }
 
-      final rpcRows = await _fetchSectionsViaRpc(
-        _sectionsAdminStateRpc,
-        unitId: unitId,
-        homeUnitId: homeUnitId,
-        logPrefix: 'admin rpc',
+
+  Future<String> _resolveHomeOwnerUnitId() async {
+    final raw = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+      _client,
+      PwfDatabaseOwnerSurfaces.unitPublicSurfaceProfileRuntimeV1,
+    ).select('org_unit_id, source_payload').eq('internal_slug', 'home').maybeSingle();
+    if (raw == null) return '';
+
+    final identity = PwfCanonicalUnitIdentity.fromRuntimeProfileRow(
+      Map<String, dynamic>.from(raw as Map),
+    );
+    if (identity.hasRuntimeSourceMismatch) {
+      log(
+        'Homepage owner resolver rejected stale runtime org_unit_id '
+        '${identity.runtimeOrgUnitId} and selected canonical core id '
+        '${identity.sourceOrgUnitId} for home.',
       );
-      if (rpcRows != null) {
-        return _mergeAndSortSectionsByScope(
-          rpcRows,
-          unitId: unitId,
-          homeUnitId: homeUnitId,
-          globalUnitId: globalUnitId,
-        );
-      }
+    }
+    return identity.canonicalOrgUnitId;
+  }
 
-      Future<List<HomepageSection>> fetchScoped(String? scopedUnitId) async {
-        final rows = scopedUnitId == null
-            ? await _client
-                  .from(_sectionsLegacyWriteTable)
-                  .select(
-                    'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
-                  )
-                  .isFilter('unit_id', null)
-                  .order('display_order', ascending: true)
-                  .order('section_name', ascending: true)
-            : await _client
-                  .from(_sectionsLegacyWriteTable)
-                  .select(
-                    'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
-                  )
-                  .eq('unit_id', scopedUnitId)
-                  .order('display_order', ascending: true)
-                  .order('section_name', ascending: true);
-
-        return _parseHomepageSectionRows(
-          rows as List<dynamic>,
-          logPrefix: 'admin scoped',
-        );
-      }
-
-      final idsToFetch = <String?>[null, globalUnitId];
-      if (homeUnitId != null &&
-          homeUnitId.isNotEmpty &&
-          homeUnitId != globalUnitId) {
-        idsToFetch.add(homeUnitId);
-      }
-      if (unitId.isNotEmpty && unitId != globalUnitId && unitId != homeUnitId) {
-        idsToFetch.add(unitId);
-      }
-
-      final scopedResults = await Future.wait(idsToFetch.map(fetchScoped));
-
-      final merged = <String, HomepageSection>{};
-      for (final rows in scopedResults) {
-        for (final row in rows) {
-          final canonicalRow = _withCanonicalSectionName(row);
-          final key = canonicalRow.sectionName;
-          final previous = merged[key];
-          if (previous == null ||
-              _shouldPreferSectionRow(
-                previous,
-                canonicalRow,
-                unitId: unitId,
-                homeUnitId: homeUnitId,
-                globalUnitId: globalUnitId,
-              )) {
-            merged[key] = canonicalRow;
-          }
-        }
-      }
-
-      final result = merged.values.toList();
-      result.sort((a, b) {
-        final aOrder = a.displayOrder == 0 ? 999999 : a.displayOrder;
-        final bOrder = b.displayOrder == 0 ? 999999 : b.displayOrder;
-        final c = aOrder.compareTo(bOrder);
-        if (c != 0) return c;
-        return a.sectionName.compareTo(b.sectionName);
-      });
-      return result;
-    } catch (e) {
-      log('Error fetching admin unit-aware homepage sections, falling back: $e');
-      return fetchAllSectionsForAdmin();
+  Future<List<HomepageSection>> _fetchOwnerCompositionAdminRows(String unitId) async {
+    try {
+      final rows = await _client.schema('platform_experience').rpc(
+        'rpc_unit_public_composition_admin_list_v1',
+        params: <String, dynamic>{'p_org_unit_id': unitId},
+      );
+      final nowIso = DateTime.now().toUtc().toIso8601String();
+      return (rows as List<dynamic>).map((raw) {
+        final row = Map<String, dynamic>.from(raw as Map);
+        row['unit_id'] = row['org_unit_id'];
+        row['settings'] ??= const <String, dynamic>{};
+        row['created_at'] ??= nowIso;
+        row['updated_at'] ??= nowIso;
+        return _withCanonicalSectionName(HomepageSection.fromJson(row));
+      }).toList(growable: false);
+    } on PostgrestException {
+      return const <HomepageSection>[];
     }
   }
 
   Future<List<HomepageSection>> fetchAllSectionsForUnit({
     required String unitId,
     String? homeUnitId,
+    bool strictUnitOnly = false,
   }) async {
+    // Platform 13 sovereign closure: both ministry and unit pages consume the
+    // owner composition runtime. No public/homepage_sections fallback is
+    // permitted at runtime. Empty composition remains an intentional safe state.
+    return _fetchOwnerCompositionRows(unitId);
+  }
+
+  Future<List<HomepageSection>> _fetchOwnerCompositionRows(String unitId) async {
     try {
-      const globalUnitId = '11111111-1111-1111-1111-111111111111';
-
-      final rpcRows = await _fetchSectionsViaRpc(
-        _sectionsRuntimeRpc,
-        unitId: unitId,
-        homeUnitId: homeUnitId,
-        logPrefix: 'runtime rpc',
-      );
-      if (rpcRows != null) {
-        return _mergeAndSortSectionsByScope(
-          rpcRows,
-          unitId: unitId,
-          homeUnitId: homeUnitId,
-          globalUnitId: globalUnitId,
-        );
-      }
-
-      Future<List<HomepageSection>> fetchScoped(String? scopedUnitId) async {
-        final rows = scopedUnitId == null
-            ? await _client
-                  .from(_sectionsReadSurface)
-                  .select(
-                    'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
-                  )
-                  .isFilter('unit_id', null)
-                  .order('display_order', ascending: true)
-                  .order('section_name', ascending: true)
-            : await _client
-                  .from(_sectionsReadSurface)
-                  .select(
-                    'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
-                  )
-                  .eq('unit_id', scopedUnitId)
-                  .order('display_order', ascending: true)
-                  .order('section_name', ascending: true);
-
-        final nowIso = DateTime.now().toUtc().toIso8601String();
-        final out = <HomepageSection>[];
-        for (final raw in (rows as List<dynamic>)) {
-          final m = Map<String, dynamic>.from(raw as Map);
-          m['settings'] ??= const <String, dynamic>{};
-          m['is_active'] ??= true;
-          m['display_order'] ??= 0;
-          m['created_at'] ??= nowIso;
-          m['updated_at'] ??= nowIso;
-          try {
-            out.add(HomepageSection.fromJson(m));
-          } catch (e) {
-            log('Skipping invalid scoped homepage_sections row: $e');
-          }
-        }
-        return out;
-      }
-
-      final idsToFetch = <String?>[null, globalUnitId];
-      if (homeUnitId != null &&
-          homeUnitId.isNotEmpty &&
-          homeUnitId != globalUnitId) {
-        idsToFetch.add(homeUnitId);
-      }
-      if (unitId.isNotEmpty && unitId != globalUnitId && unitId != homeUnitId) {
-        idsToFetch.add(unitId);
-      }
-
-      final scopedResults = await Future.wait(idsToFetch.map(fetchScoped));
-
-      // Runtime uses the public compatibility view as the canonical read surface,
-      // but /admin/home-management currently persists to the preserved write table
-      // until owner-write RPCs are approved. Some compatibility views may not
-      // expose newly activated/inactive scoped rows immediately. Overlaying the
-      // admin write-surface rows keeps /home aligned with admin choices while
-      // preserving the compatibility-view base and failing open if RLS/grants deny
-      // direct table reads.
-      try {
-        Future<List<HomepageSection>> fetchAdminOverlayScoped(
-          String? scopedUnitId,
-        ) async {
-          final rows = scopedUnitId == null
-              ? await _client
-                    .from(_sectionsLegacyWriteTable)
-                    .select(
-                      'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
-                    )
-                    .isFilter('unit_id', null)
-                    .order('display_order', ascending: true)
-                    .order('section_name', ascending: true)
-              : await _client
-                    .from(_sectionsLegacyWriteTable)
-                    .select(
-                      'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, unit_id',
-                    )
-                    .eq('unit_id', scopedUnitId)
-                    .order('display_order', ascending: true)
-                    .order('section_name', ascending: true);
-
-          return _parseHomepageSectionRows(
-            rows as List<dynamic>,
-            logPrefix: 'runtime admin overlay',
-          );
-        }
-
-        final overlayResults = await Future.wait(
-          idsToFetch.map(fetchAdminOverlayScoped),
-        );
-        scopedResults.addAll(overlayResults);
-      } catch (e) {
-        log(
-          'Homepage runtime admin-write overlay unavailable; using compatibility view only: $e',
-        );
-      }
-
-      final merged = <String, HomepageSection>{};
-      for (final rows in scopedResults) {
-        for (final row in rows) {
-          final canonicalRow = _withCanonicalSectionName(row);
-          final key = canonicalRow.sectionName;
-          final previous = merged[key];
-          if (previous == null ||
-              _shouldPreferSectionRow(
-                previous,
-                canonicalRow,
-                unitId: unitId,
-                homeUnitId: homeUnitId,
-                globalUnitId: globalUnitId,
-              )) {
-            merged[key] = canonicalRow;
-          }
-        }
-      }
-
-      final result = merged.values.toList();
-      result.sort((a, b) {
-        final aOrder = a.displayOrder == 0 ? 999999 : a.displayOrder;
-        final bOrder = b.displayOrder == 0 ? 999999 : b.displayOrder;
-        final c = aOrder.compareTo(bOrder);
-        if (c != 0) return c;
-        return a.sectionName.compareTo(b.sectionName);
-      });
-      return result;
-    } catch (e) {
-      log('Error fetching unit-aware homepage sections, falling back: $e');
-      return fetchAllSections();
+      final rows = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+        _client,
+        PwfDatabaseOwnerSurfaces.unitPublicCompositionRuntimeV1,
+      ).select(
+        'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, org_unit_id',
+      ).eq('org_unit_id', unitId).order('display_order', ascending: true);
+      final nowIso = DateTime.now().toUtc().toIso8601String();
+      return (rows as List<dynamic>).map((raw) {
+        final row = Map<String, dynamic>.from(raw as Map);
+        row['unit_id'] = row['org_unit_id'];
+        row['settings'] ??= const <String, dynamic>{};
+        row['created_at'] ??= nowIso;
+        row['updated_at'] ??= nowIso;
+        return _withCanonicalSectionName(HomepageSection.fromJson(row));
+      }).toList(growable: false);
+    } on PostgrestException {
+      return const <HomepageSection>[];
     }
   }
 
@@ -1080,43 +911,29 @@ class HomepageRepository {
     List<HomepageSection> sections, {
     String? unitId,
   }) async {
-    // Preserve current behavior: table name is defined locally in this repo.
-    // NOTE: Do NOT inline any secrets here. Supabase client is already configured.
-    final userId = _client.auth.currentUser?.id;
-    final now = DateTime.now().toUtc().toIso8601String();
-    final normalizedUnitId = unitId?.trim().isEmpty ?? true
-        ? null
-        : unitId!.trim();
-
-    final payloads = <Map<String, dynamic>>[];
-    for (final s in sections) {
-      final canonicalSectionName = _canonicalSectionKey(s.sectionName);
-      payloads.add(<String, dynamic>{
-        'id': s.id,
-        'section_name': canonicalSectionName,
-        'settings': s.settings,
-        'is_active': s.isActive,
-        'display_order': s.displayOrder,
-        'updated_at': now,
-        'updated_by': userId,
-        'unit_id': normalizedUnitId,
-      });
+    final effectiveUnitId = (unitId ?? '').trim().isNotEmpty
+        ? unitId!.trim()
+        : await _resolveHomeOwnerUnitId();
+    if (effectiveUnitId.isEmpty) {
+      throw StateError('تعذر تحديد نطاق الوحدة لحفظ تركيب الصفحة العامة.');
     }
 
-    if (await _saveSectionsViaRpc(payloads, unitId: normalizedUnitId)) {
-      return;
-    }
+    final entries = sections.map((section) => <String, dynamic>{
+      'section_name': _canonicalSectionKey(section.sectionName),
+      'settings': section.settings,
+      'is_active': section.isActive,
+      'display_order': section.displayOrder,
+    }).toList(growable: false);
 
-    for (final payload in payloads) {
-      final canonicalSectionName = payload['section_name'].toString();
-      await _insertOrUpdateSectionForWrite(
-        payload,
-        sectionName: canonicalSectionName,
-        unitId: normalizedUnitId,
-        preferredId: payload['id']?.toString(),
-      );
-    }
+    await _client.schema('platform_experience').rpc(
+      'rpc_unit_public_composition_replace_v1',
+      params: <String, dynamic>{
+        'p_org_unit_id': effectiveUnitId,
+        'p_entries': entries,
+      },
+    );
   }
+
 
   // -------- Minister ----------
   Future<MinisterSectionSettings?> fetchMinisterSettings() async {

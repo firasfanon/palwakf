@@ -1,5 +1,6 @@
 // lib/presentation/providers/header_settings_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:waqf/core/unit/pwf_unit_slug_registry.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/header_settings.dart';
 import '../../data/repositories/header_repository.dart';
@@ -102,20 +103,20 @@ final headerSettingsProvider =
 final publicHeaderSettingsProvider =
     FutureProvider.family<HeaderSettings, String>((ref, unitSlug) async {
       final repository = ref.watch(headerRepositoryProvider);
-      final normalized = unitSlug.trim().isEmpty
-          ? 'home'
-          : unitSlug.trim().toLowerCase();
+      final normalized = PwfUnitSlugRegistry.internalSlugFor(unitSlug);
       String? unitId;
       String? homeUnitId;
 
       try {
-        unitId = await ref.watch(unitIdBySlugProvider(normalized).future);
+        unitId = await ref.watch(unitIdBySlugExactProvider(normalized).future);
       } catch (_) {
         unitId = null;
       }
 
       try {
-        homeUnitId = await ref.watch(unitIdBySlugProvider('home').future);
+        homeUnitId = normalized == 'home'
+            ? await ref.watch(unitIdBySlugExactProvider('home').future)
+            : null;
       } catch (_) {
         homeUnitId = null;
       }
@@ -123,5 +124,6 @@ final publicHeaderSettingsProvider =
       return repository.fetchHeaderSettingsForScopes(
         unitId: unitId,
         homeUnitId: homeUnitId,
+        strictUnitOnly: normalized != 'home',
       );
     });

@@ -150,10 +150,24 @@ class _PwfContentPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isAr =
         Localizations.localeOf(context).languageCode.toLowerCase() == 'ar';
+    final normalizedSlug = unitSlug.trim().isEmpty
+        ? 'home'
+        : unitSlug.trim().toLowerCase();
+    final unit = ref.watch(orgUnitBySlugProvider(normalizedSlug)).valueOrNull;
+    final scopeLabel = pwfResolveScopeLabel(
+      unitSlug: normalizedSlug,
+      unit: unit,
+    );
+    final displayTitle = _scopedPublicTitle(
+      title: title,
+      scopeLabel: scopeLabel,
+      unitSlug: normalizedSlug,
+      isAr: isAr,
+    );
 
     return PwfWebPageScaffold(
-      unitSlug: unitSlug,
-      title: title,
+      unitSlug: normalizedSlug,
+      title: displayTitle,
       showTitleSection: true,
       child: PwfSectionContainer(
         sectionKey: 'public-subpage-$unitSlug',
@@ -161,10 +175,11 @@ class _PwfContentPage extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _PwfSubpageHero(
-              title: title,
+              title: displayTitle,
               subtitle: subtitle,
               eyebrow: isAr ? 'صفحة تعريفية رسمية' : 'Official public page',
-              icon: _subpageIconForTitle(title),
+              scopeLabel: scopeLabel,
+              icon: _subpageIconForTitle(displayTitle),
             ),
             const SizedBox(height: 22),
             PwfVisualResponsiveGrid(
@@ -178,20 +193,21 @@ class _PwfContentPage extends ConsumerWidget {
             const SizedBox(height: 22),
             PwfVisualCard(
               padding: const EdgeInsets.all(18),
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                alignment: WrapAlignment.start,
+              child: PwfVisualActionStack(
                 children: [
                   _ActionButton(
                     label: primaryActionLabel,
                     filled: true,
-                    onTap: () => context.go(primaryActionPath),
+                    onTap: () => context.go(
+                      _scopedPublicPath(primaryActionPath, normalizedSlug),
+                    ),
                   ),
                   _ActionButton(
                     label: isAr ? 'آخر الأخبار' : 'Latest News',
                     filled: false,
-                    onTap: () => context.go('/home/news'),
+                    onTap: () => context.go(
+                      _scopedPublicPath('/news', normalizedSlug),
+                    ),
                   ),
                 ],
               ),
@@ -203,40 +219,91 @@ class _PwfContentPage extends ConsumerWidget {
   }
 }
 
+
+String _scopedPublicTitle({
+  required String title,
+  required String scopeLabel,
+  required String unitSlug,
+  required bool isAr,
+}) {
+  if (unitSlug == 'home') return title;
+  final trimmed = title.trim();
+  if (isAr && trimmed == 'عن الوزارة') return 'عن $scopeLabel';
+  if (!isAr && trimmed.toLowerCase() == 'about the ministry') {
+    return 'About $scopeLabel';
+  }
+  return trimmed.isEmpty ? scopeLabel : trimmed;
+}
+
+String _scopedPublicPath(String path, String unitSlug) {
+  final normalizedSlug = PwfUnitSlugRegistry.publicSlugFor(unitSlug);
+  final value = path.trim();
+  if (value.isEmpty) {
+    return normalizedSlug == 'home' ? '/home' : '/$normalizedSlug';
+  }
+  if (value.startsWith('http://') || value.startsWith('https://')) return value;
+  final normalizedPath = value.startsWith('/') ? value : '/$value';
+  if (normalizedSlug == 'home') {
+    if (normalizedPath == '/news') return '/home/news';
+    return normalizedPath;
+  }
+  if (normalizedPath == '/home') return '/$normalizedSlug';
+  if (normalizedPath.startsWith('/home/')) {
+    return '/$normalizedSlug/${normalizedPath.substring('/home/'.length)}';
+  }
+  return '/$normalizedSlug$normalizedPath';
+}
+
 class _PwfSubpageHero extends StatelessWidget {
   const _PwfSubpageHero({
     required this.title,
     required this.subtitle,
     required this.eyebrow,
+    required this.scopeLabel,
     required this.icon,
   });
 
   final String title;
   final String subtitle;
   final String eyebrow;
+  final String scopeLabel;
   final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 220),
-      padding: const EdgeInsets.all(28),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final mobile = constraints.maxWidth < 640;
+        return Container(
+          width: double.infinity,
+          constraints: BoxConstraints(minHeight: mobile ? 180 : 220),
+          padding: EdgeInsets.all(mobile ? 18 : 28),
       decoration: BoxDecoration(
         gradient: PwfHomeVisualContract.sovereignGradient(),
         borderRadius: BorderRadius.circular(30),
         boxShadow: const [PwfHomeVisualContract.elevatedCardShadow],
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 720;
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 720;
           final text = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              PwfVisualChip(
-                label: eyebrow,
-                icon: Icons.verified_outlined,
-                color: PwfHomePalette.secondary,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  PwfVisualChip(
+                    label: eyebrow,
+                    icon: Icons.verified_outlined,
+                    color: PwfHomePalette.secondary,
+                  ),
+                  PwfVisualChip(
+                    label: scopeLabel,
+                    icon: Icons.apartment_outlined,
+                    color: Colors.white,
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               Text(
@@ -268,17 +335,19 @@ class _PwfSubpageHero extends StatelessWidget {
             ),
             child: Icon(icon, color: PwfHomePalette.secondary, size: 54),
           );
-          if (compact) return text;
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(child: text),
-              const SizedBox(width: 24),
-              iconBox,
-            ],
-          );
-        },
-      ),
+              if (compact) return text;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child: text),
+                  const SizedBox(width: 24),
+                  iconBox,
+                ],
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
@@ -314,21 +383,29 @@ class _SectionBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PwfVisualCard(
-      showAccentRail: true,
-      padding: const EdgeInsetsDirectional.fromSTEB(24, 22, 24, 22),
-      child: Padding(
-        padding: const EdgeInsetsDirectional.only(start: 10),
-        child: Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final mobile = constraints.maxWidth < 640;
+        return PwfVisualCard(
+          showAccentRail: true,
+          padding: EdgeInsetsDirectional.fromSTEB(
+            mobile ? 18 : 24,
+            mobile ? 18 : 22,
+            mobile ? 18 : 24,
+            mobile ? 18 : 22,
+          ),
+          child: Padding(
+            padding: EdgeInsetsDirectional.only(start: mobile ? 6 : 10),
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const PwfVisualIconTile(
+                PwfVisualIconTile(
                   icon: Icons.done_all_outlined,
                   color: PwfHomePalette.royalRed,
-                  size: 44,
+                  size: mobile ? 40 : 44,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -374,9 +451,11 @@ class _SectionBlock extends StatelessWidget {
                   ),
                 ),
             ],
-          ],
-        ),
-      ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -428,6 +507,9 @@ class _ActionButtonState extends ConsumerState<_ActionButton> {
           ),
           child: Text(
             widget.label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
               color: fg,
               fontWeight: FontWeight.w700,

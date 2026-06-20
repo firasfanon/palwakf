@@ -11,8 +11,10 @@ import 'package:waqf/features/platform/media_center/presentation/providers/pwf_p
 
 import '../pwf_web_page_scaffold.dart';
 import '../../widgets/pwf_section_container.dart';
-import '../../widgets/shared/pwf_home_visual_contract.dart';
+import 'package:waqf/features/platform/home/presentation/widgets/shared/pwf_home_visual_contract.dart';
 import '../../theme/pwf_home_palette.dart';
+import 'pwf_public_content_shared.dart';
+import 'package:waqf/features/platform/home/presentation/widgets/shared/pwf_public_safe_error.dart';
 
 class PwfMediaCenterPublicHubScreen extends StatelessWidget {
   const PwfMediaCenterPublicHubScreen({super.key, required this.unitSlug});
@@ -1909,7 +1911,7 @@ class PwfPlatformCenterContentDetailScreen extends ConsumerWidget {
           ),
           error: (error, stackTrace) => _FrontendDataNote(
             title: 'تعذر تحميل تفاصيل المحتوى',
-            body: error.toString(),
+            body: PwfPublicSafeError.messageFor(error),
           ),
           data: (item) {
             if (item == null) {
@@ -2014,7 +2016,7 @@ class _PublishedContentPanel extends ConsumerWidget {
       loading: () => const LinearProgressIndicator(minHeight: 3),
       error: (error, stackTrace) => _FrontendDataNote(
         title: 'تعذر تحميل المحتوى المنشور',
-        body: error.toString(),
+        body: PwfPublicSafeError.messageFor(error),
       ),
       data: (items) {
         if (items.isEmpty) {
@@ -2104,6 +2106,8 @@ class _PublishedContentCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               item.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontWeight: FontWeight.w900,
                 fontSize: 16,
@@ -2132,6 +2136,10 @@ class _FrontendDataNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final publicBody = pwfPublicCopyOrFallback(
+      body,
+      'تعذر تحميل هذه البيانات حاليًا. يرجى المحاولة لاحقًا أو استخدام روابط الصفحة المتاحة.',
+    );
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -2153,7 +2161,7 @@ class _FrontendDataNote extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            body,
+            publicBody,
             style: const TextStyle(color: Color(0xFF92400E), height: 1.55),
           ),
         ],
@@ -2170,6 +2178,9 @@ class _FrontendMiniPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final maxLabelWidth = (MediaQuery.sizeOf(context).width - 108)
+        .clamp(100.0, 260.0)
+        .toDouble();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
@@ -2184,12 +2195,18 @@ class _FrontendMiniPill extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: const Color(0xFF0B3A70)),
           const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF0B3A70),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxLabelWidth),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0B3A70),
+              ),
             ),
           ),
         ],
@@ -2212,7 +2229,7 @@ String _detailRouteFor(PwfPlatformCenterContentItem item) {
   final base = item.route.endsWith('/')
       ? item.route.substring(0, item.route.length - 1)
       : item.route;
-  return '$base/${item.id}';
+  return '$base/${Uri.encodeComponent(item.id)}';
 }
 
 String _publicFamilyLabel(String familyKey) {
@@ -2370,9 +2387,7 @@ class _FrontendHeroCard extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 18),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
+            PwfVisualActionStack(
               children: [
                 _FrontendHeroButton(
                   label: primaryLabel,
@@ -2438,7 +2453,12 @@ class _FrontendHeroButton extends StatelessWidget {
       icon: Icon(
         primary ? Icons.arrow_back_rounded : Icons.open_in_new_rounded,
       ),
-      label: Text(label),
+      label: Text(
+        label,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+      ),
       style: FilledButton.styleFrom(
         backgroundColor: primary
             ? PwfHomePalette.secondary
@@ -2492,6 +2512,8 @@ class _FrontendMetricCard extends StatelessWidget {
               children: [
                 Text(
                   metric.label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: PwfHomePalette.textSecondary,
                     fontWeight: FontWeight.w700,

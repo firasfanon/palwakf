@@ -1,12 +1,24 @@
+import '../../core/unit/pwf_unit_slug_registry.dart';
+
 class UnitRoutes {
   UnitRoutes._();
 
-  static String norm(String slug) => slug.trim().toLowerCase();
+  static String norm(String slug) => PwfUnitSlugRegistry.publicSlugFor(slug);
 
   static String home(String slug) {
     final s = norm(slug);
     return s == 'home' ? '/home' : '/$s';
   }
+
+  static String about(String slug) => '${home(slug)}/about';
+  static String visionMission(String slug) => '${home(slug)}/vision-mission';
+  static String structure(String slug) => '${home(slug)}/structure';
+  static String formerMinisters(String slug) => '${home(slug)}/former-ministers';
+  static String contact(String slug) => '${home(slug)}/contact';
+  static String privacy(String slug) => '${home(slug)}/privacy';
+  static String terms(String slug) => '${home(slug)}/terms';
+  static String sitemap(String slug) => '${home(slug)}/sitemap';
+  static String search(String slug) => '${home(slug)}/search';
 
   static String news(String slug) => '${home(slug)}/news';
   static String announcements(String slug) => '${home(slug)}/announcements';
@@ -37,10 +49,16 @@ class UnitRoutes {
   static String sanctitiesObservatory(String slug) =>
       '${home(slug)}/sanctities-observatory';
 
-  static String newsDetail(String slug, int id) => '${news(slug)}/$id';
+  static String _contentPathSegment(Object contentId) =>
+      Uri.encodeComponent(contentId.toString().trim());
 
-  static String announcementDetail(String slug, int id) =>
-      '${announcements(slug)}/$id';
-  static String activityDetail(String slug, int id) =>
-      '${activities(slug)}/$id';
+  /// Public Media Center content IDs are opaque. Never derive these routes from
+  /// a bounded feed window or a lossy integer hash.
+  static String newsDetail(String slug, Object contentId) =>
+      '${news(slug)}/${_contentPathSegment(contentId)}';
+
+  static String announcementDetail(String slug, Object contentId) =>
+      '${announcements(slug)}/${_contentPathSegment(contentId)}';
+  static String activityDetail(String slug, Object contentId) =>
+      '${activities(slug)}/${_contentPathSegment(contentId)}';
 }

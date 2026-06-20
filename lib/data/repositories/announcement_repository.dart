@@ -5,6 +5,7 @@ import '../models/announcement.dart';
 import '../services/media_compat_mapper.dart';
 import '../services/supabase_service.dart';
 import 'package:waqf/core/database/pwf_database_owner_surfaces.dart';
+import 'package:waqf/core/public_runtime/pwf_public_media_runtime_gateway.dart';
 
 /// Repository for managing Announcement data
 /// Provides CRUD operations for announcements
@@ -24,6 +25,8 @@ class AnnouncementRepository {
     int? limit,
     int? offset,
     String? unitSlug,
+    String? ownerOrgUnitId,
+    Set<String>? unitScopeKeys,
     String? searchQuery,
   }) async {
     if (!_mediaOwnerReadDefault) {
@@ -35,33 +38,24 @@ class AnnouncementRepository {
     }
 
     try {
-      final response = await _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.vMediaAnnouncementsCompatV1)
-          .select('*')
-          .timeout(_mediaOwnerRuntimeTimeout);
+      final unitRef = unitSlug?.trim().isNotEmpty == true
+          ? unitSlug!.trim()
+          : (ownerOrgUnitId?.trim().isNotEmpty == true
+              ? ownerOrgUnitId!.trim()
+              : 'home');
+      final rows = await PwfPublicMediaRuntimeGateway(
+        _supabaseService.client,
+      ).fetchFeed(
+        unitRef: unitRef,
+        familyKey: 'announcements',
+        limit: (limit ?? 50).clamp(1, 50).toInt(),
+        offset: 0,
+      ).timeout(_mediaOwnerRuntimeTimeout);
 
-      var items = (response as List<dynamic>)
-          .map(
-            (json) => MediaCompatMapper.announcementFromCompatRow(
-              json as Map<String, dynamic>,
-            ),
-          )
+      var items = rows
+          .map(MediaCompatMapper.announcementFromCompatRow)
           .where((announcement) => announcement.isActive)
           .toList();
-
-      final normalizedUnitSlug = unitSlug?.trim().toLowerCase();
-      if (normalizedUnitSlug != null &&
-          normalizedUnitSlug.isNotEmpty &&
-          normalizedUnitSlug != 'home') {
-        items = items
-            .where(
-              (announcement) =>
-                  announcement.targetAudience.trim().toLowerCase() ==
-                      normalizedUnitSlug ||
-                  announcement.targetAudience.trim().toLowerCase() == 'public',
-            )
-            .toList();
-      }
 
       final q = searchQuery?.trim().toLowerCase();
       if (q != null && q.isNotEmpty) {
@@ -84,27 +78,23 @@ class AnnouncementRepository {
       final windowed = _window(items, limit: limit, offset: offset);
       _logMediaRuntimeSource(
         family: 'announcements',
-        surface: PwfDatabaseOwnerSurfaces.vMediaAnnouncementsCompatV1,
+        surface: PwfDatabaseOwnerSurfaces.publicMediaRuntimeFeedRpcV2,
         rows: windowed.length,
       );
       return windowed;
     } on TimeoutException {
-      _logMediaRuntimeFallback(
-        family: 'announcements',
-        reason: 'owner-timeout',
-      );
+      _logMediaRuntimeFallback(family: 'announcements', reason: 'public-rpc-timeout');
       return const <Announcement>[];
-    } catch (e, stackTrace) {
-      dev.log(
-        'Media Center owner-read announcements runtime failed; legacy fallback may run.',
-        name: 'AnnouncementRepository',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      _logMediaRuntimeFallback(
-        family: 'announcements',
-        reason: 'owner-failure',
-      );
+    } catch (_) {
+      if (kDebugMode) {
+        debugPrint(
+          'PWF_MEDIA_CENTER_PUBLIC_RPC_UNAVAILABLE '
+          'family=announcements '
+          'rpc=${PwfDatabaseOwnerSurfaces.publicMediaRuntimeFeedRpcV2} '
+          'fallback=false',
+        );
+      }
+      _logMediaRuntimeFallback(family: 'announcements', reason: 'public-rpc-failure');
       return const <Announcement>[];
     }
   }
@@ -143,11 +133,11 @@ class AnnouncementRepository {
     debugPrint(
       'PWF_MEDIA_CENTER_ROOT_CUTOVER '
       'family=$family '
-      'owner_read=true '
-      'surface=public.$surface '
-      'projection=* '
-      'filtering=client-side '
-      'ordering=client-side '
+      'public_rpc=true '
+      'surface=$surface '
+      'projection=allow-listed '
+      'filtering=server-resolved-unit '
+      'ordering=server-side '
       'rows=$rows '
       'decision=media-center-owner-read-default-root-cutover',
     );
@@ -161,36 +151,65 @@ class AnnouncementRepository {
     debugPrint(
       'PWF_MEDIA_CENTER_LEGACY_FALLBACK_ONLY '
       'family=$family '
-      'legacy_public_fallback=true '
+      'legacy_public_fallback=false '
       'reason=$reason '
-      'decision=media-center-legacy-public-fallback-only',
+      'decision=media-center-owner-read-no-public-fallback',
     );
   }
 
-  Future<Announcement?> _getCompatAnnouncementById(int id) async {
+  Future<Announcement?> _getCompatAnnouncementByContentId(
+    String contentId, {
+    String? unitSlug,
+    String? ownerOrgUnitId,
+  }) async {
     if (!_mediaOwnerReadDefault) return null;
+    final safeContentId = contentId.trim();
+    if (safeContentId.isEmpty) return null;
+    final unitRef = unitSlug?.trim().isNotEmpty == true
+        ? unitSlug!.trim()
+        : (ownerOrgUnitId?.trim().isNotEmpty == true
+            ? ownerOrgUnitId!.trim()
+            : 'home');
     try {
-      final items = await _getCompatAnnouncements(limit: 1000);
-      for (final item in items) {
-        if (item.id == id) return item;
+      final rows = await PwfPublicMediaRuntimeGateway(_supabaseService.client)
+          .fetchDetail(
+            unitRef: unitRef,
+            contentId: safeContentId,
+            familyKey: 'announcements',
+          )
+          .timeout(_mediaOwnerRuntimeTimeout);
+      if (rows.isEmpty) return null;
+      final item = MediaCompatMapper.announcementFromCompatRow(rows.first);
+      if (!item.isActive) return null;
+      if (item != null) {
+        _logMediaRuntimeSource(
+          family: 'announcements',
+          surface: PwfDatabaseOwnerSurfaces.publicMediaRuntimeDetailRpcV2,
+          rows: 1,
+        );
       }
-      return null;
+      return item;
     } on TimeoutException {
-      dev.log(
-        'Media Center owner-read announcement detail resolver timed out',
-        name: 'AnnouncementRepository',
+      _logMediaRuntimeFallback(
+        family: 'announcements',
+        reason: 'public-detail-rpc-timeout',
       );
       return null;
     } catch (e, stackTrace) {
       dev.log(
-        'Media Center owner-read announcement detail resolver failed',
+        'Media Center public announcement detail RPC failed without feed fallback',
         name: 'AnnouncementRepository',
         error: e,
         stackTrace: stackTrace,
       );
+      _logMediaRuntimeFallback(
+        family: 'announcements',
+        reason: 'public-detail-rpc-failure',
+      );
       return null;
     }
   }
+
 
   /// Public runtime resolver for B-1A media compatibility announcement details.
   ///
@@ -198,164 +217,62 @@ class AnnouncementRepository {
   /// public detail page cannot remain in a loading state when legacy unit
   /// scoping is slow or unavailable. Legacy fallback remains unchanged.
   Future<Announcement?> getCompatRuntimeAnnouncementById(int id) {
-    return _getCompatAnnouncementById(id);
+    return _getCompatAnnouncementByContentId(id.toString());
+  }
+
+  Future<Announcement?> getAnnouncementByContentIdForUnit(
+    String contentId,
+    String unitId, {
+    String? unitSlug,
+  }) {
+    return _getCompatAnnouncementByContentId(
+      contentId,
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+    );
   }
 
   // ============================================
   // READ OPERATIONS
   // ============================================
 
-  /// Get all announcements with optional pagination
+  /// Get all announcements with optional pagination.
+  /// Public runtime reads only the owner-schema view; it does not fall back to
+  /// public.announcements when the view is unavailable or legitimately empty.
   Future<List<Announcement>> getAllAnnouncements({
     int? limit,
     int? offset,
-  }) async {
-    final compat = await _getCompatAnnouncements(limit: limit, offset: offset);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      dev.log('Fetching announcements', name: 'AnnouncementRepository');
-
-      var query = _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.announcements)
-          .select()
-          .order('created_at', ascending: false);
-
-      if (limit != null) query = query.limit(limit);
-      if (offset != null)
-        query = query.range(offset, offset + (limit ?? 10) - 1);
-
-      final response = await query;
-
-      dev.log(
-        'Successfully fetched ${(response as List).length} announcements',
-        name: 'AnnouncementRepository',
-      );
-
-      return (response as List<dynamic>)
-          .map((json) => Announcement.fromDb(json as Map<String, dynamic>))
-          .toList();
-    } catch (e, stackTrace) {
-      dev.log(
-        'Error fetching announcements',
-        name: 'AnnouncementRepository',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      throw Exception('Failed to load announcements: $e');
-    }
+  }) {
+    return _getCompatAnnouncements(limit: limit, offset: offset);
   }
 
-  /// Get active announcements
-  Future<List<Announcement>> getActiveAnnouncements({int? limit}) async {
-    final compat = await _getCompatAnnouncements(limit: limit);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      dev.log('Fetching active announcements', name: 'AnnouncementRepository');
-
-      var query = _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.announcements)
-          .select()
-          .eq('is_active', true)
-          .order('priority', ascending: false)
-          .order('created_at', ascending: false);
-
-      if (limit != null) query = query.limit(limit);
-
-      final response = await query;
-
-      // Filter by validUntil if present
-      final announcements = (response as List<dynamic>)
-          .map((json) => Announcement.fromDb(json as Map<String, dynamic>))
-          .where((announcement) {
-            if (announcement.validUntil == null) return true;
-            return announcement.validUntil!.isAfter(DateTime.now());
-          })
-          .toList();
-
-      dev.log(
-        'Found ${announcements.length} active announcements',
-        name: 'AnnouncementRepository',
-      );
-
-      return announcements;
-    } catch (e, stackTrace) {
-      dev.log(
-        'Error fetching active announcements',
-        name: 'AnnouncementRepository',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      throw Exception('Failed to load active announcements: $e');
-    }
+  /// Get active announcements.
+  Future<List<Announcement>> getActiveAnnouncements({int? limit}) {
+    return _getCompatAnnouncements(limit: limit);
   }
 
-  /// Get announcement by ID
-  Future<Announcement?> getAnnouncementById(int id) async {
-    final compat = await _getCompatAnnouncementById(id);
-    if (compat != null) return compat;
-
-    try {
-      dev.log(
-        'Fetching announcement with ID: $id',
-        name: 'AnnouncementRepository',
-      );
-
-      final response = await _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.announcements)
-          .select()
-          .eq('id', id)
-          .maybeSingle();
-
-      if (response == null) {
-        dev.log(
-          'Announcement not found with ID: $id',
-          name: 'AnnouncementRepository',
-        );
-        return null;
-      }
-
-      return Announcement.fromDb(response);
-    } catch (e, stackTrace) {
-      dev.log(
-        'Error fetching announcement by ID',
-        name: 'AnnouncementRepository',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      throw Exception('Failed to load announcement: $e');
-    }
+  /// Get announcement by ID.
+  Future<Announcement?> getAnnouncementById(int id) {
+    return _getCompatAnnouncementByContentId(id.toString());
   }
 
   /// Get announcement by ID scoped to a specific unit.
   ///
-  /// Fail-open: if unit scoping is not available (e.g., missing column) or
-  /// any error happens, this falls back to global getAnnouncementById.
+  /// Unit-scoped detail lookup.
+  ///
+  /// If the item is not owned by the requested unit, return null instead of
+  /// falling back to global/ministry content.
   Future<Announcement?> getAnnouncementByIdForUnit(
     int id,
-    String unitId,
-  ) async {
-    final compat = await _getCompatAnnouncementById(id);
-    if (compat != null) return compat;
-
-    try {
-      final response = await _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.announcements)
-          .select()
-          .eq('id', id)
-          .eq('unit_id', unitId)
-          .maybeSingle();
-
-      if (response == null) return null;
-      return Announcement.fromDb(response);
-    } catch (e) {
-      dev.log(
-        'Fail-open: getAnnouncementByIdForUnit fallback: $e',
-        name: 'AnnouncementRepository',
-      );
-      return getAnnouncementById(id);
-    }
+    String unitId, {
+    String? unitSlug,
+  }) async {
+    final compat = await _getCompatAnnouncementByContentId(
+      id.toString(),
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+    );
+    return compat;
   }
 
   /// Get announcements by priority
@@ -457,35 +374,9 @@ class AnnouncementRepository {
     }
   }
 
-  /// Search announcements
-  Future<List<Announcement>> searchAnnouncements(String query) async {
-    final compat = await _getCompatAnnouncements(searchQuery: query);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      dev.log(
-        'Searching announcements with query: $query',
-        name: 'AnnouncementRepository',
-      );
-
-      final response = await _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.announcements)
-          .select()
-          .or('title.ilike.%$query%,content.ilike.%$query%')
-          .order('created_at', ascending: false);
-
-      return (response as List<dynamic>)
-          .map((json) => Announcement.fromDb(json as Map<String, dynamic>))
-          .toList();
-    } catch (e, stackTrace) {
-      dev.log(
-        'Error searching announcements',
-        name: 'AnnouncementRepository',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      throw Exception('Failed to search announcements: $e');
-    }
+  /// Search announcements.
+  Future<List<Announcement>> searchAnnouncements(String query) {
+    return _getCompatAnnouncements(searchQuery: query);
   }
 
   // ============================================
@@ -493,34 +384,17 @@ class AnnouncementRepository {
   /// Get all announcements scoped to a specific unit (org_units)
   Future<List<Announcement>> getAllAnnouncementsForUnit(
     String unitId, {
+    String? unitSlug,
     int? limit,
     int? offset,
   }) async {
-    final compat = await _getCompatAnnouncements(limit: limit, offset: offset);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      var query = _supabaseService.client
-          .from(PwfDatabaseOwnerSurfaces.announcements)
-          .select()
-          .eq('unit_id', unitId)
-          .order('created_at', ascending: false);
-
-      if (limit != null) query = query.limit(limit);
-      if (offset != null)
-        query = query.range(offset, offset + (limit ?? 50) - 1);
-
-      final response = await query;
-      return (response as List)
-          .map((e) => Announcement.fromDb(e as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      dev.log(
-        'Error fetching unit announcements: $e',
-        name: 'AnnouncementRepository',
-      );
-      return [];
-    }
+    final compat = await _getCompatAnnouncements(
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+      limit: limit,
+      offset: offset,
+    );
+    return compat;
   }
 
   /// Get active announcements scoped to a specific unit (org_units)
@@ -531,48 +405,15 @@ class AnnouncementRepository {
   /// any error happens, this returns an empty list.
   Future<List<Announcement>> getActiveAnnouncementsForUnit(
     String unitId, {
+    String? unitSlug,
     int limit = 5,
   }) async {
-    final compat = await _getCompatAnnouncements(limit: limit);
-    if (compat.isNotEmpty) return compat;
-
-    try {
-      // NOTE: valid_until is often DATE. Use YYYY-MM-DD to avoid PostgREST 400.
-      final now = DateTime.now();
-      final nowIsoDate =
-          '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-
-      // Try unit-scoped query first. If unit_id is missing, fall back to global.
-      dynamic response;
-      try {
-        response = await _supabaseService.client
-            .from(PwfDatabaseOwnerSurfaces.announcements)
-            .select()
-            .eq('unit_id', unitId)
-            .eq('is_active', true)
-            .or('valid_until.is.null,valid_until.gt.$nowIsoDate')
-            .order('created_at', ascending: false)
-            .limit(limit);
-      } catch (e) {
-        response = await _supabaseService.client
-            .from(PwfDatabaseOwnerSurfaces.announcements)
-            .select()
-            .eq('is_active', true)
-            .or('valid_until.is.null,valid_until.gt.$nowIsoDate')
-            .order('created_at', ascending: false)
-            .limit(limit);
-      }
-
-      return (response as List)
-          .map((e) => Announcement.fromDb(e as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      dev.log(
-        'Error fetching active unit announcements: $e',
-        name: 'AnnouncementRepository',
-      );
-      return [];
-    }
+    final compat = await _getCompatAnnouncements(
+      unitSlug: unitSlug ?? unitId,
+      ownerOrgUnitId: unitId,
+      limit: limit,
+    );
+    return compat;
   }
 
   // CREATE OPERATIONS

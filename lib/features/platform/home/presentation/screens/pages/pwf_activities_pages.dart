@@ -217,16 +217,18 @@ class PwfActivityDetailWebScreen extends ConsumerWidget {
   const PwfActivityDetailWebScreen({
     super.key,
     required this.unitSlug,
-    required this.id,
+    required this.contentId,
   });
 
   final String unitSlug;
-  final int id;
+  final String contentId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(
-      activityForUnitByIdProvider(UnitActivityIdParam(unitSlug, id)),
+      activityContentDetailForUnitProvider(
+        UnitActivityContentIdParam(unitSlug, contentId),
+      ),
     );
 
     return PwfWebPageScaffold(
@@ -236,21 +238,24 @@ class PwfActivityDetailWebScreen extends ConsumerWidget {
       child: PwfSectionContainer(
         sectionKey: 'PwfActivityDetailWebScreen',
         child: async.when(
-          data: (a) {
-            if (a == null) {
+          data: (item) {
+            if (item == null) {
               return const PwfEmptyBlock(
                 title: 'النشاط غير موجود',
-                message: 'قد يكون تم حذف النشاط أو تغيير مساره.',
+                message:
+                    'العنصر غير منشور أو لا يطابق نطاق الوحدة أو فئة المحتوى المطلوبة.',
                 icon: Icons.event_busy_outlined,
               );
             }
-            return _ActivityDetailBody(item: a, unitSlug: unitSlug);
+            return _ActivityDetailBody(item: item, unitSlug: unitSlug);
           },
           loading: () =>
               const PwfLoadingBlock(message: 'جاري تحميل تفاصيل النشاط...'),
           error: (e, _) => PwfErrorBlock(
             onRetry: () => ref.invalidate(
-              activityForUnitByIdProvider(UnitActivityIdParam(unitSlug, id)),
+              activityContentDetailForUnitProvider(
+                UnitActivityContentIdParam(unitSlug, contentId),
+              ),
             ),
             message: e.toString(),
           ),
@@ -277,10 +282,10 @@ class _InlineComplementaryActivitiesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = isHomeScope ? 'أنشطة الوحدات والمحافظات' : 'أنشطة الوزارة';
+    final title = isHomeScope ? 'أنشطة الوحدات والمحافظات' : 'أنشطة مرتبطة';
     final subtitle = isHomeScope
         ? 'مساحة تعريفية مرافقة تعرض أنشطة الوحدات بعد تطبيق نفس الفلاتر المستخدمة في الصفحة الحالية.'
-        : 'مساحة تعريفية مرافقة تعرض أنشطة الوزارة بعد تطبيق نفس الفلاتر المستخدمة على أنشطة الجهة الحالية.';
+        : 'لا يتم عرض أنشطة الوزارة داخل صفحة الوحدة؛ تظهر هنا الأنشطة المرتبطة فقط عند توفرها.';
 
     return PwfSurfaceCard(
       child: Column(
@@ -584,7 +589,7 @@ class _ActivityHeroCard extends StatelessWidget {
                       const SizedBox(height: 18),
                       ElevatedButton.icon(
                         onPressed: () => context.go(
-                          UnitRoutes.activityDetail(unitSlug, item.id),
+                          UnitRoutes.activityDetail(unitSlug, item.publicDetailId),
                         ),
                         icon: const Icon(Icons.arrow_back),
                         label: const Text('عرض تفاصيل النشاط'),
@@ -674,7 +679,7 @@ class _ActivityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => context.go(UnitRoutes.activityDetail(unitSlug, item.id)),
+      onTap: () => context.go(UnitRoutes.activityDetail(unitSlug, item.publicDetailId)),
       borderRadius: PwfHomeRadii.br16,
       child: PwfSurfaceCard(
         padding: EdgeInsets.zero,
@@ -840,7 +845,7 @@ class _ActivityDetailBody extends ConsumerWidget {
             .where((e) => e.id != item.id)
             .take(3)
             .toList(growable: false);
-    final detailPath = UnitRoutes.activityDetail(unitSlug, item.id);
+    final detailPath = UnitRoutes.activityDetail(unitSlug, item.publicDetailId);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1061,7 +1066,7 @@ class _ActivityDetailBody extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 10),
                   child: InkWell(
                     onTap: () => context.go(
-                      UnitRoutes.activityDetail(unitSlug, related.id),
+                      UnitRoutes.activityDetail(unitSlug, related.publicDetailId),
                     ),
                     borderRadius: BorderRadius.circular(14),
                     child: Container(

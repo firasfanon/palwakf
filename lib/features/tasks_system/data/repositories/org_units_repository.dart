@@ -6,8 +6,10 @@ class OrgUnitsRepository {
   OrgUnitsRepository(this._client);
 
   Future<List<Map<String, dynamic>>> fetchUnitsWithProfiles() async {
-    final res = await _client
-        .from(PwfDatabaseOwnerSurfaces.orgUnits)
+    final res = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+          _client,
+          PwfDatabaseOwnerSurfaces.orgUnits,
+        )
         .select(
           'id,unit_type,parent_id,governorate_id,code,slug,name_ar,name_en,is_active,sort_order,created_at,updated_at,org_unit_profiles(*)',
         )
@@ -17,8 +19,10 @@ class OrgUnitsRepository {
   }
 
   Future<Map<String, dynamic>?> fetchUnitProfile(String unitId) async {
-    final res = await _client
-        .from(PwfDatabaseOwnerSurfaces.orgUnitProfiles)
+    final res = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+          _client,
+          PwfDatabaseOwnerSurfaces.orgUnitProfiles,
+        )
         .select('*')
         .eq('unit_id', unitId)
         .maybeSingle();
@@ -28,8 +32,10 @@ class OrgUnitsRepository {
 
   Future<Map<String, dynamic>?> fetchUnitBySlug(String slug) async {
     final s = slug.trim().toLowerCase();
-    final res = await _client
-        .from(PwfDatabaseOwnerSurfaces.orgUnits)
+    final res = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+          _client,
+          PwfDatabaseOwnerSurfaces.orgUnits,
+        )
         .select(
           'id,unit_type,parent_id,governorate_id,code,slug,name_ar,name_en,is_active,sort_order,created_at,updated_at,org_unit_profiles(*)',
         )
@@ -41,8 +47,10 @@ class OrgUnitsRepository {
 
   Future<String?> fetchUnitIdBySlug(String slug) async {
     final s = slug.trim().toLowerCase();
-    final res = await _client
-        .from(PwfDatabaseOwnerSurfaces.orgUnits)
+    final res = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+          _client,
+          PwfDatabaseOwnerSurfaces.orgUnits,
+        )
         .select('id')
         .eq('slug', s)
         .maybeSingle();
@@ -54,8 +62,10 @@ class OrgUnitsRepository {
     required Map<String, dynamic> unit,
     required Map<String, dynamic> profile,
   }) async {
-    final inserted = await _client
-        .from(PwfDatabaseOwnerSurfaces.orgUnits)
+    final inserted = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+          _client,
+          PwfDatabaseOwnerSurfaces.orgUnits,
+        )
         .insert(unit)
         .select('id')
         .single();
@@ -63,8 +73,10 @@ class OrgUnitsRepository {
 
     // Ensure profile row exists
     final prof = {...profile, 'unit_id': unitId};
-    await _client
-        .from(PwfDatabaseOwnerSurfaces.orgUnitProfiles)
+    await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+          _client,
+          PwfDatabaseOwnerSurfaces.orgUnitProfiles,
+        )
         .upsert(prof, onConflict: 'unit_id');
 
     return unitId;
@@ -75,21 +87,27 @@ class OrgUnitsRepository {
     required Map<String, dynamic> unitPatch,
     required Map<String, dynamic> profilePatch,
   }) async {
-    await _client
-        .from(PwfDatabaseOwnerSurfaces.orgUnits)
+    await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+          _client,
+          PwfDatabaseOwnerSurfaces.orgUnits,
+        )
         .update(unitPatch)
         .eq('id', unitId);
 
     // Upsert profile (1:1)
     final prof = {...profilePatch, 'unit_id': unitId};
-    await _client
-        .from(PwfDatabaseOwnerSurfaces.orgUnitProfiles)
+    await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+          _client,
+          PwfDatabaseOwnerSurfaces.orgUnitProfiles,
+        )
         .upsert(prof, onConflict: 'unit_id');
   }
 
   Future<void> deleteUnit(String unitId) async {
-    await _client
-        .from(PwfDatabaseOwnerSurfaces.orgUnits)
+    await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+          _client,
+          PwfDatabaseOwnerSurfaces.orgUnits,
+        )
         .delete()
         .eq('id', unitId);
   }

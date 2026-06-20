@@ -81,12 +81,17 @@ class _ComplaintsPageBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final s = PwfComplaintsStrings.of(context);
     final screenH = MediaQuery.of(context).size.height;
-    final tabsHeight = math.max(760.0, math.min(980.0, screenH * 0.84));
 
     final inner = LayoutBuilder(
       builder: (context, constraints) {
+        final mobile = constraints.maxWidth < 640;
+        final tabsHeight = mobile
+            ? math.max(820.0, math.min(1120.0, screenH * 1.12))
+            : math.max(760.0, math.min(980.0, screenH * 0.84));
         final maxWidth = 1100.0;
-        final horizontalPadding = constraints.maxWidth >= 1200 ? 24.0 : 16.0;
+        final horizontalPadding = mobile
+            ? 0.0
+            : (constraints.maxWidth >= 1200 ? 24.0 : 16.0);
 
         final pageContent = Center(
           child: ConstrainedBox(
@@ -117,7 +122,7 @@ class _ComplaintsPageBody extends ConsumerWidget {
                     child: SizedBox(
                       height: tabsHeight,
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(mobile ? 10 : 16),
                         child: PwfComplaintsTabScaffold(
                           tabs: [
                             s.t('complaints.tab.new'),

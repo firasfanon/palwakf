@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:waqf/core/access/access_provider.dart';
+
 import 'package:waqf/data/models/homepage_section.dart';
 import 'package:waqf/features/platform/home/presentation/widgets/sections/pwf_home_sections_renderer.dart';
+import 'package:waqf/features/platform/home/presentation/widgets/admin/pwf_unit_public_governance_panel.dart';
 import 'package:waqf/presentation/providers/org_units_provider.dart';
 import 'package:waqf/presentation/screens/admin/main/management/home_management/pwf_homepage_sections_manager.dart';
 import 'package:waqf/presentation/screens/admin/main/management/home_management/widgets/admin_surface_management_layout.dart';
@@ -24,6 +27,8 @@ class _UnitSurfacesManagementScreenState
     final state = ref.watch(pwfHomepageSectionsManagerProvider);
     final manager = ref.read(pwfHomepageSectionsManagerProvider.notifier);
     final unitsAsync = ref.watch(orgUnitsListProvider);
+    final accessProfile = ref.watch(accessProfileProvider).valueOrNull;
+    final isSuperuser = accessProfile?.hasPlatformRootAuthority ?? false;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -73,13 +78,20 @@ class _UnitSurfacesManagementScreenState
                       final unitType = ((row['unit_type'] ?? '') as String)
                           .trim()
                           .toLowerCase();
-                      return slug.isNotEmpty &&
-                          slug != 'home' &&
-                          unitType != 'system';
+                      // The canonical ministry surface (`home`) is a governed
+                      // operational target. It must be selectable here so its
+                      // composition can move through the authenticated four-eye
+                      // workflow; only system-internal surfaces remain excluded.
+                      return slug.isNotEmpty && unitType != 'system';
                     })
                     .map(_UnitSurfaceTarget.fromRow)
                     .toList()
                   ..sort((a, b) {
+                    // Keep the ministry home surface discoverable and first,
+                    // without treating it as a global fallback source.
+                    final aIsHome = a.slug == 'home';
+                    final bIsHome = b.slug == 'home';
+                    if (aIsHome != bIsHome) return aIsHome ? -1 : 1;
                     if (a.isActive != b.isActive) return a.isActive ? -1 : 1;
                     return a.label.compareTo(b.label);
                   });
@@ -99,7 +111,7 @@ class _UnitSurfacesManagementScreenState
               return ListView(
                 padding: PwfAdminSurfaceLayoutTokens.pagePadding,
                 children: [
-                  _buildSelectorCard(context, units, selectedTarget, manager),
+                  _buildSelectorCard(context, units, selectedTarget, manager, isSuperuser),
                   const SizedBox(height: 12),
                   _buildEmptyCard(context),
                 ],
@@ -110,9 +122,9 @@ class _UnitSurfacesManagementScreenState
               controlPanel: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildSelectorCard(context, units, selectedTarget, manager),
+                  _buildSelectorCard(context, units, selectedTarget, manager, isSuperuser),
                   const SizedBox(height: 12),
-                  _buildEditorCard(context, state, manager),
+                  _buildEditorCard(context, state, manager, selectedTarget),
                 ],
               ),
               previewPanel: _buildPreviewCard(context, state, selectedTarget),
@@ -128,6 +140,7 @@ class _UnitSurfacesManagementScreenState
     List<_UnitSurfaceTarget> units,
     _UnitSurfaceTarget? selectedTarget,
     PwfHomepageSectionsManager manager,
+    bool isSuperuser,
   ) {
     return Container(
       decoration: BoxDecoration(
@@ -147,14 +160,17 @@ class _UnitSurfacesManagementScreenState
           ),
           const SizedBox(height: 8),
           const Text(
-            'اختر الوحدة أولاً، ثم عدّل أقسام واجهتها العامة ومعاينتها قبل الحفظ. هذه الشاشة منفصلة عن Unit Pages التشغيلية القديمة.',
+            'اختر الوزارة أو إحدى الوحدات أولاً، ثم عدّل أقسام واجهتها العامة ومعاينتها قبل الحفظ. مسارات الوحدات القياسية تمر عبر المراجعة والاعتماد والنشر، بينما النشر السيادي المباشر للسوبر يوزر يُسجل صراحة في سجل التدقيق.',
             style: TextStyle(height: 1.55, color: Color(0xFF475569)),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          if (isSuperuser)
+            const _UnitSurfaceSuperuserNotice(),
+          if (isSuperuser) const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             value: selectedTarget?.slug,
             decoration: const InputDecoration(
-              labelText: 'الوحدة الهدف',
+              labelText: 'الوزارة أو الوحدة الهدف',
               border: OutlineInputBorder(),
             ),
             items: units
@@ -223,6 +239,7 @@ class _UnitSurfacesManagementScreenState
     BuildContext context,
     PwfHomepageSectionsState state,
     PwfHomepageSectionsManager manager,
+    _UnitSurfaceTarget selectedTarget,
   ) {
     return Container(
       decoration: BoxDecoration(
@@ -245,6 +262,11 @@ class _UnitSurfacesManagementScreenState
             sections: state.draft,
             onToggle: manager.toggleActive,
             onReorder: manager.reorder,
+          ),
+          const SizedBox(height: 16),
+          PwfUnitPublicGovernancePanel(
+            orgUnitId: selectedTarget.id,
+            unitNameAr: selectedTarget.label,
           ),
         ],
       ),
@@ -272,12 +294,42 @@ class _UnitSurfacesManagementScreenState
   }
 }
 
+class _UnitSurfaceSuperuserNotice extends StatelessWidget {
+  const _UnitSurfaceSuperuserNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F3FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFC4B5FD)),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.admin_panel_settings_outlined, color: Color(0xFF6D28D9)),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'تفويض Super User السيادي فعّال: يمكنك إدارة أي وحدة من هذه الشاشة دون Unit Scope اصطناعي. إجراءات النشر المباشر تظهر داخل بطاقة الحوكمة عندما يدعمها عقد RPC الخاص بالسطح.',
+              style: TextStyle(height: 1.45),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _UnitSurfaceTarget {
+  final String id;
   final String slug;
   final String label;
   final bool isActive;
 
   const _UnitSurfaceTarget({
+    required this.id,
     required this.slug,
     required this.label,
     required this.isActive,
@@ -285,6 +337,7 @@ class _UnitSurfaceTarget {
 
   factory _UnitSurfaceTarget.fromRow(Map<String, dynamic> row) {
     return _UnitSurfaceTarget(
+      id: (row['id'] ?? '').toString().trim(),
       slug: (row['slug'] ?? '').toString().trim().toLowerCase(),
       label: (row['name_ar'] ?? row['name_en'] ?? row['slug'] ?? '').toString(),
       isActive: (row['is_active'] ?? true) == true,
