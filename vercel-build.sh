@@ -11,4 +11,4 @@ flutter --version
 flutter config --enable-web
 flutter pub get
 
-flutter build web --release
+flutter build web --release --no-wasm-dry-run

@@ -105,32 +105,32 @@ class AdminPanelRegistry {
     ),
     AdminPanelTabItem(
       key: 'public',
-      label: 'المحتوى والواجهات',
+      label: 'الواجهة العامة',
       icon: Icons.web_outlined,
     ),
     AdminPanelTabItem(
       key: 'surfaces_services',
-      label: 'مركز الخدمات',
+      label: 'خدمات الجمهور',
       icon: Icons.apps_rounded,
     ),
     AdminPanelTabItem(
       key: 'media',
-      label: 'المركز الإعلامي',
+      label: 'الإعلام والنشر',
       icon: Icons.perm_media_outlined,
     ),
     AdminPanelTabItem(
-      key: 'platform',
-      label: 'المنصة',
-      icon: Icons.settings_outlined,
-    ),
-    AdminPanelTabItem(
       key: 'systems',
-      label: 'الأنظمة',
+      label: 'الأنظمة التشغيلية',
       icon: Icons.widgets_outlined,
     ),
     AdminPanelTabItem(
+      key: 'platform',
+      label: 'إدارة المنصة',
+      icon: Icons.settings_outlined,
+    ),
+    AdminPanelTabItem(
       key: 'governance',
-      label: 'الحوكمة والتدقيق',
+      label: 'الرقابة والجودة',
       icon: Icons.verified_user_outlined,
     ),
     AdminPanelTabItem(
@@ -1050,10 +1050,47 @@ class AdminPanelRegistry {
   ];
 
   static const groupEntrySections = <String, List<AdminPanelEntrySection>>{
+    'main': [
+      AdminPanelEntrySection(
+        title: 'العمل اليومي',
+        icon: Icons.space_dashboard_rounded,
+        routes: [
+          AppRoutes.adminDashboard,
+          AppRoutes.adminMyActivity,
+          AppRoutes.adminAssistant,
+        ],
+      ),
+      AdminPanelEntrySection(
+        title: 'الدعم والمعاينة',
+        icon: Icons.support_agent_rounded,
+        routes: [
+          AppRoutes.adminChatbot,
+          AppRoutes.adminUsageGuide,
+        ],
+      ),
+      AdminPanelEntrySection(
+        title: 'الإدارة العامة',
+        icon: Icons.settings_suggest_rounded,
+        routes: [AppRoutes.adminSettings],
+      ),
+    ],
+    'public': [
+      AdminPanelEntrySection(
+        title: 'إدارة الواجهات',
+        icon: Icons.dashboard_customize_rounded,
+        routes: [
+          AppRoutes.adminHomeManagement,
+          AppRoutes.adminUnitSurfacesManagement,
+          AppRoutes.adminSystemSurfacesManagement,
+          AppRoutes.adminUnitPagesExecution,
+          AppRoutes.adminSharedContent,
+        ],
+      ),
+    ],
     'surfaces_services': [
       AdminPanelEntrySection(
-        title: 'إدارة خدمات الجمهور',
-        icon: Icons.design_services_rounded,
+        title: 'الاستقبال والمتابعة',
+        icon: Icons.assignment_rounded,
         routes: [
           AppRoutes.adminServicesPage,
           AppRoutes.adminSurfacesServicesRequests,
@@ -1106,7 +1143,7 @@ class AdminPanelRegistry {
         ],
       ),
       AdminPanelEntrySection(
-        title: 'الأنشطة والفعاليات والاجتماعيات',
+        title: 'الأنشطة والفعاليات',
         icon: Icons.event_available_rounded,
         routes: [
           AppRoutes.adminMediaCenterActivities,
@@ -1137,11 +1174,6 @@ class AdminPanelRegistry {
           AppRoutes.adminMediaCenterFridaySermons,
         ],
       ),
-      AdminPanelEntrySection(
-        title: 'الحوكمة الإعلامية',
-        icon: Icons.policy_rounded,
-        routes: [AppRoutes.adminMediaCenterGovernance],
-      ),
     ],
     'public_pages': [
       AdminPanelEntrySection(
@@ -1169,40 +1201,65 @@ class AdminPanelRegistry {
     ],
     'platform': [
       AdminPanelEntrySection(
-        title: 'إدارة المنصة',
-        icon: Icons.settings_suggest_rounded,
+        title: 'الهوية والهيكل المؤسسي',
+        icon: Icons.people_alt_rounded,
         routes: [
-          AppRoutes.adminSettings,
           AppRoutes.adminUsers,
           AppRoutes.adminOrgUnits,
           AppRoutes.adminProfile,
+        ],
+      ),
+      AdminPanelEntrySection(
+        title: 'تشغيل المنصة وصيانتها',
+        icon: Icons.settings_rounded,
+        routes: [
           AppRoutes.adminTechnicalServices,
           AppRoutes.adminTechnicalServicesBackup,
           AppRoutes.adminTechnicalServicesMaintenance,
           AppRoutes.adminTechnicalServicesHealth,
           AppRoutes.adminTechnicalServicesDeployment,
           AppRoutes.adminTechnicalServicesAudit,
+        ],
+      ),
+      AdminPanelEntrySection(
+        title: 'سجل الأنظمة والتصميم',
+        icon: Icons.account_tree_rounded,
+        routes: [
+          AppRoutes.adminDynamicSystemRegistry,
+          AppRoutes.adminSystemOperations,
+          AppRoutes.adminDesignSystem,
+          AppRoutes.adminDesignSystemRolloutEvidence,
+          AppRoutes.adminDesignSystemWave2Scope,
+          AppRoutes.adminDesignSystemWave2MediaInventory,
           AppRoutes.adminDatabaseMigration,
         ],
       ),
       AdminPanelEntrySection(
-        title: 'مصادر ووظائف سيادية مساندة',
+        title: 'البيانات والتكامل والتقارير',
         icon: Icons.hub_rounded,
         routes: [
           AppRoutes.adminData,
+          AppRoutes.adminWaqfAssetsIntegrationIntake,
+          AppRoutes.adminCrossSystemContracts,
           AppRoutes.adminReports,
           AppRoutes.adminDocumentIntelligence,
           AppRoutes.adminDocumentIntelligenceReviewQueue,
-          AppRoutes.adminCrossSystemContracts,
         ],
       ),
     ],
     'systems': [
       AdminPanelEntrySection(
-        title: 'الأنظمة التشغيلية',
-        icon: Icons.widgets_rounded,
+        title: 'الأصول والوقف',
+        icon: Icons.landscape_rounded,
         routes: [
           AppRoutes.adminWaqfLands,
+          AppRoutes.adminWaqfAssetsIntegrationIntake,
+        ],
+      ),
+      AdminPanelEntrySection(
+        title: 'الأنظمة القطاعية',
+        icon: Icons.widgets_rounded,
+        routes: [
           AppRoutes.adminMosques,
           AppRoutes.adminCases,
           AppRoutes.adminTasks,
@@ -1210,12 +1267,9 @@ class AdminPanelRegistry {
         ],
       ),
       AdminPanelEntrySection(
-        title: 'استلام الأنظمة المرجعية',
-        icon: Icons.rule_folder_rounded,
-        routes: [
-          AppRoutes.adminWaqfAssetsIntegrationIntake,
-          AppRoutes.adminCrossSystemContracts,
-        ],
+        title: 'التكامل بين الأنظمة',
+        icon: Icons.account_tree_outlined,
+        routes: [AppRoutes.adminCrossSystemContracts],
       ),
     ],
     'governance': [
@@ -1241,7 +1295,6 @@ class AdminPanelRegistry {
           AppRoutes.adminTechnicalServicesHealth,
           AppRoutes.adminTechnicalServicesDeployment,
           AppRoutes.adminTechnicalServicesAudit,
-          AppRoutes.adminDeveloper,
         ],
       ),
     ],
@@ -1256,11 +1309,11 @@ class AdminPanelRegistry {
       return tabs[2];
     if (_publicRoutes.any((prefix) => value.startsWith(prefix))) return tabs[1];
     if (_mediaRoutes.any((prefix) => value.startsWith(prefix))) return tabs[3];
-    if (_systemRoutes.any((prefix) => value.startsWith(prefix))) return tabs[5];
+    if (_systemRoutes.any((prefix) => value.startsWith(prefix))) return tabs[4];
     if (_governanceRoutes.any((prefix) => value.startsWith(prefix)))
       return tabs[6];
     if (_platformRoutes.any((prefix) => value.startsWith(prefix)))
-      return tabs[4];
+      return tabs[5];
     if (_developerRoutes.any((prefix) => value.startsWith(prefix)))
       return tabs[7];
     return tabs[0];

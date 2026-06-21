@@ -24,3 +24,19 @@
 ## 2026-06-21 — Core Org Units Schema Qualification Runtime Closure
 - Corrected invalid `core.core.org_units` PostgREST relation construction.
 - Hardened Super User activity and unit context rendering.
+
+## 2026-06-21 — Final Consolidated Handoff + Updated Baseline
+
+- Consolidated the Platform 14 authority/runtime continuity state into a new baseline.
+- Recorded the authoritative separation between applied Staging Foundation Database Authority and pending final Flutter compile/build/browser certification.
+- Added a direct continuation prompt, UAT matrix, evidence index, open-gate registry, lineage record, and selected trigger evidence.
+- Kept Super Admin domain RPC waves, Media Center least-privilege containment, RLS/ACL changes, and production promotion explicitly out of scope.
+
+
+## 2026-06-21 — Platform 15F Admin Shell Material Boundary Runtime Hotfix
+
+- Added a shared desktop `Material` boundary in `PlatformAdminShell` so the refactored `WebSidebar` and `_AdminTopStrip` interactive Material controls have a valid ancestor.
+- Root cause: Chrome runtime error `No Material widget found` after Platform 15E sidebar information architecture work.
+- Added focused import-aware contract test, PowerShell static verifier, validation runner, UAT runbook, error record, and handoff.
+- No route, RBAC, database, Supabase, RLS, grant, or Media Center change.
+- Candidate only; Flutter and browser evidence pending.

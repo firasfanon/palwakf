@@ -52,6 +52,10 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     final effectiveTab = visibleTabs.any((tab) => tab.key == _activeTab)
         ? _activeTab
         : (visibleTabs.isNotEmpty ? visibleTabs.first.key : 'main');
+    final activeWorkspace = visibleTabs.firstWhere(
+      (tab) => tab.key == effectiveTab,
+      orElse: () => visibleTabs.first,
+    );
     final groups = _visibleGroupsForTab(
       effectiveTab,
       accessProfile,
@@ -63,7 +67,7 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
-      width: collapsed ? 88 : 264,
+      width: collapsed ? 76 : 304,
       decoration: BoxDecoration(
         color: const Color(0xFF0B1220),
         border: Border(
@@ -79,22 +83,24 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
       ),
       child: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+          padding: const EdgeInsets.fromLTRB(10, 10, 10, 14),
           children: [
             _buildHeader(
               collapsed: collapsed,
               showRoutes: showRoutes,
               showPageNames: showPageNames,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             _buildTabBar(
               tabs: visibleTabs,
               activeTabKey: effectiveTab,
-              accessProfile: accessProfile,
-              dynamicSystems: dynamicSystems,
               collapsed: collapsed,
             ),
-            const SizedBox(height: 8),
+            if (!collapsed) ...[
+              const SizedBox(height: 12),
+              _buildWorkspaceCaption(activeWorkspace, groups),
+            ],
+            const SizedBox(height: 4),
             if (groups.isEmpty)
               _buildAccessEmptyState(collapsed: collapsed)
             else
@@ -135,6 +141,43 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildWorkspaceCaption(
+    AdminPanelTabItem workspace,
+    List<AdminPanelGroup> groups,
+  ) {
+    final subtitle = groups.length == 1
+        ? groups.first.subtitle
+        : 'اختر الباب المناسب ضمن الفئات المرتبة أدناه.';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(6, 2, 6, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            workspace.label,
+            style: const TextStyle(
+              color: Color(0xFFF8FAFC),
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF94A3B8),
+              fontSize: 11.3,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -357,217 +400,173 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     required bool showPageNames,
   }) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.symmetric(
+        horizontal: collapsed ? 8 : 12,
+        vertical: 10,
+      ),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F4C81), Color(0xFF0B1220)],
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-        ),
-        borderRadius: BorderRadius.circular(24),
+        color: const Color(0xFF101C30),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: const Color(0xFFEAB308).withValues(alpha: 0.22),
+          color: const Color(0xFFEAB308).withValues(alpha: 0.20),
         ),
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: collapsed ? 46 : 54,
-                height: collapsed ? 46 : 54,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
+      child: collapsed
+          ? IconButton(
+              tooltip: 'توسيع الشريط الجانبي',
+              onPressed: () => ref
+                  .read(adminSidebarCollapsedProvider.notifier)
+                  .state = false,
+              icon: SizedBox(
+                width: 36,
+                height: 36,
+                child: Image.asset(AppConstants.appLogo, fit: BoxFit.contain),
+              ),
+            )
+          : Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   child: Image.asset(AppConstants.appLogo, fit: BoxFit.contain),
                 ),
-              ),
-              if (!collapsed) ...[
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'لوحة التحكم',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 15,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 2),
                       Text(
-                        'PalWakf Admin',
+                        'إدارة منصة PalWakf',
                         style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFFF8FAFC),
+                          fontSize: 11.5,
+                          color: Color(0xFFCBD5E1),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 14),
-          Align(
-            alignment: collapsed ? Alignment.center : Alignment.centerLeft,
-            child: IconButton.filledTonal(
-              onPressed: () =>
-                  ref.read(adminSidebarCollapsedProvider.notifier).state =
-                      !collapsed,
-              icon: Icon(
-                collapsed
-                    ? Icons.chevron_left_rounded
-                    : Icons.chevron_right_rounded,
-              ),
-              tooltip: collapsed ? 'توسيع السايد بار' : 'طي السايد بار',
-            ),
-          ),
-          if (!collapsed)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Text(
-                    'إدارة المنصة\nوالأنظمة المتصلة',
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      color: Colors.white,
-                      height: 1.55,
-                      fontWeight: FontWeight.w800,
-                    ),
+                IconButton(
+                  tooltip: 'طي الشريط الجانبي',
+                  onPressed: () => ref
+                      .read(adminSidebarCollapsedProvider.notifier)
+                      .state = true,
+                  icon: const Icon(
+                    Icons.keyboard_double_arrow_right_rounded,
+                    color: Color(0xFFEAB308),
                   ),
-                  if (showPageNames || showRoutes) ...[
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        if (showPageNames)
-                          const _SidebarHintChip(
-                            label: 'أسماء الصفحات: ظاهرة',
-                            icon: Icons.title_rounded,
-                          ),
-                        if (showRoutes)
-                          const _SidebarHintChip(
-                            label: 'المسارات: ظاهرة',
-                            icon: Icons.route_rounded,
-                          ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
+                ),
+              ],
             ),
-        ],
-      ),
     );
   }
 
   Widget _buildTabBar({
     required List<AdminPanelTabItem> tabs,
     required String activeTabKey,
-    required AccessProfile? accessProfile,
-    required List<PwfDynamicSystemModule> dynamicSystems,
     required bool collapsed,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final itemWidth = collapsed
-              ? constraints.maxWidth
-              : (constraints.maxWidth - 12) / 2;
-          return Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              for (final tab in tabs)
-                SizedBox(
-                  width: itemWidth,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () {
-                        setState(() => _activeTab = tab.key);
-                        final targetRoute = _defaultRouteForTab(
-                          tab.key,
-                          accessProfile,
-                          dynamicSystems,
-                        );
-                        if (targetRoute != null &&
-                            (widget.currentRoute ?? '') != targetRoute) {
-                          context.go(targetRoute);
-                        }
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: activeTabKey == tab.key
-                              ? const Color(0xFFEAB308)
-                              : const Color(0xFF132238),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: activeTabKey == tab.key
-                                ? const Color(0xFFEAB308)
-                                : Colors.white.withValues(alpha: 0.08),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              tab.icon,
-                              size: 18,
-                              color: activeTabKey == tab.key
-                                  ? const Color(0xFF0B1220)
-                                  : Colors.white,
-                            ),
-                            if (!collapsed) ...[
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  tab.label,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: activeTabKey == tab.key
-                                        ? const Color(0xFF0B1220)
-                                        : const Color(0xFFF8FAFC),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
+    final activeTab = tabs.firstWhere(
+      (tab) => tab.key == activeTabKey,
+      orElse: () => tabs.first,
+    );
+
+    return PopupMenuButton<String>(
+      tooltip: 'تغيير مساحة العمل',
+      onSelected: (key) => setState(() => _activeTab = key),
+      color: const Color(0xFF132238),
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      itemBuilder: (context) => [
+        for (final tab in tabs)
+          PopupMenuItem<String>(
+            value: tab.key,
+            child: Row(
+              children: [
+                Icon(
+                  tab.icon,
+                  size: 19,
+                  color: tab.key == activeTabKey
+                      ? const Color(0xFFEAB308)
+                      : const Color(0xFFCBD5E1),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    tab.label,
+                    style: TextStyle(
+                      color: tab.key == activeTabKey
+                          ? Colors.white
+                          : const Color(0xFFE2E8F0),
+                      fontWeight: tab.key == activeTabKey
+                          ? FontWeight.w900
+                          : FontWeight.w700,
                     ),
                   ),
                 ),
+                if (tab.key == activeTabKey)
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    size: 18,
+                    color: Color(0xFFEAB308),
+                  ),
+              ],
+            ),
+          ),
+      ],
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: collapsed ? 0 : 12,
+          vertical: 11,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xFF132238),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Row(
+          mainAxisAlignment: collapsed
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.start,
+          children: [
+            Icon(activeTab.icon, color: const Color(0xFFEAB308), size: 20),
+            if (!collapsed) ...[
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  activeTab.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFFF8FAFC),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12.8,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: Color(0xFFCBD5E1),
+              ),
             ],
-          );
-        },
+          ],
+        ),
       ),
     );
   }
@@ -716,32 +715,16 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     required bool showRoutes,
     required bool collapsed,
   }) {
-    if (collapsed) return const SizedBox(height: 6);
+    if (collapsed) return const SizedBox(height: 4);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            group.title,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: Colors.white.withValues(alpha: 0.82),
-            ),
-          ),
-          if (showRoutes) ...[
-            const SizedBox(height: 4),
-            Text(
-              group.subtitle,
-              style: TextStyle(
-                fontSize: 11,
-                height: 1.45,
-                color: Colors.white.withValues(alpha: 0.58),
-              ),
-            ),
-          ],
-        ],
+      padding: const EdgeInsets.fromLTRB(6, 10, 6, 6),
+      child: Text(
+        group.title,
+        style: const TextStyle(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w900,
+          color: Color(0xFF94A3B8),
+        ),
       ),
     );
   }
@@ -755,50 +738,49 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     required bool showDescription,
   }) {
     if (group.items.isEmpty) return const SizedBox.shrink();
-    final parent = group.items.first;
     final byRoute = <String, AdminPanelEntry>{
-      for (final item in group.items) item.route: item,
+      for (final item in group.items) _normalizeRoute(item.route): item,
     };
-    final current = widget.currentRoute ?? '';
-    final isActive =
-        current.startsWith(parent.route) ||
-        sections.any(
-          (section) => section.routes.any((route) => current.startsWith(route)),
-        );
+    final sectionedRoutes = <String>{
+      for (final section in sections)
+        for (final route in section.routes) _normalizeRoute(route),
+    };
+    final hubItems = group.items
+        .where((item) => !sectionedRoutes.contains(_normalizeRoute(item.route)))
+        .toList(growable: false);
 
     if (collapsed) {
+      final collapsedItem = hubItems.isNotEmpty ? hubItems.first : group.items.first;
       return _buildNavItem(
         context,
-        parent,
-        collapsed: collapsed,
+        collapsedItem,
+        collapsed: true,
         showRoutes: showRoutes,
-        showDescription: showDescription,
+        showDescription: false,
       );
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+      margin: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF133056) : const Color(0xFF132238),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isActive
-              ? const Color(0xFFEAB308)
-              : Colors.white.withValues(alpha: 0.08),
-        ),
+        color: const Color(0xFF101B2D),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildSurfaceServicesParentItem(
-            context,
-            parent,
-            isActive: current == parent.route,
-            showDescription: showDescription,
-            showRoutes: showRoutes,
-          ),
-          const SizedBox(height: 8),
+          for (final item in hubItems) ...[
+            _buildSurfaceServicesParentItem(
+              context,
+              item,
+              isActive: _routeIsActive(item.route),
+              showDescription: showDescription,
+              showRoutes: showRoutes,
+            ),
+            const SizedBox(height: 6),
+          ],
           for (final section in sections)
             _buildSidebarEntrySection(
               context,
@@ -808,7 +790,7 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
                 routes: section.routes,
               ),
               entries: section.routes
-                  .map((route) => byRoute[route])
+                  .map((route) => byRoute[_normalizeRoute(route)])
                   .whereType<AdminPanelEntry>()
                   .toList(growable: false),
               showRoutes: showRoutes,
@@ -816,6 +798,13 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
         ],
       ),
     );
+  }
+
+  bool _routeIsActive(String route) {
+    final current = _normalizeRoute(widget.currentRoute);
+    final candidate = _normalizeRoute(route);
+    return current == candidate ||
+        (candidate.isNotEmpty && current.startsWith('$candidate/'));
   }
 
   Widget _buildMediaCenterDropdown(
@@ -1068,81 +1057,45 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         onTap: () => context.go(parent.route),
         child: Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
           decoration: BoxDecoration(
             color: isActive
-                ? const Color(0xFFEAB308).withValues(alpha: 0.16)
-                : Colors.white.withValues(alpha: 0.045),
-            borderRadius: BorderRadius.circular(14),
+                ? const Color(0xFF173B66)
+                : Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isActive
-                  ? const Color(0xFFEAB308).withValues(alpha: 0.45)
-                  : Colors.white.withValues(alpha: 0.06),
+                  ? const Color(0xFFEAB308).withValues(alpha: 0.62)
+                  : Colors.white.withValues(alpha: 0.05),
             ),
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? const Color(0xFFEAB308).withValues(alpha: 0.18)
-                      : Colors.white.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  parent.icon,
-                  size: 19,
-                  color: isActive ? const Color(0xFFEAB308) : Colors.white,
+              Icon(
+                parent.icon,
+                size: 18,
+                color: isActive ? const Color(0xFFEAB308) : Colors.white,
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  parent.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFFF8FAFC),
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12.5,
+                  ),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      parent.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFFF8FAFC),
-                        fontWeight: FontWeight.w900,
-                        fontSize: 12.8,
-                      ),
-                    ),
-                    if (showDescription) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        parent.description,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 10.8,
-                          height: 1.35,
-                          color: Color(0xFFD7E3F6),
-                        ),
-                      ),
-                    ],
-                    if (showRoutes) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        parent.route,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFFCBD5E1),
-                          fontSize: 10.5,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+              const Icon(
+                Icons.chevron_left_rounded,
+                size: 18,
+                color: Color(0xFF94A3B8),
               ),
             ],
           ),
@@ -1158,20 +1111,19 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     required bool showRoutes,
   }) {
     if (entries.isEmpty) return const SizedBox.shrink();
-    final current = widget.currentRoute ?? '';
-    final isActive = entries.any((entry) => current.startsWith(entry.route));
+    final isActive = entries.any((entry) => _routeIsActive(entry.route));
 
     return Container(
-      margin: const EdgeInsets.only(top: 6),
+      margin: const EdgeInsets.only(top: 5),
       decoration: BoxDecoration(
         color: isActive
-            ? const Color(0xFF0F2A49)
-            : Colors.white.withValues(alpha: 0.035),
-        borderRadius: BorderRadius.circular(14),
+            ? const Color(0xFF102B4A)
+            : Colors.white.withValues(alpha: 0.025),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isActive
-              ? const Color(0xFFEAB308).withValues(alpha: 0.28)
-              : Colors.white.withValues(alpha: 0.055),
+              ? const Color(0xFFEAB308).withValues(alpha: 0.22)
+              : Colors.white.withValues(alpha: 0.045),
         ),
       ),
       child: Material(
@@ -1180,13 +1132,12 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
             initiallyExpanded: isActive,
-            tilePadding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 2,
-            ),
-            childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            maintainState: true,
+            tilePadding: const EdgeInsets.symmetric(horizontal: 10),
+            childrenPadding: const EdgeInsets.fromLTRB(7, 0, 7, 7),
+            visualDensity: VisualDensity.compact,
             iconColor: const Color(0xFFEAB308),
-            collapsedIconColor: Colors.white70,
+            collapsedIconColor: const Color(0xFF94A3B8),
             leading: Icon(
               section.icon,
               size: 18,
@@ -1198,7 +1149,7 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: Color(0xFFF8FAFC),
-                fontSize: 12.3,
+                fontSize: 12.1,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -1217,66 +1168,65 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     AdminPanelEntry item, {
     required bool showRoutes,
   }) {
-    final isActive = widget.currentRoute == item.route;
+    final isActive = _routeIsActive(item.route);
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         onTap: () => context.go(item.route),
         child: Container(
           width: double.infinity,
-          margin: const EdgeInsets.only(top: 6),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          margin: const EdgeInsets.only(top: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
           decoration: BoxDecoration(
             color: isActive
-                ? const Color(0xFFEAB308).withValues(alpha: 0.16)
-                : Colors.white.withValues(alpha: 0.045),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isActive
-                  ? const Color(0xFFEAB308).withValues(alpha: 0.45)
-                  : Colors.white.withValues(alpha: 0.06),
-            ),
+                ? const Color(0xFFEAB308).withValues(alpha: 0.14)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
             children: [
               Icon(
                 item.icon,
-                size: 18,
+                size: 16,
                 color: isActive ? const Color(0xFFEAB308) : Colors.white70,
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFFF8FAFC),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12.5,
-                      ),
-                    ),
-                    if (showRoutes) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        item.route,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFFCBD5E1),
-                          fontSize: 10.5,
-                        ),
-                      ),
-                    ],
-                  ],
+                child: Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isActive ? Colors.white : const Color(0xFFE2E8F0),
+                    fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+                    fontSize: 12.2,
+                  ),
                 ),
               ),
+              if (item.badge != null)
+                _buildBadge(item.badge!),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBadge(int value) {
+    return Container(
+      margin: const EdgeInsetsDirectional.only(start: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFB22222),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        value.toString(),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );
@@ -1289,137 +1239,73 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     required bool showRoutes,
     required bool showDescription,
   }) {
-    final isActive = widget.currentRoute == item.route;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () => context.go(item.route),
-          child: Ink(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isActive
-                  ? const Color(0xFF133056)
-                  : const Color(0xFF132238),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
+    final isActive = _routeIsActive(item.route);
+    final tooltip = showDescription ? item.description : item.label;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Tooltip(
+        message: collapsed ? tooltip : '',
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => context.go(item.route),
+            child: Container(
+              height: collapsed ? 48 : 46,
+              padding: EdgeInsets.symmetric(horizontal: collapsed ? 0 : 11),
+              decoration: BoxDecoration(
                 color: isActive
-                    ? const Color(0xFFEAB308)
-                    : Colors.white.withValues(alpha: 0.08),
-              ),
-              boxShadow: isActive
-                  ? [
-                      BoxShadow(
-                        color: const Color(0xFFEAB308).withValues(alpha: 0.10),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: collapsed
-                  ? MainAxisAlignment.center
-                  : MainAxisAlignment.start,
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
+                    ? const Color(0xFF173B66)
+                    : Colors.white.withValues(alpha: 0.025),
+                borderRadius: BorderRadius.circular(12),
+                border: BorderDirectional(
+                  start: BorderSide(
                     color: isActive
-                        ? const Color(0xFFEAB308).withValues(alpha: 0.18)
-                        : Colors.white.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    item.icon,
-                    color: isActive ? const Color(0xFFEAB308) : Colors.white,
-                    size: 20,
+                        ? const Color(0xFFEAB308)
+                        : Colors.transparent,
+                    width: 3,
                   ),
                 ),
-                if (!collapsed) ...[
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.label,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFFF8FAFC),
-                          ),
-                        ),
-                        if (showDescription) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            item.description,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              height: 1.4,
-                              color: Color(0xFFD7E3F6),
-                            ),
-                          ),
-                        ],
-                        if (showRoutes) ...[
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.06),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              item.route,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 10.5,
-                                color: Color(0xFFCBD5E1),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+              ),
+              child: Row(
+                mainAxisAlignment: collapsed
+                    ? MainAxisAlignment.center
+                    : MainAxisAlignment.start,
+                children: [
+                  Icon(
+                    item.icon,
+                    size: 19,
+                    color: isActive ? const Color(0xFFEAB308) : Colors.white70,
                   ),
-                  if (item.badge != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFB22222),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
+                  if (!collapsed) ...[
+                    const SizedBox(width: 10),
+                    Expanded(
                       child: Text(
-                        item.badge.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
+                        item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12.7,
+                          fontWeight: isActive
+                              ? FontWeight.w900
+                              : FontWeight.w700,
+                          color: isActive
+                              ? Colors.white
+                              : const Color(0xFFE2E8F0),
                         ),
                       ),
                     ),
+                    if (item.badge != null) _buildBadge(item.badge!),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+
 }
 
 class _SidebarEntrySection {
