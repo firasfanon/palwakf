@@ -744,10 +744,27 @@ class HomepageRepository {
     String? homeUnitId,
     bool strictUnitOnly = false,
   }) async {
-    // Platform 13 sovereign closure: both ministry and unit pages consume the
-    // owner composition runtime. No public/homepage_sections fallback is
-    // permitted at runtime. Empty composition remains an intentional safe state.
-    return _fetchOwnerCompositionRows(unitId);
+    final ownerRows = await _fetchOwnerCompositionRows(unitId);
+    if (ownerRows.isNotEmpty) return ownerRows;
+    // Fallback: if the owner composition view is empty, read from the legacy
+    // table so the public page is never blank while the admin migrates data.
+    return _fetchLegacySectionsRows(unitId);
+  }
+
+  Future<List<HomepageSection>> _fetchLegacySectionsRows(String unitId) async {
+    try {
+      final rows = await _client
+          .from(sectionsTable)
+          .select()
+          .eq('unit_id', unitId)
+          .order('display_order', ascending: true);
+      return (rows as List<dynamic>).map((raw) {
+        final row = Map<String, dynamic>.from(raw as Map);
+        return _withCanonicalSectionName(HomepageSection.fromJson(row));
+      }).toList(growable: false);
+    } on PostgrestException {
+      return const <HomepageSection>[];
+    }
   }
 
   Future<List<HomepageSection>> _fetchOwnerCompositionRows(String unitId) async {
@@ -1027,8 +1044,9 @@ class HomepageRepository {
       }
     }
 
-    // Best-effort: also sync owner-schema table so the runtime view
+    // Sync owner-schema table so the runtime view
     // (`v_unit_public_composition_runtime_v1`) reflects changes.
+    // This is the authoritative source for the public homepage.
     try {
       for (final entry in entries) {
         final sectionName = entry['section_name'] as String;
@@ -1050,6 +1068,15 @@ class HomepageRepository {
               .from('org_unit_public_compositions')
               .update(ownerPayload)
               .eq('id', ownerRow['id'] as int);
+        } else {
+          await _client.schema('platform_experience')
+              .from('org_unit_public_compositions')
+              .insert(<String, dynamic>{
+            ...ownerPayload,
+            'section_name': sectionName,
+            'org_unit_id': unitId,
+            'created_at': nowIso,
+          });
         }
       }
     } catch (e) {
