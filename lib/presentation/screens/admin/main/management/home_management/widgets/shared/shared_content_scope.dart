@@ -113,3 +113,102 @@ class SharedContentScopeBadge extends StatelessWidget {
     );
   }
 }
+
+/// Limits selectable editorial scopes without injecting a ministry/home fallback.
+/// An empty [allowedSlugs] means the caller keeps the legacy all-units selector.
+List<SharedContentScopeOption> filterSharedContentScopeOptions(
+  List<SharedContentScopeOption> options, {
+  Set<String>? allowedSlugs,
+}) {
+  if (allowedSlugs == null) return options;
+  final normalized = allowedSlugs
+      .map((value) => value.trim().toLowerCase())
+      .where((value) => value.isNotEmpty)
+      .toSet();
+  return options
+      .where((option) => normalized.contains(option.slug.trim().toLowerCase()))
+      .toList(growable: false);
+}
+
+/// Reusable scoped selector used by both the general and unit-owned editorial
+/// workspaces. In locked mode it deliberately exposes the context as read-only.
+class SharedContentScopeSelector extends StatelessWidget {
+  const SharedContentScopeSelector({
+    super.key,
+    required this.options,
+    required this.value,
+    required this.onChanged,
+    this.locked = false,
+    this.labelText = 'نطاق الإدارة',
+  });
+
+  final List<SharedContentScopeOption> options;
+  final String value;
+  final ValueChanged<String> onChanged;
+  final bool locked;
+  final String labelText;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = options.firstWhere(
+      (option) => option.slug == value,
+      orElse: () => options.first,
+    );
+
+    if (locked || options.length <= 1) {
+      return InputDecorator(
+        decoration: InputDecoration(
+          labelText: labelText,
+          prefixIcon: const Icon(Icons.account_tree_outlined),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                selected.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.lock_outline, size: 18),
+          ],
+        ),
+      );
+    }
+
+    return DropdownButtonFormField<String>(
+      value: selected.slug,
+      isExpanded: true,
+      decoration: InputDecoration(labelText: labelText),
+      items: options
+          .map(
+            (option) => DropdownMenuItem<String>(
+              value: option.slug,
+              child: Text(
+                option.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          )
+          .toList(growable: false),
+      selectedItemBuilder: (context) => options
+          .map<Widget>(
+            (option) => Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                option.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          )
+          .toList(growable: false),
+      onChanged: (next) {
+        if (next != null && next.isNotEmpty) onChanged(next);
+      },
+    );
+  }
+}

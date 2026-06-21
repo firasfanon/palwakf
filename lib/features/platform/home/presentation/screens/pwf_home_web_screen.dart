@@ -155,6 +155,18 @@ class _PwfHomeWebScreenState extends ConsumerState<PwfHomeWebScreen> {
                                               name == 'footer') &&
                                           (s as dynamic).isActive == true;
                                     });
+                                    final bool hasPublicBody =
+                                        PwfHomeSectionsRenderer.hasRenderablePublicBody(
+                                      sections,
+                                    );
+
+                                    if (!hasPublicBody) {
+                                      return <Widget>[
+                                        const _PwfPublicHomeCompositionEmptyState(),
+                                        const PwfLoginModal(),
+                                        PwfFooterSection(unitSlug: widget.unitSlug),
+                                      ];
+                                    }
 
                                     return <Widget>[
                                       PwfHomeSectionsRenderer(
@@ -280,6 +292,55 @@ class _PwfHomeWebScreenState extends ConsumerState<PwfHomeWebScreen> {
     }
 
     return page;
+  }
+}
+
+class _PwfPublicHomeCompositionEmptyState extends StatelessWidget {
+  const _PwfPublicHomeCompositionEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 72),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 680),
+          child: Card(
+            elevation: 0,
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.home_work_outlined,
+                    size: 44,
+                    color: Color(0xFF0F4C81),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'الصفحة قيد الإعداد',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'يجري تجهيز المحتوى الرسمي لهذه الصفحة. يرجى المحاولة لاحقًا.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(height: 1.6, color: Color(0xFF475569)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

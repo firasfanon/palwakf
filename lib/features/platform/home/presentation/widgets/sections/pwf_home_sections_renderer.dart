@@ -145,6 +145,26 @@ class PwfHomeSectionsRenderer extends StatelessWidget {
     'pwf_footer': (context, unitSlug) => PwfFooterSection(unitSlug: unitSlug),
   };
 
+  /// Returns whether the provided composition can produce a visible public body.
+  /// Used by the page shell to avoid presenting a header-only blank canvas when
+  /// rows are empty, inactive, or contain only pinned chrome entries.
+  static bool hasRenderablePublicBody(List<HomepageSection> sections) {
+    for (final section in sections) {
+      if (!section.isActive) continue;
+      final key = canonicalPwfHomeSectionKey(section.sectionName);
+      final rendererKey = pwfHomeSectionRendererKey(key);
+      final isPinnedChrome = rendererKey == 'pwf_top_bar' ||
+          rendererKey == 'pwf_main_nav' ||
+          rendererKey == 'pwf_footer';
+      if (isPinnedChrome) continue;
+      if (kDefaultBuilders.containsKey(rendererKey) &&
+          pwfHomeSectionIsRuntimeVisible(key)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final ordered = _normalize(sections);

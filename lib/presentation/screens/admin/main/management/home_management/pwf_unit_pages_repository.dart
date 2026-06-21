@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:waqf/core/data/pwf_runtime_payload_normalizer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:waqf/presentation/providers/org_units_provider.dart';
@@ -52,16 +53,22 @@ class PwfUnitPagesRepository {
         );
 
     final pagesByUnit = <String, Map<String, dynamic>>{};
-    for (final raw in (pageRows as List<dynamic>)) {
-      final row = Map<String, dynamic>.from(raw as Map);
+    for (final raw in PwfRuntimePayloadNormalizer.rows(
+      pageRows,
+      source: 'public.v_platform_site_pages_compat_v1 unit contracts',
+    )) {
+      final row = Map<String, dynamic>.from(raw);
       final unitId = (row['unit_id'] ?? '').toString().trim();
       if (unitId.isEmpty) continue;
       pagesByUnit[unitId] = row;
     }
 
     final sectionsByUnit = <String, List<Map<String, dynamic>>>{};
-    for (final raw in (sectionRows as List<dynamic>)) {
-      final row = Map<String, dynamic>.from(raw as Map);
+    for (final raw in PwfRuntimePayloadNormalizer.rows(
+      sectionRows,
+      source: 'public.v_platform_homepage_sections_compat_v1 unit contracts',
+    )) {
+      final row = Map<String, dynamic>.from(raw);
       final unitId = (row['unit_id'] ?? '').toString().trim();
       if (unitId.isEmpty) continue;
       sectionsByUnit

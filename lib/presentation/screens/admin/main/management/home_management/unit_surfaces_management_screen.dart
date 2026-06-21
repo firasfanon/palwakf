@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:waqf/app/routing/app_routes.dart';
 import 'package:waqf/core/access/access_provider.dart';
-
 import 'package:waqf/data/models/homepage_section.dart';
 import 'package:waqf/features/platform/home/presentation/widgets/sections/pwf_home_sections_renderer.dart';
-import 'package:waqf/features/platform/home/presentation/widgets/admin/pwf_unit_public_governance_panel.dart';
-import 'package:waqf/presentation/providers/org_units_provider.dart';
+import 'package:waqf/features/platform/unit_operations/domain/unit_operational_activation_contract.dart';
+import 'package:waqf/features/platform/unit_operations/presentation/providers/unit_operational_activation_providers.dart';
+import 'package:waqf/presentation/providers/homepage_settings_provider.dart';
 import 'package:waqf/presentation/screens/admin/main/management/home_management/pwf_homepage_sections_manager.dart';
+import 'package:waqf/presentation/screens/admin/main/management/home_management/pwf_unit_pages_repository.dart';
 import 'package:waqf/presentation/screens/admin/main/management/home_management/widgets/admin_surface_management_layout.dart';
 
+/// Canonical editor for owner-runtime public compositions.
+///
+/// This screen is the only editable surface-composition route. The legacy unit
+/// page execution route delegates here so a legacy publication marker cannot
+/// diverge from the composition consumed by the public runtime.
 class UnitSurfacesManagementScreen extends ConsumerStatefulWidget {
-  const UnitSurfacesManagementScreen({super.key});
+  const UnitSurfacesManagementScreen({super.key, this.initialUnitSlug});
+
+  final String? initialUnitSlug;
 
   @override
   ConsumerState<UnitSurfacesManagementScreen> createState() =>
@@ -21,14 +31,137 @@ class UnitSurfacesManagementScreen extends ConsumerStatefulWidget {
 class _UnitSurfacesManagementScreenState
     extends ConsumerState<UnitSurfacesManagementScreen> {
   String? _selectedSlug;
+  String? _queuedSlug;
+
+  @override
+  void initState() {
+    super.initState();
+    final candidate = widget.initialUnitSlug?.trim().toLowerCase();
+    _selectedSlug = candidate == null || candidate.isEmpty ? null : candidate;
+  }
+
+  void _queueCompositionLoad(
+    String slug,
+    PwfHomepageSectionsManager manager,
+    PwfHomepageSectionsState state,
+  ) {
+    if (slug.isEmpty || state.unitSlug == slug || state.isLoading) return;
+    if (_queuedSlug == slug) return;
+    _queuedSlug = slug;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await manager.setUnitSlug(slug);
+      if (_queuedSlug == slug) _queuedSlug = null;
+    });
+  }
+
+  Future<void> _saveAndReconcile(PwfHomepageSectionsManager manager) async {
+    await manager.save();
+    if (!mounted) return;
+    final latest = ref.read(pwfHomepageSectionsManagerProvider);
+    if (latest.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذر حفظ مسودة تركيب العرض: ${latest.error}')),
+      );
+      return;
+    }
+
+    final slug = latest.unitSlug.trim().isEmpty
+        ? 'home'
+        : latest.unitSlug.trim().toLowerCase();
+    ref.invalidate(homepageSectionsForUnitProvider(slug));
+    ref.invalidate(pwfUnitPagesPersistedContractsProvider);
+    ref.invalidate(unitOperationalActivationStatesProvider);
+    try {
+      await ref.refresh(unitOperationalActivationStatesProvider.future);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'تم حفظ مسودة تركيب العرض. النشر العام خطوة مستقلة؛ استخدم «نشر التركيب للعامة» بعد مراجعة المعاينة.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'تم حفظ المسودة، لكن تعذرت إعادة قراءة الجاهزية من Runtime: $error',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _publishAndReconcile(PwfHomepageSectionsManager manager) async {
+    final beforePublish = ref.read(pwfHomepageSectionsManagerProvider);
+    if (beforePublish.isDirty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('احفظ مسودة تركيب العرض قبل طلب النشر العام.'),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final receipt = await manager.publishRuntimeComposition();
+      if (!mounted) return;
+
+      final slug = ref.read(pwfHomepageSectionsManagerProvider).unitSlug
+          .trim()
+          .toLowerCase();
+      ref.invalidate(homepageSectionsForUnitProvider(slug));
+      ref.invalidate(pwfUnitPagesPersistedContractsProvider);
+      ref.invalidate(unitOperationalActivationStatesProvider);
+
+      try {
+        final states = await ref.refresh(
+          unitOperationalActivationStatesProvider.future,
+        );
+        final confirmed = states
+            .where((state) => state.slug == slug)
+            .cast<UnitOperationalActivationState?>()
+            .firstWhere((state) => state != null, orElse: () => null);
+        final runtimeConfirmed = confirmed != null &&
+            confirmed.isSurfacePublished &&
+            confirmed.activeSectionCount > 0;
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              runtimeConfirmed
+                  ? 'تم نشر تركيب العرض للعامة وتأكيد Runtime بعد القراءة اللاحقة (${receipt.publishedEntryCount} قسمًا منشورًا).'
+                  : 'تم استدعاء النشر، لكن قراءة Runtime لم تؤكد الظهور العام بعد. راجع بطاقة الجاهزية وNetwork.',
+            ),
+          ),
+        );
+      } catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'تم تنفيذ طلب النشر، لكن تعذر إثبات Runtime بالقراءة اللاحقة: $error',
+            ),
+          ),
+        );
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذر نشر تركيب العرض للعامة: $error')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(pwfHomepageSectionsManagerProvider);
+    final compositionState = ref.watch(pwfHomepageSectionsManagerProvider);
     final manager = ref.read(pwfHomepageSectionsManagerProvider.notifier);
-    final unitsAsync = ref.watch(orgUnitsListProvider);
     final accessProfile = ref.watch(accessProfileProvider).valueOrNull;
     final isSuperuser = accessProfile?.hasPlatformRootAuthority ?? false;
+    final activationStatesAsync = ref.watch(unitOperationalActivationStatesProvider);
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -37,81 +170,104 @@ class _UnitSurfacesManagementScreenState
           title: const Text('إدارة واجهات الوحدات'),
           actions: [
             IconButton(
-              tooltip: 'تحديث',
-              onPressed: state.isLoading || (_selectedSlug ?? '').isEmpty
+              tooltip: 'تحديث القراءة التشغيلية',
+              onPressed: compositionState.isLoading
                   ? null
-                  : () async => manager.setUnitSlug(_selectedSlug!),
+                  : () async {
+                      if ((_selectedSlug ?? '').isNotEmpty) {
+                        await manager.setUnitSlug(_selectedSlug!);
+                      }
+                      ref.invalidate(unitOperationalActivationStatesProvider);
+                    },
               icon: const Icon(Icons.refresh),
             ),
             IconButton(
               tooltip: 'تراجع',
-              onPressed: state.isDirty && !state.isSaving
+              onPressed: compositionState.isDirty && !compositionState.isSaving
                   ? manager.resetDraft
                   : null,
               icon: const Icon(Icons.undo),
             ),
             const SizedBox(width: 8),
             FilledButton.icon(
-              onPressed: state.isDirty && !state.isSaving ? manager.save : null,
-              icon: state.isSaving
+              onPressed: compositionState.isDirty && !compositionState.isSaving
+                  ? () => _saveAndReconcile(manager)
+                  : null,
+              icon: compositionState.isSaving
                   ? const SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.save),
-              label: const Text('حفظ'),
+                  : const Icon(Icons.save_outlined),
+              label: const Text('حفظ مسودة التركيب'),
+            ),
+            const SizedBox(width: 8),
+            FilledButton.icon(
+              onPressed: isSuperuser &&
+                      !compositionState.isSaving &&
+                      !compositionState.isLoading &&
+                      !compositionState.isDirty &&
+                      (_selectedSlug ?? '').isNotEmpty
+                  ? () => _publishAndReconcile(manager)
+                  : null,
+              icon: const Icon(Icons.publish_rounded),
+              label: const Text('نشر التركيب للعامة'),
             ),
             const SizedBox(width: 12),
           ],
         ),
-        body: unitsAsync.when(
+        body: activationStatesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Center(child: Text(error.toString())),
-          data: (rows) {
-            final units =
-                rows
-                    .where((row) {
-                      final slug = ((row['slug'] ?? '') as String)
-                          .trim()
-                          .toLowerCase();
-                      final unitType = ((row['unit_type'] ?? '') as String)
-                          .trim()
-                          .toLowerCase();
-                      // The canonical ministry surface (`home`) is a governed
-                      // operational target. It must be selectable here so its
-                      // composition can move through the authenticated four-eye
-                      // workflow; only system-internal surfaces remain excluded.
-                      return slug.isNotEmpty && unitType != 'system';
-                    })
-                    .map(_UnitSurfaceTarget.fromRow)
-                    .toList()
-                  ..sort((a, b) {
-                    // Keep the ministry home surface discoverable and first,
-                    // without treating it as a global fallback source.
-                    final aIsHome = a.slug == 'home';
-                    final bIsHome = b.slug == 'home';
-                    if (aIsHome != bIsHome) return aIsHome ? -1 : 1;
-                    if (a.isActive != b.isActive) return a.isActive ? -1 : 1;
-                    return a.label.compareTo(b.label);
-                  });
+          error: (error, _) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text('تعذر تحميل حالة واجهات الوحدات: $error'),
+            ),
+          ),
+          data: (states) {
+            final units = states
+                .map(_UnitSurfaceTarget.fromActivationState)
+                .toList(growable: false)
+              ..sort((a, b) {
+                final aHome = a.slug == 'home';
+                final bHome = b.slug == 'home';
+                if (aHome != bHome) return aHome ? -1 : 1;
+                if (a.isPubliclyEligible != b.isPubliclyEligible) {
+                  return a.isPubliclyEligible ? -1 : 1;
+                }
+                return a.label.compareTo(b.label);
+              });
 
             if (units.isEmpty) {
-              return const Center(child: Text('لا توجد وحدات متاحة حالياً.'));
+              return const Center(child: Text('لا توجد وحدات قابلة للعرض.'));
             }
 
             final selectedTarget = _selectedSlug == null
                 ? null
                 : units.cast<_UnitSurfaceTarget?>().firstWhere(
-                    (e) => e?.slug == _selectedSlug,
-                    orElse: () => null,
-                  );
+                      (item) => item?.slug == _selectedSlug,
+                      orElse: () => null,
+                    );
+            if (selectedTarget != null) {
+              _queueCompositionLoad(
+                selectedTarget.slug,
+                manager,
+                compositionState,
+              );
+            }
 
             if (selectedTarget == null) {
               return ListView(
                 padding: PwfAdminSurfaceLayoutTokens.pagePadding,
                 children: [
-                  _buildSelectorCard(context, units, selectedTarget, manager, isSuperuser),
+                  _buildSelectorCard(
+                    context,
+                    units,
+                    null,
+                    manager,
+                    isSuperuser,
+                  ),
                   const SizedBox(height: 12),
                   _buildEmptyCard(context),
                 ],
@@ -122,12 +278,27 @@ class _UnitSurfacesManagementScreenState
               controlPanel: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildSelectorCard(context, units, selectedTarget, manager, isSuperuser),
+                  _buildSelectorCard(
+                    context,
+                    units,
+                    selectedTarget,
+                    manager,
+                    isSuperuser,
+                  ),
                   const SizedBox(height: 12),
-                  _buildEditorCard(context, state, manager, selectedTarget),
+                  _buildEditorCard(
+                    context,
+                    compositionState,
+                    manager,
+                    selectedTarget,
+                  ),
                 ],
               ),
-              previewPanel: _buildPreviewCard(context, state, selectedTarget),
+              previewPanel: _buildPreviewCard(
+                context,
+                compositionState,
+                selectedTarget,
+              ),
             );
           },
         ),
@@ -154,18 +325,17 @@ class _UnitSurfacesManagementScreenState
         children: [
           Text(
             'إدارة واجهات الوحدات',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
           ),
           const SizedBox(height: 8),
           const Text(
-            'اختر الوزارة أو إحدى الوحدات أولاً، ثم عدّل أقسام واجهتها العامة ومعاينتها قبل الحفظ. مسارات الوحدات القياسية تمر عبر المراجعة والاعتماد والنشر، بينما النشر السيادي المباشر للسوبر يوزر يُسجل صراحة في سجل التدقيق.',
+            'هذه الشاشة هي المرجع التحريري لتركيب العرض العام. لا تعتبر علامة النشر القديمة دليلاً على الظهور العام؛ الجاهزية تقاس من قراءة Runtime بعد الحفظ.',
             style: TextStyle(height: 1.55, color: Color(0xFF475569)),
           ),
           const SizedBox(height: 12),
-          if (isSuperuser)
-            const _UnitSurfaceSuperuserNotice(),
+          if (isSuperuser) const _UnitSurfaceSuperuserNotice(),
           if (isSuperuser) const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             value: selectedTarget?.slug,
@@ -190,18 +360,18 @@ class _UnitSurfacesManagementScreenState
                               softWrap: false,
                             ),
                           ),
-                          if (!item.isActive) ...[
-                            const SizedBox(width: 8),
-                            const Text(
-                              'غير مفعلة',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: Color(0xFFB45309),
-                                fontSize: 12,
-                              ),
+                          const SizedBox(width: 8),
+                          Text(
+                            item.publicReadinessLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: item.isPubliclyEligible
+                                  ? const Color(0xFF1D7A46)
+                                  : const Color(0xFFB45309),
+                              fontSize: 12,
                             ),
-                          ],
+                          ),
                         ],
                       ),
                     ),
@@ -214,6 +384,21 @@ class _UnitSurfacesManagementScreenState
               await manager.setUnitSlug(value);
             },
           ),
+          if (selectedTarget != null) ...[
+            const SizedBox(height: 12),
+            _UnitSurfaceRuntimeStatus(target: selectedTarget),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerRight,
+              child: OutlinedButton.icon(
+                onPressed: () => context.go(
+                  '${AppRoutes.adminUnitOperationalActivation}?unit=${Uri.encodeComponent(selectedTarget.slug)}',
+                ),
+                icon: const Icon(Icons.fact_check_outlined),
+                label: const Text('فتح حالة التفعيل والجاهزية'),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -228,9 +413,7 @@ class _UnitSurfacesManagementScreenState
       ),
       padding: const EdgeInsets.all(24),
       child: const Center(
-        child: Text(
-          'اختر وحدة من القائمة المنسدلة لعرض وتحرير أقسام واجهتها العامة.',
-        ),
+        child: Text('اختر وحدة من القائمة لعرض تركيبها وحالة جاهزيتها العامة.'),
       ),
     );
   }
@@ -253,20 +436,20 @@ class _UnitSurfacesManagementScreenState
         children: [
           Text(
             'ترتيب وتفعيل الأقسام',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'الوحدة: ${selectedTarget.label} — الحفظ يكتب مسودة تركيب العرض المملوك للوحدة؛ النشر العام خطوة صريحة منفصلة ثم تُثبت بقراءة Runtime.',
+            style: const TextStyle(color: Color(0xFF475569)),
           ),
           const SizedBox(height: 16),
           _SectionsEditorList(
             sections: state.draft,
             onToggle: manager.toggleActive,
             onReorder: manager.reorder,
-          ),
-          const SizedBox(height: 16),
-          PwfUnitPublicGovernancePanel(
-            orgUnitId: selectedTarget.id,
-            unitNameAr: selectedTarget.label,
           ),
         ],
       ),
@@ -278,10 +461,9 @@ class _UnitSurfacesManagementScreenState
     PwfHomepageSectionsState state,
     _UnitSurfaceTarget selectedTarget,
   ) {
-    final waitingSync =
-        state.unitSlug != selectedTarget.slug || state.isLoading;
+    final waitingSync = state.unitSlug != selectedTarget.slug || state.isLoading;
     return PwfAdminSurfacePreviewFrame(
-      title: 'معاينة واجهة الوحدة',
+      title: 'معاينة تركيب العرض',
       subtitle: 'الوحدة: ${selectedTarget.label}',
       badge: selectedTarget.slug,
       isLoading: waitingSync,
@@ -312,7 +494,7 @@ class _UnitSurfaceSuperuserNotice extends StatelessWidget {
           SizedBox(width: 8),
           Expanded(
             child: Text(
-              'تفويض Super User السيادي فعّال: يمكنك إدارة أي وحدة من هذه الشاشة دون Unit Scope اصطناعي. إجراءات النشر المباشر تظهر داخل بطاقة الحوكمة عندما يدعمها عقد RPC الخاص بالسطح.',
+              'تفويض Super User السيادي فعّال. الحفظ يكتب مسودة، ثم يستطيع Super User نشر التركيب للعامة مباشرة دون اشتراط حساب مراجعة أو ناشر منفصل. بطاقة الجاهزية تقرأ Runtime بعد النشر.',
               style: TextStyle(height: 1.45),
             ),
           ),
@@ -323,24 +505,80 @@ class _UnitSurfaceSuperuserNotice extends StatelessWidget {
 }
 
 class _UnitSurfaceTarget {
-  final String id;
-  final String slug;
+  const _UnitSurfaceTarget({required this.activation});
+
+  final UnitOperationalActivationState activation;
+
+  String get id => activation.unitId;
+  String get slug => activation.slug;
+  String get label => activation.unitNameAr;
+  bool get isPubliclyEligible => activation.isPubliclyEligible;
+  String get publicReadinessLabel => activation.publicReadinessLabel;
+
+  factory _UnitSurfaceTarget.fromActivationState(
+    UnitOperationalActivationState state,
+  ) {
+    return _UnitSurfaceTarget(activation: state);
+  }
+}
+
+class _UnitSurfaceRuntimeStatus extends StatelessWidget {
+  const _UnitSurfaceRuntimeStatus({required this.target});
+
+  final _UnitSurfaceTarget target;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = target.activation;
+    final color = state.isPubliclyEligible
+        ? const Color(0xFF1D7A46)
+        : const Color(0xFFB45309);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: .28)),
+      ),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Icon(
+            state.isPubliclyEligible
+                ? Icons.verified_rounded
+                : Icons.pending_actions_rounded,
+            color: color,
+          ),
+          Text(
+            state.publicReadinessLabel,
+            style: TextStyle(color: color, fontWeight: FontWeight.w800),
+          ),
+          _RuntimeChip(label: state.operationalLabel),
+          _RuntimeChip(label: state.publicationLabel),
+          _RuntimeChip(label: state.runtimeCompositionLabel),
+        ],
+      ),
+    );
+  }
+}
+
+class _RuntimeChip extends StatelessWidget {
+  const _RuntimeChip({required this.label});
+
   final String label;
-  final bool isActive;
 
-  const _UnitSurfaceTarget({
-    required this.id,
-    required this.slug,
-    required this.label,
-    required this.isActive,
-  });
-
-  factory _UnitSurfaceTarget.fromRow(Map<String, dynamic> row) {
-    return _UnitSurfaceTarget(
-      id: (row['id'] ?? '').toString().trim(),
-      slug: (row['slug'] ?? '').toString().trim().toLowerCase(),
-      label: (row['name_ar'] ?? row['name_en'] ?? row['slug'] ?? '').toString(),
-      isActive: (row['is_active'] ?? true) == true,
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Text(label, style: Theme.of(context).textTheme.labelSmall),
     );
   }
 }

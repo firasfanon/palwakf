@@ -706,10 +706,10 @@ class _WebHomepageManagementScreenState
               Icons.widgets_rounded,
             ),
             _QuickLaunchCardData(
-              'إدارة الأجزاء الفرعية للوحدات',
-              'استعادة شاشة Unit Pages التشغيلية القديمة كمسار مستقل، بعيدًا عن واجهات الوحدات العامة.',
-              AppRoutes.adminUnitPagesExecution,
-              Icons.view_list_rounded,
+              'حالة النشر والجاهزية',
+              'قراءة موحدة لتفعيل الوحدة، تركيب العرض العام، والاستعداد الفعلي للظهور للعامة.',
+              AppRoutes.adminUnitOperationalActivation,
+              Icons.fact_check_rounded,
             ),
             _QuickLaunchCardData(
               'السلايدر / الهيرو',

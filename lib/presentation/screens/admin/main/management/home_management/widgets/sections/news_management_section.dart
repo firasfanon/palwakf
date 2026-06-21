@@ -13,7 +13,16 @@ import '../shared/shared_content_scope.dart';
 import 'package:waqf/core/database/pwf_database_owner_surfaces.dart';
 
 class NewsManagementSection extends ConsumerStatefulWidget {
-  const NewsManagementSection({super.key});
+  const NewsManagementSection({
+    super.key,
+    this.initialUnitSlug = 'home',
+    this.allowedUnitSlugs,
+    this.lockScopeSelection = false,
+  });
+
+  final String initialUnitSlug;
+  final Set<String>? allowedUnitSlugs;
+  final bool lockScopeSelection;
 
   @override
   ConsumerState<NewsManagementSection> createState() =>
@@ -32,7 +41,21 @@ class _NewsManagementSectionState extends ConsumerState<NewsManagementSection> {
   @override
   void initState() {
     super.initState();
+    _unitSlug = widget.initialUnitSlug.trim().toLowerCase().isEmpty
+        ? 'home'
+        : widget.initialUnitSlug.trim().toLowerCase();
     _searchController = TextEditingController();
+  }
+
+  @override
+  void didUpdateWidget(covariant NewsManagementSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = widget.initialUnitSlug.trim().toLowerCase();
+    if (next.isNotEmpty && next != _unitSlug) {
+      _unitSlug = next;
+      _selectedIds.clear();
+      _selectionMode = false;
+    }
   }
 
   @override
@@ -353,7 +376,7 @@ class _NewsManagementSectionState extends ConsumerState<NewsManagementSection> {
   @override
   Widget build(BuildContext context) {
     final unitsAsync = ref.watch(orgUnitsListProvider);
-    final unitIdAsync = ref.watch(unitIdBySlugProvider(_unitSlug));
+    final unitIdAsync = ref.watch(unitIdBySlugExactProvider(_unitSlug));
 
     return unitsAsync.when(
       loading: () => const SharedAdminLoadingState(
@@ -361,11 +384,19 @@ class _NewsManagementSectionState extends ConsumerState<NewsManagementSection> {
       ),
       error: (e, _) => SharedAdminErrorState(message: 'تعذر تحميل الوحدات: $e'),
       data: (units) {
-        final options = buildSharedContentScopeOptions(units);
+        final options = filterSharedContentScopeOptions(
+          buildSharedContentScopeOptions(units),
+          allowedSlugs: widget.allowedUnitSlugs,
+        );
+        if (options.isEmpty) {
+          return const SharedAdminErrorState(
+            message: 'لا يوجد نطاق تحريري متاح لهذا الحساب.',
+          );
+        }
         final hasCurrent = options.any((o) => o.slug == _unitSlug);
         if (!hasCurrent) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) setState(() => _unitSlug = 'home');
+            if (mounted) setState(() => _unitSlug = options.first.slug);
           });
         }
 
@@ -377,6 +408,11 @@ class _NewsManagementSectionState extends ConsumerState<NewsManagementSection> {
           error: (e, _) =>
               SharedAdminErrorState(message: 'تعذر تحديد النطاق: $e'),
           data: (unitId) {
+            if (unitId == null || unitId.isEmpty) {
+              return const SharedAdminErrorState(
+                message: 'تعذر التحقق من وحدة التحرير الحالية دون استخدام بديل.',
+              );
+            }
             return LayoutBuilder(
               builder: (context, constraints) {
                 final width = constraints.maxWidth;
@@ -439,39 +475,15 @@ class _NewsManagementSectionState extends ConsumerState<NewsManagementSection> {
                             children: [
                               SizedBox(
                                 width: fieldWidth,
-                                child: DropdownButtonFormField<String>(
-                                  value: hasCurrent ? _unitSlug : 'home',
-                                  isExpanded: true,
-                                  decoration: const InputDecoration(
-                                    labelText: 'نطاق الإدارة',
-                                  ),
-                                  items: options
-                                      .map(
-                                        (o) => DropdownMenuItem(
-                                          value: o.slug,
-                                          child: Text(
-                                            o.label,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      )
-                                      .toList(),
-                                  selectedItemBuilder: (context) => options
-                                      .map<Widget>(
-                                        (o) => Align(
-                                          alignment: Alignment.centerRight,
-                                          child: Text(
-                                            o.label,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      )
-                                      .toList(growable: false),
-                                  onChanged: (v) => setState(
-                                    () => _unitSlug = v ?? _unitSlug,
-                                  ),
+                                child: SharedContentScopeSelector(
+                                  options: options,
+                                  value: hasCurrent ? _unitSlug : options.first.slug,
+                                  locked: widget.lockScopeSelection,
+                                  onChanged: (next) => setState(() {
+                                    _unitSlug = next;
+                                    _selectedIds.clear();
+                                    _selectionMode = false;
+                                  }),
                                 ),
                               ),
                               SizedBox(

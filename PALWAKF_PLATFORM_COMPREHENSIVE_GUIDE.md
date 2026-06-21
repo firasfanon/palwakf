@@ -460,3 +460,189 @@ NO_DATABASE_OR_RBAC_OR_ROUTE_CHANGE
 MEDIA_CENTER_UNCHANGED
 PRODUCTION_NOT_APPROVED
 ```
+
+---
+
+## Platform 15G — Unit Media Center Sovereign Administration + Scoped Editorial Workflow and Local Content Isolation Closure (2026-06-21)
+
+### Nature
+
+- **Development:** a dedicated unit-owned editorial administration workspace was added at `/admin/unit-media-center`.
+- **Integration:** existing news, announcements, activities/events, photo and video management widgets are reused under one current-unit context.
+- **Governance:** the UI is fail-closed for ordinary accounts when no explicit unit scope is available; it does not synthesize a ministry/home scope.
+- **Approval gate:** no database-side workflow authorizer, RLS/grant change, or production approval is included.
+
+### Authority and scope contract
+
+- Universal Super User authority continues to come solely from the owner-side effective-authority contract, represented in Flutter through `AccessProfile.isSuperuser`; it may choose an operational unit context without requiring synthetic unit assignments.
+- Ordinary accounts receive only `AdminUser.effectiveUnitIds` as selectable editorial scope.
+- A missing or stale unit slug no longer falls back to `home`/global in admin news, announcements, activities, or gallery read providers. Exact resolution produces a controlled error.
+- Child editorial components receive a locked selected scope in the unit workspace, preventing local selector-based cross-unit navigation.
+
+### Security isolation preserved
+
+- `media_center` remains absent from exposed schemas.
+- No old runtime-view grant, new public fallback, database write path, RLS amendment, or SQL apply was created.
+- The future canonical domain workflow (`draft -> review -> approve -> publish` with audit) is not claimed as implemented. It requires its own owner-schema inventory, domain-authorizer design, authorization, apply evidence, and positive/negative UAT.
+
+### Candidate status
+
+```text
+PLATFORM15G_UNIT_MEDIA_CENTER_SCOPED_EDITORIAL_UI_CANDIDATE_PREPARED
+EXACT_UNIT_RESOLUTION_NO_FALLBACK_IMPLEMENTED
+ORDINARY_SCOPE_UI_CONFINEMENT_IMPLEMENTED
+DATABASE_WORKFLOW_AUTHORIZER_NOT_APPLIED
+LOCAL_FLUTTER_EVIDENCE_PENDING
+SUPERUSER_AND_ORDINARY_SCOPED_BROWSER_UAT_PENDING
+PRODUCTION_NOT_APPROVED
+```
+
+---
+
+## Platform 15H — Unit Operational Activation + Publication State Composition and Runtime Evidence Closure (2026-06-21)
+
+### Nature
+
+- **Development:** added the dedicated route `/admin/unit-operations` as an operator-facing control plane for unit activation and publication readiness.
+- **Integration:** composes the master unit `is_active` read with the existing unit-surface contract (`isPublished`, visibility, archival, active-section count).
+- **Governance:** the implementation makes it explicit that publishing a surface, activating a unit, and making it visible publicly are distinct states.
+- **Approval gate:** no new database-side authorizer, audit event, RLS/grant change, or production approval was applied.
+
+### Operational composition
+
+A unit is ready for public reachability only when all four conditions are true:
+
+1. The master unit is operationally active.
+2. Its unit surface is published.
+3. The surface visibility is public.
+4. The surface is not archived.
+
+The new screen does not infer the master activation state from content or page publication. Its activation action uses the existing `OrgUnitsRepository.updateUnitWithProfile` wrapper with an `is_active` patch only; it has no implicit side effect on publication.
+
+### Security and boundary rules
+
+- The route is restricted in UI to Super User or `platformAdmin.manageSite`.
+- Super User authority remains derived from the effective-authority contract; no synthetic scope assignment is created.
+- The new code introduces no direct client table access, no schema selection, no public fallback, no grant/RLS change, and no SQL.
+- `media_center` remains absent from exposed schemas and its least-privilege security workstream is untouched.
+
+### Candidate status
+
+```text
+PLATFORM15H_UNIT_OPERATIONAL_ACTIVATION_UI_CANDIDATE_PREPARED
+MASTER_ACTIVATION_AND_SURFACE_PUBLICATION_COMPOSED_SEPARATELY
+EXISTING_UNIT_UPDATE_RPC_REUSED_RUNTIME_EVIDENCE_PENDING
+SUPERUSER_AND_ORDINARY_SCOPED_BROWSER_UAT_PENDING
+DATABASE_SIDE_PUBLICATION_AUTHORISER_NOT_APPLIED
+NO_SQL_RLS_GRANT_OR_MEDIA_CENTER_EXPOSURE_CHANGE
+PRODUCTION_NOT_APPROVED
+```
+
+---
+
+## Platform 15H1 — Unit Operational Activation PowerShell Verifier ASCII Hotfix (2026-06-21)
+
+**Nature:** local verification-tool hotfix only.
+
+**Accepted evidence:** Platform 15H static verifier failed at Windows PowerShell parse time. The defect was source encoding plus colon-delimited variable interpolation. No Flutter/RPC/database action occurred.
+
+**Fix:** `tools/platform15h_verify_unit_operational_activation.ps1` is ASCII-only and uses `${relative}` / `${forbidden}` interpolation delimiters.
+
+**State:** rerun required. Unit activation, publication composition, persisted `is_active`, public visibility, and production approval remain pending.
+
+## Platform 15H2 — Unit Operational Activation verifier alignment (2026-06-21)
+- The unit activation static verifier must validate the independent publication/activation statement in the domain contract, not the UI page.
+- Static verification remains distinct from activation RPC network evidence, state readback, and production approval.
+
+## Platform 15H3 — Unit Operational Activation Compile Boundary (2026-06-21)
+- The Platform 15H activation UI composes independent master activation, unit-surface publication, visibility and archive state.
+- A focused Flutter test exposed that the activation page invoked `PwfUnitPageVisibilityModeX.labelAr` without importing the extension declaration library directly.
+- Platform 15H3 fixes that Dart library-scope import boundary and adds a static verifier guard.
+- No operational activation, publication, database, RLS, grant, route, or Media Center behavior was changed by 15H3.
+- Compile, analyzer, release build, browser UAT and server-side activation/readback evidence remain mandatory.
+
+## Platform 15H4 — Unit Operational Activation Shared Store False Positive Scope Hotfix (2026-06-21)
+- The Platform 15H verifier must inspect only Platform 15H feature files for direct-data-access patterns.
+- Shared legacy page-execution store utilities may use in-memory `List.from` operations and must not be treated as database access.
+- Current gates remain: focused test, full runner, browser UAT, RPC evidence, `is_active` readback, scoped-user negative UAT, and production decision.
+
+---
+
+## Platform 15I1 — Runtime Composition Health Catch-Map Compile Hotfix (2026-06-21)
+
+**Nature:** a focused Dart compile-blocker remediation for the Platform 15I owner-runtime health fallback.
+
+**Root cause:** `HomepageRepository.fetchRuntimeCompositionHealthForUnits` used a map comprehension in its catch path but omitted the unit-id key before `HomepageRuntimeCompositionHealth`. This blocked all Chrome compilation, including the public-home reconciliation path.
+
+**Correction:** the fallback is now keyed as `id: HomepageRuntimeCompositionHealth(...)`. The focused reconciliation test and ASCII-only verifier require that pattern.
+
+**No change:** operational activation semantics, publication eligibility rules, RPCs, SQL, Supabase, RLS, grants, Media Center, routes, and RBAC remain unchanged.
+
+**Required evidence:** focused Flutter tests, analyzer, web build, Platform 15I runner, browser compilation/rendering, Network RPC evidence, persisted readback, scoped-user negative UAT.
+
+```text
+PLATFORM15I1_COMPILE_HOTFIX_CANDIDATE_PREPARED
+PUBLICATION_RUNTIME_NOT_CERTIFIED
+PRODUCTION_NOT_APPROVED
+```
+
+## Platform 15I2 — Unit Update RPC Enum-Cast Runtime Remediation (2026-06-21)
+- Browser evidence exposed PostgreSQL error 42804 in `public.pwf_admin_update_unit_with_profile` when operational activation attempted an `is_active` patch.
+- Root cause: the existing RPC assigns a text `coalesce` expression to enum column `core.org_units.unit_type`.
+- Prepared staged-only remediation: cast optional `unit_type` JSON input to `public.org_unit_type`, preserving the existing enum when omitted.
+- No SQL execution evidence has been accepted yet. Browser Network 200 and readback remain mandatory; production remains unapproved.
+
+---
+
+## Platform 15J — Core Org Unit Type Sovereign Ownership Migration + Public Enum Dependency Census and Compatibility Closure (2026-06-21)
+
+### Accepted catalog fact
+
+- `core.org_units.unit_type` currently uses legacy `public.org_unit_type`.
+- The enum contains the currently observed operational labels, including ministry, directorate, orphanage, system and general_directorate.
+- This is a schema-ownership debt: a Core Master Data table must not depend on a `public`-owned enum after sovereign closure.
+
+### Approved architecture
+
+```text
+core.org_unit_type
+→ core.org_units.unit_type
+public.pwf_admin_create_unit_with_profile / public.pwf_admin_update_unit_with_profile
+→ governed RPC wrappers only
+```
+
+### Controlled migration strategy
+
+- Do not create a second enum and do not recast stored data through text.
+- Move the existing PostgreSQL type object/OID from `public` to `core` using `ALTER TYPE ... SET SCHEMA` only after the read-only census passes.
+- The migration must fail closed if any non-canonical table column or unexpected PL/pgSQL routine depends on the legacy public type.
+- Rewrite existing public RPC wrapper casts to `core.org_unit_type` in the same transaction.
+- Do not drop a type, add a public compatibility type, modify RLS/grants, or grant new type access.
+
+### Gate
+
+```text
+PUBLIC_ORG_UNIT_TYPE_LEGACY_DEPENDENCY_CONFIRMED
+PLATFORM15J_READ_ONLY_DEPENDENCY_CENSUS_REQUIRED
+PLATFORM15J_STAGING_MIGRATION_NOT_APPLIED
+PLATFORM15I2_PUBLIC_ENUM_CAST_INTERIM_ONLY
+SUPERUSER_RPC_READBACK_PENDING
+UNIT_PUBLICATION_RUNTIME_NOT_STABLE
+PRODUCTION_NOT_APPROVED
+```
+
+## Platform 15J1
+`core.org_units.unit_type` depends on legacy `public.org_unit_type`. The catalog census showed a bounded compatibility dependency set. Owner-type migration is allowed only through the 15J1 exact-set gate; `public.org_units_cache` remains a separate legacy containment task.
+
+
+## Platform 15J2 — Core Org Unit Type Index Dependency Gate Alignment (2026-06-21)
+
+Staging catalog evidence established that `core.idx_org_units_unit_type` is a normal typed index dependency of `core.org_units.unit_type`. Platform 15J2 updates the owner-type migration gate to compare the exact tuple `(schema, relation, relkind, column)` and explicitly admits that index. The gate remains fail-closed for any other unrecorded relation, dependency, or routine. This does not move `public.org_units_cache`, apply the enum migration, certify activation/publication, or approve production.
+
+
+## Platform 15K — Unit Publication Runtime Payload Normalization + Activation / Composition Readback Reconciliation (2026-06-21)
+
+- Trigger: browser evidence showed a JSArray/List-to-Map runtime failure in Unit Operations and successful composition-save requests that did not produce runtime publication.
+- Root cause: save RPC deliberately writes `draft`, whereas the runtime view exposes only `published`; the UI lacked an explicit publish action.
+- Candidate: payload boundary normalizer, explicit Super User runtime publication RPC, direct draft-vs-publish UI separation, guarded readback messaging.
+- Exclusions: no `public` base-table creation, no `core.org_unit_type` change, no RLS/Media Center migration, and no production approval.

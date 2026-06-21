@@ -117,7 +117,9 @@ RouteBase _buildAdminShellRoute(Ref ref) {
       ),
       GoRoute(
         path: AppRoutes.adminUnitSurfacesManagement,
-        builder: (context, state) => const UnitSurfacesManagementScreen(),
+        builder: (context, state) => UnitSurfacesManagementScreen(
+          initialUnitSlug: state.uri.queryParameters['unit'],
+        ),
       ),
       GoRoute(
         path: AppRoutes.adminSystemSurfacesManagement,
@@ -210,6 +212,10 @@ RouteBase _buildAdminShellRoute(Ref ref) {
       GoRoute(
         path: AppRoutes.adminMediaCenter,
         builder: (context, state) => const MediaCenterDashboardPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminUnitMediaCenter,
+        builder: (context, state) => const UnitMediaCenterAdministrationPage(),
       ),
       GoRoute(
         path: AppRoutes.adminMediaCenterNews,
@@ -349,6 +355,12 @@ RouteBase _buildAdminShellRoute(Ref ref) {
       GoRoute(
         path: AppRoutes.adminOrgUnits,
         builder: (context, state) => const OrgUnitsManagementScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminUnitOperationalActivation,
+        builder: (context, state) => UnitOperationalActivationPage(
+          initialUnitSlug: state.uri.queryParameters['unit'],
+        ),
       ),
       GoRoute(
         path: AppRoutes.adminDocumentIntelligence,

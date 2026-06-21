@@ -35,7 +35,10 @@ class AdminNewsQuery {
 
 final adminNewsArticlesProvider =
     FutureProvider.family<List<NewsArticle>, AdminNewsQuery>((ref, q) async {
-      final unitId = await ref.watch(unitIdBySlugProvider(q.unitSlug).future);
+      final unitId = await ref.watch(unitIdBySlugExactProvider(q.unitSlug).future);
+      if (unitId == null || unitId.isEmpty) {
+        throw StateError('Unknown or unavailable editorial unit scope.');
+      }
       final supabase = ref.watch(supabaseServiceProvider).client;
 
       // postgrest 2.x typing nuance:

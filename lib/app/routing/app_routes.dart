@@ -7,6 +7,7 @@ class AppRoutes {
   static const adminFridaySermons = '/admin/friday-sermons';
   static const adminMosques = '/admin/mosques';
   static const adminOrgUnits = '/admin/org-units';
+  static const adminUnitOperationalActivation = '/admin/unit-operations';
 
   // Public
   /// Root of the public website. We redirect it to the ministry unit (/home).
@@ -200,6 +201,7 @@ class AppRoutes {
 
   // Media Center
   static const adminMediaCenter = '/admin/media-center';
+  static const adminUnitMediaCenter = '/admin/unit-media-center';
   static const adminMediaCenterNews = '/admin/media-center/news';
   static const adminMediaCenterAnnouncements =
       '/admin/media-center/announcements';

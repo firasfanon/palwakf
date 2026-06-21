@@ -821,6 +821,11 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     };
     final sections = <_SidebarEntrySection>[
       _SidebarEntrySection(
+        title: 'محتوى الوحدات',
+        icon: Icons.account_tree_rounded,
+        routes: const [AppRoutes.adminUnitMediaCenter],
+      ),
+      _SidebarEntrySection(
         title: 'النشر الإعلامي',
         icon: Icons.article_rounded,
         routes: const [
@@ -876,6 +881,7 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     final current = widget.currentRoute ?? '';
     final isActive =
         current.startsWith(AppRoutes.adminMediaCenter) ||
+        current.startsWith(AppRoutes.adminUnitMediaCenter) ||
         sections.any(
           (section) => section.routes.any((route) => current.startsWith(route)),
         );

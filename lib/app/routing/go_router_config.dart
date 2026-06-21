@@ -72,6 +72,7 @@ import '../../presentation/screens/public/unit/unit_home_screen.dart';
 import '../../presentation/screens/admin/main/management/users_management/users_management_screen.dart';
 import '../../presentation/screens/admin/main/management/mosques_management/mosques_management_screen.dart';
 import '../../presentation/screens/admin/main/management/org_units_management/org_units_management_screen.dart';
+import '../../features/platform/unit_operations/presentation/pages/unit_operational_activation_page.dart';
 import '../../presentation/screens/admin/main/management/settings/settings_screen.dart';
 import '../../presentation/screens/admin/main/management/developer/developer_tools_screen.dart';
 import '../../presentation/screens/admin/main/management/shared_content/shared_content_management_screen.dart';
@@ -82,6 +83,7 @@ import '../../features/document_intelligence/presentation/pages/document_review_
 import '../../features/document_intelligence/presentation/pages/document_review_page.dart';
 import '../../features/document_intelligence/presentation/pages/document_linking_page.dart';
 import '../../features/media_center/presentation/pages/media_center_dashboard_page.dart';
+import '../../features/media_center/presentation/pages/unit_media_center_administration_page.dart';
 import '../../features/media_center_mobile/presentation/pages/media_center_mobile_app_page.dart';
 import '../../features/media_center_mobile/presentation/pages/media_center_mobile_operational_home_page.dart';
 import '../../features/media_center_public/presentation/pages/official_media_detail_page.dart';

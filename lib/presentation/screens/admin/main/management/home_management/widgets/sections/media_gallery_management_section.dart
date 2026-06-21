@@ -20,12 +20,18 @@ class MediaGalleryManagementSection extends ConsumerStatefulWidget {
     this.allowTypeChange = true,
     this.headerTitle,
     this.headerDescription,
+    this.initialUnitSlug = 'home',
+    this.allowedUnitSlugs,
+    this.lockScopeSelection = false,
   });
 
   final MediaType initialType;
   final bool allowTypeChange;
   final String? headerTitle;
   final String? headerDescription;
+  final String initialUnitSlug;
+  final Set<String>? allowedUnitSlugs;
+  final bool lockScopeSelection;
 
   @override
   ConsumerState<MediaGalleryManagementSection> createState() =>
@@ -50,6 +56,9 @@ class _MediaGalleryManagementSectionState
   void initState() {
     super.initState();
     _type = widget.initialType;
+    _unitSlug = widget.initialUnitSlug.trim().toLowerCase().isEmpty
+        ? 'home'
+        : widget.initialUnitSlug.trim().toLowerCase();
   }
 
   @override
@@ -58,6 +67,11 @@ class _MediaGalleryManagementSectionState
     if (!widget.allowTypeChange &&
         oldWidget.initialType != widget.initialType) {
       _type = widget.initialType;
+    }
+    final nextSlug = widget.initialUnitSlug.trim().toLowerCase();
+    if (nextSlug.isNotEmpty && nextSlug != _unitSlug) {
+      _unitSlug = nextSlug;
+      _clearSelection();
     }
   }
 
@@ -104,7 +118,19 @@ class _MediaGalleryManagementSectionState
   ) {
     final body = unitsAsync.when(
       data: (units) {
-        final safeUnits = List<Map<String, dynamic>>.from(units);
+        final allowed = widget.allowedUnitSlugs;
+        final safeUnits = List<Map<String, dynamic>>.from(units)
+            .where((unit) {
+              if (allowed == null) return true;
+              final slug = (unit['slug'] ?? '').toString().trim().toLowerCase();
+              return allowed.contains(slug);
+            })
+            .toList(growable: false);
+        if (safeUnits.isEmpty) {
+          return const SharedAdminErrorState(
+            message: 'لا يوجد نطاق وسائط متاح لهذا الحساب.',
+          );
+        }
         _ensureUnitSlugValid(safeUnits);
         return _buildMediaBody(context, safeUnits, compact: compact);
       },
@@ -261,9 +287,7 @@ class _MediaGalleryManagementSectionState
   void _ensureUnitSlugValid(List<Map<String, dynamic>> units) {
     final slugs = units.map((u) => (u['slug'] ?? '').toString()).toSet();
     if (!slugs.contains(_unitSlug)) {
-      _unitSlug = slugs.contains('home')
-          ? 'home'
-          : (slugs.isNotEmpty ? slugs.first : 'home');
+      _unitSlug = slugs.isNotEmpty ? slugs.first : _unitSlug;
     }
   }
 
@@ -314,47 +338,21 @@ class _MediaGalleryManagementSectionState
                 children: [
                   SizedBox(
                     width: unitFieldWidth,
-                    child: DropdownButtonFormField<String>(
+                    child: SharedContentScopeSelector(
+                      options: buildSharedContentScopeOptions(unitItems)
+                          .where(
+                            (option) => unitItems.any(
+                              (unit) =>
+                                  (unit['slug'] ?? '').toString().trim().toLowerCase() ==
+                                  option.slug,
+                            ),
+                          )
+                          .toList(growable: false),
                       value: _unitSlug,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'الوحدة / الفرع',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: unitItems.map((u) {
-                        final slug = (u['slug'] ?? '').toString();
-                        final nameAr = (u['name_ar'] ?? slug).toString();
-                        final code = (u['code'] ?? '').toString();
-                        final isActive = (u['is_active'] as bool?) ?? true;
-                        final base = code.isEmpty ? nameAr : '$nameAr — $code';
-                        final label = isActive ? base : '$base (موقوف)';
-                        return DropdownMenuItem<String>(
-                          value: slug,
-                          child: Text(
-                            label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
-                      selectedItemBuilder: (context) => unitItems.map((u) {
-                        final slug = (u['slug'] ?? '').toString();
-                        final nameAr = (u['name_ar'] ?? slug).toString();
-                        final code = (u['code'] ?? '').toString();
-                        final isActive = (u['is_active'] as bool?) ?? true;
-                        final base = code.isEmpty ? nameAr : '$nameAr — $code';
-                        final label = isActive ? base : '$base (موقوف)';
-                        return Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: Text(
-                            label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (v) => setState(() {
-                        _unitSlug = v ?? _unitSlug;
+                      locked: widget.lockScopeSelection,
+                      labelText: 'نطاق إدارة الوسائط',
+                      onChanged: (next) => setState(() {
+                        _unitSlug = next;
                         _clearSelection();
                       }),
                     ),

@@ -1,8 +1,61 @@
 import 'dart:developer';
+import 'package:waqf/core/data/pwf_runtime_payload_normalizer.dart';
 import 'package:waqf/core/database/pwf_database_owner_surfaces.dart';
-import 'package:waqf/core/unit/pwf_canonical_unit_identity.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/homepage_section.dart';
+
+class HomepageRuntimeCompositionHealth {
+  const HomepageRuntimeCompositionHealth({
+    required this.unitId,
+    required this.readSucceeded,
+    required this.totalSectionCount,
+    required this.activeSectionCount,
+  });
+
+  final String unitId;
+  final bool readSucceeded;
+  final int totalSectionCount;
+  final int activeSectionCount;
+
+  bool get hasPublishedRuntimeComposition =>
+      readSucceeded && activeSectionCount > 0;
+}
+
+class HomepageRuntimeCompositionPublishReceipt {
+  const HomepageRuntimeCompositionPublishReceipt({
+    required this.unitId,
+    required this.status,
+    required this.activeSectionCount,
+    required this.publishedEntryCount,
+    required this.publishedAt,
+  });
+
+  final String unitId;
+  final String status;
+  final int activeSectionCount;
+  final int publishedEntryCount;
+  final String? publishedAt;
+
+  factory HomepageRuntimeCompositionPublishReceipt.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    int asInt(dynamic value) {
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      return int.tryParse(value?.toString() ?? '') ?? 0;
+    }
+
+    return HomepageRuntimeCompositionPublishReceipt(
+      unitId: (json['org_unit_id'] ?? '').toString().trim(),
+      status: (json['status'] ?? '').toString().trim(),
+      activeSectionCount: asInt(json['active_section_count']),
+      publishedEntryCount: asInt(json['published_entry_count']),
+      publishedAt: (json['published_at'] ?? '').toString().trim().isEmpty
+          ? null
+          : (json['published_at'] ?? '').toString().trim(),
+    );
+  }
+}
 
 class HomepageRepository {
   final SupabaseClient _client;
@@ -676,23 +729,11 @@ class HomepageRepository {
 
 
   Future<String> _resolveHomeOwnerUnitId() async {
-    final raw = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+    final row = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
       _client,
       PwfDatabaseOwnerSurfaces.unitPublicSurfaceProfileRuntimeV1,
-    ).select('org_unit_id, source_payload').eq('internal_slug', 'home').maybeSingle();
-    if (raw == null) return '';
-
-    final identity = PwfCanonicalUnitIdentity.fromRuntimeProfileRow(
-      Map<String, dynamic>.from(raw as Map),
-    );
-    if (identity.hasRuntimeSourceMismatch) {
-      log(
-        'Homepage owner resolver rejected stale runtime org_unit_id '
-        '${identity.runtimeOrgUnitId} and selected canonical core id '
-        '${identity.sourceOrgUnitId} for home.',
-      );
-    }
-    return identity.canonicalOrgUnitId;
+    ).select('org_unit_id').eq('internal_slug', 'home').maybeSingle();
+    return (row?['org_unit_id'] ?? '').toString().trim();
   }
 
   Future<List<HomepageSection>> _fetchOwnerCompositionAdminRows(String unitId) async {
@@ -702,8 +743,12 @@ class HomepageRepository {
         params: <String, dynamic>{'p_org_unit_id': unitId},
       );
       final nowIso = DateTime.now().toUtc().toIso8601String();
-      return (rows as List<dynamic>).map((raw) {
-        final row = Map<String, dynamic>.from(raw as Map);
+      final normalizedRows = PwfRuntimePayloadNormalizer.rows(
+        rows,
+        source: 'platform_experience.rpc_unit_public_composition_admin_list_v1',
+      );
+      return normalizedRows.map((raw) {
+        final row = Map<String, dynamic>.from(raw);
         row['unit_id'] = row['org_unit_id'];
         row['settings'] ??= const <String, dynamic>{};
         row['created_at'] ??= nowIso;
@@ -735,8 +780,12 @@ class HomepageRepository {
         'id, section_name, settings, is_active, display_order, created_at, updated_at, updated_by, org_unit_id',
       ).eq('org_unit_id', unitId).order('display_order', ascending: true);
       final nowIso = DateTime.now().toUtc().toIso8601String();
-      return (rows as List<dynamic>).map((raw) {
-        final row = Map<String, dynamic>.from(raw as Map);
+      final normalizedRows = PwfRuntimePayloadNormalizer.rows(
+        rows,
+        source: 'platform_experience.v_unit_public_composition_runtime_v1',
+      );
+      return normalizedRows.map((raw) {
+        final row = Map<String, dynamic>.from(raw);
         row['unit_id'] = row['org_unit_id'];
         row['settings'] ??= const <String, dynamic>{};
         row['created_at'] ??= nowIso;
@@ -745,6 +794,70 @@ class HomepageRepository {
       }).toList(growable: false);
     } on PostgrestException {
       return const <HomepageSection>[];
+    }
+  }
+
+  /// Reads the actual owner-runtime composition for a group of units.
+  ///
+  /// This read model intentionally does not infer publication from legacy page
+  /// metadata. A public surface is runtime-published only when the owner
+  /// runtime exposes at least one active composition entry for that unit.
+  Future<Map<String, HomepageRuntimeCompositionHealth>>
+      fetchRuntimeCompositionHealthForUnits(Iterable<String> unitIds) async {
+    final ids = unitIds
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+    if (ids.isEmpty) {
+      return const <String, HomepageRuntimeCompositionHealth>{};
+    }
+
+    final totalByUnit = <String, int>{};
+    final activeByUnit = <String, int>{};
+    try {
+      final rows = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
+        _client,
+        PwfDatabaseOwnerSurfaces.unitPublicCompositionRuntimeV1,
+      ).select('org_unit_id,is_active').inFilter('org_unit_id', ids);
+
+      for (final row in PwfRuntimePayloadNormalizer.rows(
+        rows,
+        source: 'platform_experience.v_unit_public_composition_runtime_v1 health',
+      )) {
+        final unitId = (row['org_unit_id'] ?? '').toString().trim();
+        if (!ids.contains(unitId)) continue;
+        totalByUnit[unitId] = (totalByUnit[unitId] ?? 0) + 1;
+        final active = row['is_active'] == true ||
+            row['is_active']?.toString().trim().toLowerCase() == 'true';
+        if (active) {
+          activeByUnit[unitId] = (activeByUnit[unitId] ?? 0) + 1;
+        }
+      }
+
+      return <String, HomepageRuntimeCompositionHealth>{
+        for (final id in ids)
+          id: HomepageRuntimeCompositionHealth(
+            unitId: id,
+            readSucceeded: true,
+            totalSectionCount: totalByUnit[id] ?? 0,
+            activeSectionCount: activeByUnit[id] ?? 0,
+          ),
+      };
+    } catch (error, stackTrace) {
+      log(
+        'Runtime composition health read failed: $error',
+        stackTrace: stackTrace,
+      );
+      return <String, HomepageRuntimeCompositionHealth>{
+        for (final id in ids)
+          id: HomepageRuntimeCompositionHealth(
+            unitId: id,
+            readSucceeded: false,
+            totalSectionCount: 0,
+            activeSectionCount: 0,
+          ),
+      };
     }
   }
 
@@ -932,6 +1045,34 @@ class HomepageRepository {
         'p_entries': entries,
       },
     );
+  }
+
+  /// Publishes the already-saved owner composition for the selected unit.
+  ///
+  /// Saving remains a draft operation. Runtime publication is explicit so the
+  /// operator can distinguish a persisted draft from a public owner-runtime
+  /// composition. The server enforces Super User authority and ordinary-role
+  /// workflow constraints.
+  Future<HomepageRuntimeCompositionPublishReceipt> publishRuntimeComposition({
+    required String unitId,
+  }) async {
+    final normalizedUnitId = unitId.trim();
+    if (normalizedUnitId.isEmpty) {
+      throw StateError('تعذر تحديد نطاق الوحدة لنشر تركيب العرض.');
+    }
+
+    final raw = await _client.schema('platform_experience').rpc(
+      'rpc_unit_public_composition_publish_runtime_v1',
+      params: <String, dynamic>{'p_org_unit_id': normalizedUnitId},
+    );
+    final rows = PwfRuntimePayloadNormalizer.rows(
+      raw,
+      source: 'platform_experience.rpc_unit_public_composition_publish_runtime_v1',
+    );
+    if (rows.isEmpty) {
+      throw StateError('لم تُرجع عملية نشر تركيب العرض إيصال Runtime.');
+    }
+    return HomepageRuntimeCompositionPublishReceipt.fromJson(rows.first);
   }
 
 

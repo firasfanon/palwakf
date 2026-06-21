@@ -1,8 +1,6 @@
-import 'dart:developer' as developer;
-
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:waqf/core/data/pwf_runtime_payload_normalizer.dart';
 import 'package:waqf/core/database/pwf_database_owner_surfaces.dart';
-import 'package:waqf/core/unit/pwf_canonical_unit_identity.dart';
 import 'package:waqf/core/unit/pwf_unit_slug_registry.dart';
 
 /// OrgUnitsRepository — owner-schema direct public runtime.
@@ -24,8 +22,10 @@ class OrgUnitsRepository {
         .select('*')
         .order('unit_name_ar', ascending: true);
 
-    final rows = List<Map<String, dynamic>>.from(res)
-        .map(_shapeRuntimeProfileAsOrgUnit)
+    final rows = PwfRuntimePayloadNormalizer.rows(
+      res,
+      source: 'core.v_unit_public_surface_profile_runtime_v1 list',
+    ).map(_shapeRuntimeProfileAsOrgUnit)
         .where((row) {
           if (!onlyActive) return true;
           return _boolLike(row['is_active'], fallback: true);
@@ -42,13 +42,9 @@ class OrgUnitsRepository {
 
   Future<String?> fetchUnitIdBySlug(String slug) async {
     final row = await _fetchRuntimeProfileBySlug(slug);
-    if (row == null) return null;
-
-    final identity = PwfCanonicalUnitIdentity.fromRuntimeProfileRow(row);
-    _logRuntimeIdentityMismatch(slug, identity);
-    return identity.canonicalOrgUnitId.isEmpty
+    return (row?['org_unit_id'] ?? row?['id'] ?? '').toString().trim().isEmpty
         ? null
-        : identity.canonicalOrgUnitId;
+        : (row?['org_unit_id'] ?? row?['id']).toString().trim();
   }
 
   Future<Map<String, dynamic>?> fetchUnitProfile(String unitId) async {
@@ -61,8 +57,10 @@ class OrgUnitsRepository {
         .select('*')
         .eq('org_unit_id', id)
         .maybeSingle();
-    if (res == null) return null;
-    return Map<String, dynamic>.from(res);
+    return PwfRuntimePayloadNormalizer.firstRow(
+      res,
+      source: 'core.v_unit_public_surface_profile_runtime_v1 profile',
+    );
   }
 
   Future<Map<String, dynamic>?> _fetchRuntimeProfileBySlug(String slug) async {
@@ -84,7 +82,11 @@ class OrgUnitsRepository {
           .select('*')
           .eq('internal_slug', candidate)
           .maybeSingle();
-      if (byInternal != null) return Map<String, dynamic>.from(byInternal);
+      final normalizedInternal = PwfRuntimePayloadNormalizer.firstRow(
+        byInternal,
+        source: 'core.v_unit_public_surface_profile_runtime_v1 internal_slug',
+      );
+      if (normalizedInternal != null) return normalizedInternal;
 
       final byPublic = await PwfDatabaseOwnerSurfaces.fromOwnerSchema(
           _client,
@@ -93,19 +95,20 @@ class OrgUnitsRepository {
           .select('*')
           .eq('public_slug', candidate)
           .maybeSingle();
-      if (byPublic != null) return Map<String, dynamic>.from(byPublic);
+      final normalizedPublic = PwfRuntimePayloadNormalizer.firstRow(
+        byPublic,
+        source: 'core.v_unit_public_surface_profile_runtime_v1 public_slug',
+      );
+      if (normalizedPublic != null) return normalizedPublic;
     }
     return null;
   }
 
   Map<String, dynamic> _shapeRuntimeProfileAsOrgUnit(Map<String, dynamic> row) {
     final source = _sourcePayload(row);
-    final identity = PwfCanonicalUnitIdentity.fromRuntimeProfileRow(row);
-    _logRuntimeIdentityMismatch(
-      (row['internal_slug'] ?? source['slug'] ?? '').toString(),
-      identity,
-    );
-    final id = identity.canonicalOrgUnitId;
+    final id = (row['org_unit_id'] ?? row['id'] ?? source['id'] ?? '')
+        .toString()
+        .trim();
     final internalSlug = (row['internal_slug'] ?? source['slug'] ?? '')
         .toString()
         .trim();
@@ -126,21 +129,6 @@ class OrgUnitsRepository {
       'org_unit_profiles': const <Map<String, dynamic>>[],
       'runtime_source': PwfDatabaseOwnerSurfaces.unitPublicSurfaceProfileRuntimeV1,
     };
-  }
-
-
-  void _logRuntimeIdentityMismatch(
-    String requestedSlug,
-    PwfCanonicalUnitIdentityResolution identity,
-  ) {
-    if (!identity.hasRuntimeSourceMismatch) return;
-    developer.log(
-      'Public unit runtime identity mismatch; using canonical core.org_units id '
-      'from source_payload for slug=${requestedSlug.trim().toLowerCase()}. '
-      'runtime_org_unit_id=${identity.runtimeOrgUnitId}; '
-      'source_org_unit_id=${identity.sourceOrgUnitId}.',
-      name: 'OrgUnitsRepository',
-    );
   }
 
   Map<String, dynamic> _sourcePayload(Map<String, dynamic> row) {

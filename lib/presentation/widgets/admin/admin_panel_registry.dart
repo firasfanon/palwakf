@@ -214,13 +214,6 @@ class AdminPanelRegistry {
         icon: Icons.widgets_rounded,
       ),
       AdminPanelEntry(
-        label: 'تنفيذ صفحات الوحدات',
-        description:
-            'متابعة تنفيذ صفحات الوحدات الديناميكية واستعادة الوصول إلى شاشة التنفيذ القديمة.',
-        route: AppRoutes.adminUnitPagesExecution,
-        icon: Icons.fact_check_rounded,
-      ),
-      AdminPanelEntry(
         label: 'إدارة المحتوى المشترك',
         description:
             'إدارة العناصر المشتركة غير الإعلامية في الواجهة العامة دون خلطها بالمركز الإعلامي.',
@@ -369,6 +362,13 @@ class AdminPanelRegistry {
             'لوحة service-first لتشغيل خدمات الإعلام مع إبقاء الحوكمة والتشخيص عند الطلب.',
         route: AppRoutes.adminMediaCenter,
         icon: Icons.perm_media_rounded,
+      ),
+      AdminPanelEntry(
+        label: 'المركز الإعلامي للوحدات',
+        description:
+            'مساحة تحرير محكومة تعرض محتوى الوحدة الحالية فقط، مع اختيار سياق صريح للحسابات ذات السلطة الشاملة.',
+        route: AppRoutes.adminUnitMediaCenter,
+        icon: Icons.account_tree_rounded,
       ),
       AdminPanelEntry(
         label: 'معلومات الحوكمة',
@@ -749,6 +749,13 @@ class AdminPanelRegistry {
         icon: Icons.apartment_outlined,
       ),
       AdminPanelEntry(
+        label: 'تفعيل الوحدات والنشر',
+        description:
+            'فصل حالة تفعيل الوحدة عن نشر سطحها العام، ومراجعة جاهزية الظهور للعامة.',
+        route: AppRoutes.adminUnitOperationalActivation,
+        icon: Icons.toggle_on_rounded,
+      ),
+      AdminPanelEntry(
         label: 'الشكاوى',
         description:
             'الخدمة السيادية للشكاوى على مستوى المنصة مع مسار إداري مركزي.',
@@ -1082,7 +1089,6 @@ class AdminPanelRegistry {
           AppRoutes.adminHomeManagement,
           AppRoutes.adminUnitSurfacesManagement,
           AppRoutes.adminSystemSurfacesManagement,
-          AppRoutes.adminUnitPagesExecution,
           AppRoutes.adminSharedContent,
         ],
       ),
@@ -1206,6 +1212,7 @@ class AdminPanelRegistry {
         routes: [
           AppRoutes.adminUsers,
           AppRoutes.adminOrgUnits,
+          AppRoutes.adminUnitOperationalActivation,
           AppRoutes.adminProfile,
         ],
       ),
@@ -1479,6 +1486,7 @@ class AdminPanelRegistry {
   static const _platformRoutes = <String>[
     '/admin/users',
     '/admin/org-units',
+    '/admin/unit-operations',
     '/admin/profile',
     '/admin/settings',
     '/admin/platform/system-registry',

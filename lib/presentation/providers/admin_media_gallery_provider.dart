@@ -40,7 +40,10 @@ final adminMediaGalleryItemsProvider =
       ref,
       q,
     ) async {
-      final unitId = await ref.watch(unitIdBySlugProvider(q.unitSlug).future);
+      final unitId = await ref.watch(unitIdBySlugExactProvider(q.unitSlug).future);
+      if (unitId == null || unitId.isEmpty) {
+        throw StateError('Unknown or unavailable editorial unit scope.');
+      }
       final repo = ref.read(mediaGalleryRepositoryProvider);
       return repo.fetchForUnit(
         unitId,

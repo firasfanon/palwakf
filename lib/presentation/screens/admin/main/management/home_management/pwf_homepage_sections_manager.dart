@@ -273,6 +273,38 @@ class PwfHomepageSectionsManager
     }
   }
 
+  Future<HomepageRuntimeCompositionPublishReceipt>
+      publishRuntimeComposition() async {
+    if (state.isSaving) {
+      throw StateError('هناك عملية حفظ أو نشر قيد التنفيذ.');
+    }
+    if (state.isDirty) {
+      throw StateError('احفظ مسودة تركيب العرض قبل طلب النشر العام.');
+    }
+    final unitId = _currentUnitId?.trim() ?? '';
+    if (unitId.isEmpty) {
+      throw StateError('تعذر تحديد نطاق الوحدة لنشر تركيب العرض.');
+    }
+
+    state = state.copyWith(isSaving: true, error: null);
+    try {
+      final receipt = await _repo.publishRuntimeComposition(unitId: unitId);
+      final rows = await _loadSectionsForCurrentUnit();
+      final normalized = _ensureOfficialKeys(rows);
+      final ordered = _sortWithPinnedEdges(normalized);
+      state = state.copyWith(
+        isSaving: false,
+        original: List.unmodifiable(ordered),
+        draft: List.unmodifiable(ordered),
+      );
+      return receipt;
+    } catch (e, st) {
+      log('Home composition runtime publish failed: $e', stackTrace: st);
+      state = state.copyWith(isSaving: false, error: e.toString());
+      rethrow;
+    }
+  }
+
   List<HomepageSection> _ensureOfficialKeys(List<HomepageSection> existing) {
     final byKey = <String, HomepageSection>{};
     final nowIso = DateTime.now().toUtc().toIso8601String();
