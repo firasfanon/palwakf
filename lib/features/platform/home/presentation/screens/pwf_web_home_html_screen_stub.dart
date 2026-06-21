@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-abstract class PwfWebHomeHtmlScreenBase extends StatelessWidget {
+abstract class PwfWebHomeHtmlScreenBase extends StatefulWidget {
   final String unitSlug;
   final String? unitTitle;
 
@@ -11,8 +11,14 @@ abstract class PwfWebHomeHtmlScreenBase extends StatelessWidget {
   });
 
   @override
+  State<PwfWebHomeHtmlScreenBase> createState() =>
+      _PwfWebHomeHtmlScreenBaseStubState();
+}
+
+class _PwfWebHomeHtmlScreenBaseStubState
+    extends State<PwfWebHomeHtmlScreenBase> {
+  @override
   Widget build(BuildContext context) {
-    // Non-web fallback (should not be used in production).
     return const SizedBox.shrink();
   }
 }
