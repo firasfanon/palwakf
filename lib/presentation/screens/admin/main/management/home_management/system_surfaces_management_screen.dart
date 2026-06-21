@@ -65,35 +65,35 @@ class _SystemSurfacesManagementScreenState
         appBar: AppBar(
           title: const Text('إدارة واجهات الأنظمة'),
           actions: [
-            IconButton(
-              tooltip: 'تحديث',
-              onPressed: state.isLoading
-                  ? null
-                  : () async => manager.setUnitSlug(_selectedSlug),
-              icon: const Icon(Icons.refresh),
-            ),
-            IconButton(
-              tooltip: 'تراجع',
-              onPressed: state.isDirty && !state.isSaving
-                  ? manager.resetDraft
-                  : null,
-              icon: const Icon(Icons.undo),
+            PwfAdminSurfaceAppBarActions(
+              actions: [
+                PwfAdminSurfaceAppBarAction(
+                  label: 'تحديث',
+                  icon: Icons.refresh,
+                  onPressed: state.isLoading
+                      ? null
+                      : () async => manager.setUnitSlug(_selectedSlug),
+                ),
+                PwfAdminSurfaceAppBarAction(
+                  label: 'تراجع',
+                  icon: Icons.undo,
+                  onPressed: state.isDirty && !state.isSaving
+                      ? manager.resetDraft
+                      : null,
+                ),
+                PwfAdminSurfaceAppBarAction(
+                  label: 'حفظ',
+                  icon: Icons.save,
+                  primary: true,
+                  onPressed: state.isDirty &&
+                          !state.isSaving &&
+                          canManageSelectedSystem
+                      ? manager.save
+                      : null,
+                ),
+              ],
             ),
             const SizedBox(width: 8),
-            FilledButton.icon(
-              onPressed: state.isDirty && !state.isSaving && canManageSelectedSystem
-                  ? manager.save
-                  : null,
-              icon: state.isSaving
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.save),
-              label: const Text('حفظ'),
-            ),
-            const SizedBox(width: 12),
           ],
         ),
         body: PwfAdminSurfaceSplit(
@@ -149,6 +149,7 @@ class _SystemSurfacesManagementScreenState
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: selectedSystem.slug,
+            isExpanded: true,
             decoration: const InputDecoration(
               labelText: 'النظام الهدف',
               border: OutlineInputBorder(),
@@ -157,10 +158,18 @@ class _SystemSurfacesManagementScreenState
                 .map(
                   (item) => DropdownMenuItem<String>(
                     value: item.slug,
-                    child: Text(item.nameAr, overflow: TextOverflow.ellipsis),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        item.nameAr,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: false,
+                      ),
+                    ),
                   ),
                 )
-                .toList(),
+                .toList(growable: false),
             onChanged: (value) async {
               if (value == null || value == _selectedSlug) return;
               setState(() => _selectedSlug = value);

@@ -11,6 +11,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/enums/enums.dart';
 import '../../../features/platform/dynamic_systems/data/models/pwf_dynamic_system_models.dart';
 import '../../../features/platform/dynamic_systems/presentation/providers/pwf_dynamic_system_registry_providers.dart';
+import '../../../features/media_center/presentation/providers/unit_media_center_scope_providers.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/developer_ui_provider.dart';
 import '../admin/admin_panel_registry.dart';
@@ -48,7 +49,16 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     final dynamicSystems =
         ref.watch(visibleDynamicAdminSystemsProvider).valueOrNull ??
         const <PwfDynamicSystemModule>[];
-    final visibleTabs = _visibleTabsForAccess(accessProfile, dynamicSystems);
+    final unitMediaScope = ref.watch(unitMediaCenterScopeProvider).valueOrNull;
+    final isUnitBoundActor = currentUser != null &&
+        !currentUser.isCentral &&
+        accessProfile?.isSuperuser != true;
+    final visibleTabs = _visibleTabsForAccess(
+      accessProfile,
+      dynamicSystems,
+      unitMediaScope: unitMediaScope,
+      isUnitBoundActor: isUnitBoundActor,
+    );
     final effectiveTab = visibleTabs.any((tab) => tab.key == _activeTab)
         ? _activeTab
         : (visibleTabs.isNotEmpty ? visibleTabs.first.key : 'main');
@@ -60,6 +70,8 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
       effectiveTab,
       accessProfile,
       dynamicSystems,
+      unitMediaScope: unitMediaScope,
+      isUnitBoundActor: isUnitBoundActor,
     );
     final showRoutes = ref.watch(developerShowRoutesProvider);
     final showPageNames = ref.watch(developerShowPageNamesProvider);
@@ -86,6 +98,7 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
           padding: const EdgeInsets.fromLTRB(10, 10, 10, 14),
           children: [
             _buildHeader(
+              currentUser: currentUser,
               collapsed: collapsed,
               showRoutes: showRoutes,
               showPageNames: showPageNames,
@@ -184,12 +197,21 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
 
   List<AdminPanelTabItem> _visibleTabsForAccess(
     AccessProfile? profile,
-    List<PwfDynamicSystemModule> dynamicSystems,
-  ) {
+    List<PwfDynamicSystemModule> dynamicSystems, {
+    required UnitMediaCenterScope? unitMediaScope,
+    required bool isUnitBoundActor,
+  }) {
     final tabs = AdminPanelRegistry.tabs
+        .where((tab) => tab.key != 'governance')
         .where(
           (tab) =>
-              _visibleGroupsForTab(tab.key, profile, dynamicSystems).isNotEmpty,
+              _visibleGroupsForTab(
+                tab.key,
+                profile,
+                dynamicSystems,
+                unitMediaScope: unitMediaScope,
+                isUnitBoundActor: isUnitBoundActor,
+              ).isNotEmpty,
         )
         .toList(growable: false);
     if (tabs.isNotEmpty) return tabs;
@@ -205,12 +227,26 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
   List<AdminPanelGroup> _visibleGroupsForTab(
     String tabKey,
     AccessProfile? profile,
-    List<PwfDynamicSystemModule> dynamicSystems,
-  ) {
-    final groups = AdminPanelRegistry.groupsForTab(tabKey)
+    List<PwfDynamicSystemModule> dynamicSystems, {
+    required UnitMediaCenterScope? unitMediaScope,
+    required bool isUnitBoundActor,
+  }) {
+    final sourceGroups = AdminPanelRegistry.groupsForTab(tabKey).where((group) {
+      // A unit-bound editor receives the scoped Unit Media Center workspace,
+      // not central editorial navigation which could imply a wider authority.
+      return !(tabKey == 'media' &&
+          isUnitBoundActor &&
+          group.id == 'media_center');
+    });
+
+    final groups = sourceGroups
         .map((group) => _filterGroupForAccess(group, profile))
         .where((group) => group.items.isNotEmpty)
         .toList(growable: true);
+
+    if (tabKey == 'media' && unitMediaScope?.hasAccess == true) {
+      groups.insert(0, _unitMediaCenterGroup(unitMediaScope!));
+    }
 
     if (tabKey == 'systems') {
       final dynamicGroup = _dynamicSystemsGroup(
@@ -222,6 +258,18 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     }
 
     return groups;
+  }
+
+  AdminPanelGroup _unitMediaCenterGroup(UnitMediaCenterScope scope) {
+    final subtitle = scope.isUniversalSuperAdmin
+        ? 'اختر وحدة التحرير صراحة قبل أي كتابة أو نشر.'
+        : 'تحرير الأخبار والإعلانات والأنشطة والوسائط ضمن وحدتك المعتمدة فقط.';
+    return AdminPanelGroup(
+      id: AdminPanelRegistry.unitMediaCenterGroup.id,
+      title: AdminPanelRegistry.unitMediaCenterGroup.title,
+      subtitle: subtitle,
+      items: AdminPanelRegistry.unitMediaCenterGroup.items,
+    );
   }
 
   AdminPanelGroup _filterGroupForAccess(
@@ -369,7 +417,13 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     AccessProfile? profile,
     List<PwfDynamicSystemModule> dynamicSystems,
   ) {
-    final groups = _visibleGroupsForTab(tabKey, profile, dynamicSystems);
+    final groups = _visibleGroupsForTab(
+      tabKey,
+      profile,
+      dynamicSystems,
+      unitMediaScope: ref.read(unitMediaCenterScopeProvider).valueOrNull,
+      isUnitBoundActor: false,
+    );
     for (final group in groups) {
       if (group.items.isNotEmpty) return group.items.first.route;
     }
@@ -395,10 +449,19 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
   };
 
   Widget _buildHeader({
+    required dynamic currentUser,
     required bool collapsed,
     required bool showRoutes,
     required bool showPageNames,
   }) {
+    final roleLabel = (currentUser?.operationalRoleLabelAr ??
+            currentUser?.role ??
+            'مساحة الإدارة')
+        .toString();
+    final scopeLabel = (currentUser?.scopeLabel ??
+            currentUser?.unitNameAr ??
+            'PalWakf')
+        .toString();
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: collapsed ? 8 : 12,
@@ -436,24 +499,26 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
                   child: Image.asset(AppConstants.appLogo, fit: BoxFit.contain),
                 ),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'لوحة التحكم',
+                        'مساحة العمل',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
-                        'إدارة منصة PalWakf',
-                        style: TextStyle(
+                        '$roleLabel — $scopeLabel',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
                           fontSize: 11.5,
                           color: Color(0xFFCBD5E1),
                           fontWeight: FontWeight.w600,
@@ -595,7 +660,8 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     required bool showPageNames,
   }) {
     final name = currentUser?.name ?? 'مستخدم';
-    final role = currentUser?.role ?? '—';
+    final role = currentUser?.operationalRoleLabelAr ?? currentUser?.role ?? '—';
+    final scope = currentUser?.scopeLabel ?? currentUser?.unitNameAr ?? '';
     final trimmed = name.toString().trim();
     final initials = (trimmed.isNotEmpty ? trimmed.substring(0, 1) : 'U')
         .toUpperCase();
@@ -641,7 +707,11 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        role.toString(),
+                        scope.toString().trim().isEmpty
+                            ? role.toString()
+                            : '${role.toString()} — ${scope.toString()}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Color(0xFFE2E8F0),
                           fontSize: 12,
@@ -650,35 +720,6 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
                       ),
                     ],
                   ),
-                ),
-                Consumer(
-                  builder: (context, ref, _) {
-                    final enabled =
-                        ref.watch(developerShowRoutesProvider) ||
-                        ref.watch(developerShowPageNamesProvider);
-                    return IconButton(
-                      tooltip: enabled
-                          ? 'إخفاء مؤشرات الصيانة'
-                          : 'إظهار مؤشرات الصيانة',
-                      onPressed: () {
-                        final next = !enabled;
-                        ref.read(developerShowRoutesProvider.notifier).state =
-                            next;
-                        ref
-                                .read(developerShowPageNamesProvider.notifier)
-                                .state =
-                            next;
-                      },
-                      icon: Icon(
-                        enabled
-                            ? Icons.visibility_off_rounded
-                            : Icons.developer_mode_rounded,
-                        color: enabled
-                            ? const Color(0xFFEAB308)
-                            : Colors.white70,
-                      ),
-                    );
-                  },
                 ),
               ],
             ],
@@ -805,133 +846,6 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     final candidate = _normalizeRoute(route);
     return current == candidate ||
         (candidate.isNotEmpty && current.startsWith('$candidate/'));
-  }
-
-  Widget _buildMediaCenterDropdown(
-    BuildContext context,
-    AdminPanelGroup group, {
-    required bool collapsed,
-    required bool showRoutes,
-    required bool showDescription,
-  }) {
-    if (group.items.isEmpty) return const SizedBox.shrink();
-    final parent = group.items.first;
-    final byRoute = <String, AdminPanelEntry>{
-      for (final item in group.items) item.route: item,
-    };
-    final sections = <_SidebarEntrySection>[
-      _SidebarEntrySection(
-        title: 'محتوى الوحدات',
-        icon: Icons.account_tree_rounded,
-        routes: const [AppRoutes.adminUnitMediaCenter],
-      ),
-      _SidebarEntrySection(
-        title: 'النشر الإعلامي',
-        icon: Icons.article_rounded,
-        routes: const [
-          AppRoutes.adminMediaCenterNews,
-          AppRoutes.adminMediaCenterAnnouncements,
-          AppRoutes.adminMediaCenterPressReleases,
-          AppRoutes.adminMediaCenterOfficialStatements,
-          AppRoutes.adminMediaCenterBreakingNews,
-        ],
-      ),
-      _SidebarEntrySection(
-        title: 'الأنشطة والفعاليات',
-        icon: Icons.event_available_rounded,
-        routes: const [
-          AppRoutes.adminMediaCenterActivities,
-          AppRoutes.adminMediaCenterEvents,
-          AppRoutes.adminMediaCenterEditorialCalendar,
-        ],
-      ),
-      _SidebarEntrySection(
-        title: 'الاجتماعيات',
-        icon: Icons.groups_2_rounded,
-        routes: const [AppRoutes.adminMediaCenterSocialPosts],
-      ),
-      _SidebarEntrySection(
-        title: 'الوسائط والحملات',
-        icon: Icons.photo_library_rounded,
-        routes: const [
-          AppRoutes.adminMediaCenterPhotos,
-          AppRoutes.adminMediaCenterVideos,
-          AppRoutes.adminMediaCenterHeroSlider,
-          AppRoutes.adminMediaCenterAwarenessCampaigns,
-          AppRoutes.adminMediaCenterMediaLibrary,
-        ],
-      ),
-      _SidebarEntrySection(
-        title: 'الرصد والتوثيق',
-        icon: Icons.shield_rounded,
-        routes: const [
-          AppRoutes.adminMediaCenterSanctitiesObservatory,
-          AppRoutes.adminMediaCenterMediaReports,
-          AppRoutes.adminMediaCenterMediaCoverage,
-          AppRoutes.adminMediaCenterWaqfImpactStories,
-          AppRoutes.adminMediaCenterFridaySermons,
-        ],
-      ),
-      _SidebarEntrySection(
-        title: 'الحوكمة الإعلامية',
-        icon: Icons.policy_rounded,
-        routes: const [AppRoutes.adminMediaCenterGovernance],
-      ),
-    ];
-    final current = widget.currentRoute ?? '';
-    final isActive =
-        current.startsWith(AppRoutes.adminMediaCenter) ||
-        current.startsWith(AppRoutes.adminUnitMediaCenter) ||
-        sections.any(
-          (section) => section.routes.any((route) => current.startsWith(route)),
-        );
-
-    if (collapsed) {
-      return _buildNavItem(
-        context,
-        parent,
-        collapsed: collapsed,
-        showRoutes: showRoutes,
-        showDescription: showDescription,
-      );
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-      decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF133056) : const Color(0xFF132238),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isActive
-              ? const Color(0xFFEAB308)
-              : Colors.white.withValues(alpha: 0.08),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildSurfaceServicesParentItem(
-            context,
-            parent,
-            isActive: current == parent.route,
-            showDescription: showDescription,
-            showRoutes: showRoutes,
-          ),
-          const SizedBox(height: 8),
-          for (final section in sections)
-            _buildSidebarEntrySection(
-              context,
-              section,
-              entries: section.routes
-                  .map((route) => byRoute[route])
-                  .whereType<AdminPanelEntry>()
-                  .toList(growable: false),
-              showRoutes: showRoutes,
-            ),
-        ],
-      ),
-    );
   }
 
   Widget _buildSurfacesServicesDropdown(

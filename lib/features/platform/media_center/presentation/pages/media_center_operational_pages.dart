@@ -156,6 +156,8 @@ class MediaCenterBreakingNewsOperationalPage extends StatelessWidget {
       icon: Icons.priority_high_outlined,
       primaryLabel: 'إضافة عاجل',
       previewRoute: AppRoutes.home,
+      accentColor: Color(0xFFB22222),
+      operationalLabel: 'نشر عاجل مركزي',
       child: BreakingNewsManagementScreen(embedded: true),
     );
   }
@@ -232,13 +234,14 @@ class MediaCenterPressReleasesOperationalPage extends StatelessWidget {
       governanceFamilyKey: 'press_releases',
       title: 'إدارة البيانات الصحفية',
       subtitle:
-          'مواقف وتوضيحات رسمية تصدر بصياغة حكومية مع اعتماد مركزي قبل النشر.',
+          'مساحة تحرير رسمية للبيانات الصحفية: رقم البيان، الجهة المصدرة، تاريخ الإصدار، المرفق، وحالة الاعتماد قبل النشر.',
       icon: Icons.article_outlined,
       primaryLabel: 'إضافة بيان صحفي',
       previewRoute: AppRoutes.pressReleases,
+      officialCommunicationSpec: _OfficialCommunicationSpec.pressRelease,
       bullets: [
         'تمييز البيان الصحفي عن الخبر والإعلان والتصريح الرسمي.',
-        'إسناد البيان إلى الجهة الرسمية وتاريخ الإصدار وحالة الاعتماد.',
+        'إسناد البيان إلى جهة رسمية ورقم مرجعي وتاريخ إصدار قابلين للتدقيق.',
         'إظهار البيان في الواجهة العامة فقط بعد اعتماد مركزي وأثر تدقيق.',
       ],
     );
@@ -255,10 +258,11 @@ class MediaCenterOfficialStatementsOperationalPage extends StatelessWidget {
       governanceFamilyKey: 'official_statements',
       title: 'إدارة التصريحات الرسمية',
       subtitle:
-          'تصريحات منسوبة لمسؤول أو ناطق رسمي مع ضبط المتحدث والصفة والموضوع.',
+          'مساحة تحرير للتصريحات المنسوبة: اسم المتحدث، الصفة، جهة التخويل، الموضوع، وتاريخ التصريح قبل النشر.',
       icon: Icons.record_voice_over_outlined,
       primaryLabel: 'إضافة تصريح رسمي',
       previewRoute: AppRoutes.officialStatements,
+      officialCommunicationSpec: _OfficialCommunicationSpec.officialStatement,
       bullets: [
         'تسجيل اسم المتحدث وصفته والجهة والتاريخ والموضوع.',
         'اعتماد مركزي قبل النشر بسبب حساسية النسبة الرسمية.',
@@ -428,6 +432,101 @@ class MediaCenterWaqfImpactStoriesOperationalPage extends StatelessWidget {
   }
 }
 
+class _OfficialCommunicationField {
+  const _OfficialCommunicationField({
+    required this.key,
+    required this.label,
+    required this.helperText,
+    this.requiredBeforeApproval = false,
+  });
+
+  final String key;
+  final String label;
+  final String helperText;
+  final bool requiredBeforeApproval;
+}
+
+class _OfficialCommunicationSpec {
+  const _OfficialCommunicationSpec({
+    required this.workspaceLabel,
+    required this.formIntro,
+    required this.fields,
+    required this.leadingIcon,
+  });
+
+  final String workspaceLabel;
+  final String formIntro;
+  final List<_OfficialCommunicationField> fields;
+  final IconData leadingIcon;
+
+  static const pressRelease = _OfficialCommunicationSpec(
+    workspaceLabel: 'سجل البيانات الصحفية',
+    formIntro:
+        'استخدم بيانات تعريف رسمية قابلة للتدقيق. لا تستخدم هذا المسار للخبر اليومي أو الإعلان.',
+    leadingIcon: Icons.article_outlined,
+    fields: [
+      _OfficialCommunicationField(
+        key: 'release_number',
+        label: 'رقم البيان / المرجع',
+        helperText: 'رقم صادر رسميًا أو مرجع داخلي معتمد.',
+        requiredBeforeApproval: true,
+      ),
+      _OfficialCommunicationField(
+        key: 'issuer_name',
+        label: 'الجهة المصدرة',
+        helperText: 'مثال: وزارة الأوقاف والشؤون الدينية.',
+        requiredBeforeApproval: true,
+      ),
+      _OfficialCommunicationField(
+        key: 'issue_date',
+        label: 'تاريخ الإصدار',
+        helperText: 'يُكتب بصيغة YYYY-MM-DD.',
+      ),
+      _OfficialCommunicationField(
+        key: 'reference_number',
+        label: 'مرجع قرار/وثيقة (اختياري)',
+        helperText: 'مرجع داخلي أو وثيقة منشورة قابلة للتحقق.',
+      ),
+    ],
+  );
+
+  static const officialStatement = _OfficialCommunicationSpec(
+    workspaceLabel: 'سجل التصريحات الرسمية',
+    formIntro:
+        'يُستخدم فقط للتصريح المنسوب إلى متحدث مخوّل. لا ينشر اسم متحدث أو صفة دون توثيق المصدر.',
+    leadingIcon: Icons.record_voice_over_outlined,
+    fields: [
+      _OfficialCommunicationField(
+        key: 'speaker_name',
+        label: 'اسم المتحدث',
+        helperText: 'الاسم الرسمي كما يظهر في التفويض أو المصدر المعتمد.',
+        requiredBeforeApproval: true,
+      ),
+      _OfficialCommunicationField(
+        key: 'speaker_title',
+        label: 'الصفة الوظيفية',
+        helperText: 'مثل: الوزير، الناطق الرسمي، مدير عام.',
+        requiredBeforeApproval: true,
+      ),
+      _OfficialCommunicationField(
+        key: 'speaker_authority',
+        label: 'جهة التخويل/الإسناد',
+        helperText: 'الجهة التي تثبت صفة المتحدث أو مصدر التصريح.',
+      ),
+      _OfficialCommunicationField(
+        key: 'statement_date',
+        label: 'تاريخ التصريح',
+        helperText: 'يُكتب بصيغة YYYY-MM-DD.',
+      ),
+      _OfficialCommunicationField(
+        key: 'topic',
+        label: 'موضوع التصريح',
+        helperText: 'وصف مختصر للموضوع الرسمي.',
+      ),
+    ],
+  );
+}
+
 class MediaCenterCompletedOperationalPage extends StatelessWidget {
   const MediaCenterCompletedOperationalPage({
     super.key,
@@ -439,6 +538,7 @@ class MediaCenterCompletedOperationalPage extends StatelessWidget {
     required this.primaryLabel,
     required this.previewRoute,
     required this.bullets,
+    this.officialCommunicationSpec,
   });
 
   final String currentRoute;
@@ -449,6 +549,7 @@ class MediaCenterCompletedOperationalPage extends StatelessWidget {
   final String primaryLabel;
   final String previewRoute;
   final List<String> bullets;
+  final _OfficialCommunicationSpec? officialCommunicationSpec;
 
   @override
   Widget build(BuildContext context) {
@@ -466,6 +567,7 @@ class MediaCenterCompletedOperationalPage extends StatelessWidget {
         primaryLabel: primaryLabel,
         previewRoute: previewRoute,
         bullets: bullets,
+        officialCommunicationSpec: officialCommunicationSpec,
       ),
     );
   }
@@ -478,6 +580,7 @@ class _CompletedMediaCenterWorkspace extends ConsumerStatefulWidget {
     required this.primaryLabel,
     required this.previewRoute,
     required this.bullets,
+    this.officialCommunicationSpec,
   });
 
   final String title;
@@ -485,6 +588,7 @@ class _CompletedMediaCenterWorkspace extends ConsumerStatefulWidget {
   final String primaryLabel;
   final String previewRoute;
   final List<String> bullets;
+  final _OfficialCommunicationSpec? officialCommunicationSpec;
 
   @override
   ConsumerState<_CompletedMediaCenterWorkspace> createState() =>
@@ -530,6 +634,7 @@ class _CompletedMediaCenterWorkspaceState
       builder: (context) => _DraftContentDialog(
         title: widget.primaryLabel,
         familyKey: widget.familyKey,
+        officialCommunicationSpec: widget.officialCommunicationSpec,
       ),
     );
     if (result == null) return;
@@ -554,6 +659,7 @@ class _CompletedMediaCenterWorkspaceState
         title: 'تحرير المحتوى',
         familyKey: widget.familyKey,
         initialItem: row,
+        officialCommunicationSpec: widget.officialCommunicationSpec,
       ),
     );
     if (result == null) return;
@@ -660,6 +766,13 @@ class _CompletedMediaCenterWorkspaceState
               homepageSectionKey: _homepageSectionKey(widget.familyKey),
               dataContract: _dataContract(widget.familyKey),
             ),
+            if (widget.officialCommunicationSpec != null) ...[
+              const SizedBox(height: 14),
+              _OfficialCommunicationBriefPanel(
+                spec: widget.officialCommunicationSpec!,
+                rows: sourceRows,
+              ),
+            ],
             const SizedBox(height: 14),
             LayoutBuilder(
               builder: (context, constraints) {
@@ -710,6 +823,7 @@ class _CompletedMediaCenterWorkspaceState
               rows: rows,
               emptyLabel: 'لا توجد عناصر مطابقة للفلاتر الحالية.',
               onAction: _runAction,
+              officialCommunicationSpec: widget.officialCommunicationSpec,
             ),
             const SizedBox(height: 14),
             _WorkflowAndGovernancePanel(
@@ -906,12 +1020,14 @@ class _RowsPanel extends StatelessWidget {
     required this.rows,
     required this.emptyLabel,
     required this.onAction,
+    this.officialCommunicationSpec,
   });
 
   final String title;
   final List<PwfPlatformCenterContentItem> rows;
   final String emptyLabel;
   final void Function(PwfPlatformCenterContentItem row, String action) onAction;
+  final _OfficialCommunicationSpec? officialCommunicationSpec;
 
   @override
   Widget build(BuildContext context) {
@@ -956,6 +1072,7 @@ class _RowsPanel extends StatelessWidget {
                         row: row,
                         compact: compact,
                         onAction: onAction,
+                        officialCommunicationSpec: officialCommunicationSpec,
                       ),
                       if (row != rows.last) const SizedBox(height: 10),
                     ],
@@ -974,11 +1091,13 @@ class _AdminRowCard extends StatelessWidget {
     required this.row,
     required this.compact,
     required this.onAction,
+    this.officialCommunicationSpec,
   });
 
   final PwfPlatformCenterContentItem row;
   final bool compact;
   final void Function(PwfPlatformCenterContentItem row, String action) onAction;
+  final _OfficialCommunicationSpec? officialCommunicationSpec;
 
   @override
   Widget build(BuildContext context) {
@@ -1011,6 +1130,13 @@ class _AdminRowCard extends StatelessWidget {
             ),
           ],
         ),
+        if (officialCommunicationSpec != null) ...[
+          const SizedBox(height: 7),
+          _OfficialCommunicationMetadataLine(
+            spec: officialCommunicationSpec!,
+            metadata: row.metadata,
+          ),
+        ],
       ],
     );
     final workflowActions = _workflowActionsFor(row);
@@ -1244,6 +1370,145 @@ class _SmallPill extends StatelessWidget {
   }
 }
 
+class _OfficialCommunicationBriefPanel extends StatelessWidget {
+  const _OfficialCommunicationBriefPanel({
+    required this.spec,
+    required this.rows,
+  });
+
+  final _OfficialCommunicationSpec spec;
+  final List<PwfPlatformCenterContentItem> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final missingMetadata = rows.where((row) => spec.fields.any(
+      (field) => field.requiredBeforeApproval && (row.metadata[field.key]?.toString().trim().isEmpty ?? true),
+    )).length;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B3A70).withValues(alpha: 0.045),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFF0B3A70).withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFF0B3A70).withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(spec.leadingIcon, color: const Color(0xFF0B3A70)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(spec.workspaceLabel, style: const TextStyle(fontWeight: FontWeight.w900)),
+                const SizedBox(height: 5),
+                Text(spec.formIntro, style: const TextStyle(color: Color(0xFF475569), height: 1.45)),
+                if (missingMetadata > 0) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    '$missingMetadata سجل يحتاج استكمال حقول التعريف الرسمية قبل إرساله للمراجعة أو الاعتماد.',
+                    style: const TextStyle(color: Color(0xFF92400E), fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OfficialCommunicationMetadataLine extends StatelessWidget {
+  const _OfficialCommunicationMetadataLine({
+    required this.spec,
+    required this.metadata,
+  });
+
+  final _OfficialCommunicationSpec spec;
+  final Map<String, dynamic> metadata;
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = spec.fields
+        .where((field) => metadata[field.key]?.toString().trim().isNotEmpty ?? false)
+        .take(2)
+        .toList(growable: false);
+    if (entries.isEmpty) {
+      return const Text(
+        'حقول التعريف الرسمية غير مكتملة',
+        style: TextStyle(color: Color(0xFFB45309), fontSize: 12, fontWeight: FontWeight.w700),
+      );
+    }
+    return Text(
+      entries.map((field) => '${field.label}: ${metadata[field.key]}').join(' • '),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+    );
+  }
+}
+
+class _OfficialCommunicationFormFields extends StatelessWidget {
+  const _OfficialCommunicationFormFields({
+    required this.spec,
+    required this.controllers,
+  });
+
+  final _OfficialCommunicationSpec spec;
+  final Map<String, TextEditingController> controllers;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(spec.workspaceLabel, style: const TextStyle(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          Text(spec.formIntro, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12, height: 1.4)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              for (final field in spec.fields)
+                SizedBox(
+                  width: 320,
+                  child: TextFormField(
+                    controller: controllers[field.key],
+                    validator: (value) => null,
+                    decoration: InputDecoration(
+                      labelText: field.label,
+                      helperText: field.helperText,
+                      helperMaxLines: 2,
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _DraftFormResult {
   const _DraftFormResult({
     required this.title,
@@ -1271,11 +1536,13 @@ class _DraftContentDialog extends StatefulWidget {
     required this.title,
     required this.familyKey,
     this.initialItem,
+    this.officialCommunicationSpec,
   });
 
   final String title;
   final String familyKey;
   final PwfPlatformCenterContentItem? initialItem;
+  final _OfficialCommunicationSpec? officialCommunicationSpec;
 
   @override
   State<_DraftContentDialog> createState() => _DraftContentDialogState();
@@ -1289,6 +1556,7 @@ class _DraftContentDialogState extends State<_DraftContentDialog> {
   late final TextEditingController _unitSlugController;
   late final TextEditingController _documentUrlController;
   late final TextEditingController _metadataController;
+  late final Map<String, TextEditingController> _officialFieldControllers;
   late String _scope;
   late String _categoryKey;
 
@@ -1308,6 +1576,10 @@ class _DraftContentDialogState extends State<_DraftContentDialog> {
     _metadataController = TextEditingController(
       text: _initialMetadataText(item),
     );
+    _officialFieldControllers = {
+      for (final field in widget.officialCommunicationSpec?.fields ?? const <_OfficialCommunicationField>[])
+        field.key: TextEditingController(text: item?.metadata[field.key]?.toString() ?? ''),
+    };
     _scope = _scopeLabel(item?.scopeType ?? 'central') == 'وحدة'
         ? 'وحدة'
         : 'الوزارة';
@@ -1324,6 +1596,9 @@ class _DraftContentDialogState extends State<_DraftContentDialog> {
     _unitSlugController.dispose();
     _documentUrlController.dispose();
     _metadataController.dispose();
+    for (final controller in _officialFieldControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -1382,6 +1657,13 @@ class _DraftContentDialogState extends State<_DraftContentDialog> {
                       ? 'أدخل نصًا تفصيليًا لا يقل عن 20 حرفًا.'
                       : null,
                 ),
+                if (widget.officialCommunicationSpec != null) ...[
+                  const SizedBox(height: 12),
+                  _OfficialCommunicationFormFields(
+                    spec: widget.officialCommunicationSpec!,
+                    controllers: _officialFieldControllers,
+                  ),
+                ],
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -1486,7 +1768,12 @@ class _DraftContentDialogState extends State<_DraftContentDialog> {
                 unitSlug: _unitSlugController.text.trim(),
                 categoryKey: _categoryKey,
                 documentUrl: _documentUrlController.text.trim(),
-                metadata: _parseMetadata(_metadataController.text),
+                metadata: {
+                  ..._parseMetadata(_metadataController.text),
+                  for (final entry in _officialFieldControllers.entries)
+                    if (entry.value.text.trim().isNotEmpty)
+                      entry.key: entry.value.text.trim(),
+                },
               ),
             );
           },
@@ -1720,6 +2007,8 @@ class MediaCenterOperationalPage extends StatelessWidget {
     required this.primaryLabel,
     required this.previewRoute,
     required this.child,
+    this.accentColor = const Color(0xFF0B3A70),
+    this.operationalLabel = 'خدمة تشغيلية مباشرة',
   });
 
   final String currentRoute;
@@ -1730,6 +2019,8 @@ class MediaCenterOperationalPage extends StatelessWidget {
   final String primaryLabel;
   final String previewRoute;
   final Widget child;
+  final Color accentColor;
+  final String operationalLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -1751,6 +2042,8 @@ class MediaCenterOperationalPage extends StatelessWidget {
                   icon: icon,
                   primaryLabel: primaryLabel,
                   previewRoute: previewRoute,
+                  accentColor: accentColor,
+                  operationalLabel: operationalLabel,
                 ),
               ),
               Expanded(
@@ -1776,6 +2069,8 @@ class _MediaCenterOperationalHeader extends StatelessWidget {
     required this.icon,
     required this.primaryLabel,
     required this.previewRoute,
+    required this.accentColor,
+    required this.operationalLabel,
   });
 
   final String currentRoute;
@@ -1785,6 +2080,8 @@ class _MediaCenterOperationalHeader extends StatelessWidget {
   final IconData icon;
   final String primaryLabel;
   final String previewRoute;
+  final Color accentColor;
+  final String operationalLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -1812,10 +2109,10 @@ class _MediaCenterOperationalHeader extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(11),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0B3A70).withValues(alpha: 0.08),
+                  color: accentColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(icon, color: const Color(0xFF0B3A70)),
+                child: Icon(icon, color: accentColor),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1832,7 +2129,7 @@ class _MediaCenterOperationalHeader extends StatelessWidget {
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.w900),
                         ),
-                        const _OperationalChip(label: 'خدمة تشغيلية مباشرة'),
+                        _OperationalChip(label: operationalLabel, color: accentColor),
                       ],
                     ),
                     const SizedBox(height: 6),
@@ -2330,25 +2627,27 @@ class MediaCenterGovernanceInfo {
 }
 
 class _OperationalChip extends StatelessWidget {
-  const _OperationalChip({required this.label});
+  const _OperationalChip({
+    required this.label,
+    this.color = const Color(0xFFD4AF37),
+  });
 
   final String label;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFFD4AF37).withValues(alpha: 0.16),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: const Color(0xFFD4AF37).withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: Color(0xFF7A5A00),
+        style: TextStyle(
+          color: color,
           fontWeight: FontWeight.w900,
           fontSize: 12,
         ),

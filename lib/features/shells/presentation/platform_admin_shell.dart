@@ -6,6 +6,7 @@ import '../../../app/routing/app_routes.dart';
 import '../../../presentation/providers/auth_provider.dart';
 import '../../../presentation/widgets/web/web_sidebar.dart';
 import '../../../core/layout/pwf_global_layout_contract.dart';
+import 'pwf_admin_operational_context_bar.dart';
 
 /// Platform admin shell wrapper.
 /// IMPORTANT: Sidebar must be rendered ONLY here (single unified sidebar).
@@ -26,7 +27,15 @@ class PlatformAdminShell extends ConsumerWidget {
 
     // Mobile/Small: keep route content bounded without fixed sidebar.
     if (w < PwfGlobalLayoutContract.adminShellBreakpoint) {
-      return PwfAdminRouteBoundary(child: child);
+      return Material(
+        color: PwfGlobalLayoutContract.pageBackground,
+        child: Column(
+          children: [
+            PwfAdminOperationalContextBar(location: location, compact: true),
+            Expanded(child: PwfAdminRouteBoundary(child: child)),
+          ],
+        ),
+      );
     }
 
     final user = ref.watch(currentUserProvider);
@@ -45,6 +54,7 @@ class PlatformAdminShell extends ConsumerWidget {
             child: Column(
               children: [
                 _AdminTopStrip(currentUser: user),
+                PwfAdminOperationalContextBar(location: location),
                 Expanded(child: PwfAdminRouteBoundary(child: child)),
               ],
             ),

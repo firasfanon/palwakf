@@ -350,11 +350,30 @@ class AdminPanelRegistry {
     ],
   );
 
+  /// Appears only when the actor has a resolved editorial unit scope.
+  /// It intentionally remains separate from the central Media Center group so
+  /// unit staff never infer access to national editorial surfaces.
+  static const unitMediaCenterGroup = AdminPanelGroup(
+    id: 'unit_media_center',
+    title: 'المركز الإعلامي للوحدة',
+    subtitle:
+        'تحرير الأخبار والإعلانات والأنشطة والفعاليات والوسائط ضمن نطاق الوحدة المعتمد فقط.',
+    items: [
+      AdminPanelEntry(
+        label: 'مساحة تحرير الوحدة',
+        description:
+            'محتوى الوحدة فقط مع اختيار سياق صريح للحسابات ذات السلطة الشاملة.',
+        route: AppRoutes.adminUnitMediaCenter,
+        icon: Icons.perm_media_rounded,
+      ),
+    ],
+  );
+
   static const mediaCenterGroup = AdminPanelGroup(
     id: 'media_center',
     title: 'المركز الإعلامي',
     subtitle:
-        'المحتوى المنشور والرصد والتوثيق الإعلامي: أخبار، إعلانات، أنشطة، فعاليات، اجتماعيات، وسائط، مرصد، وتقارير.',
+        'مساحة المركز الإعلامي المركزي: النشر الرسمي والرصد والتوثيق والحملات عبر المنصة. أما تحرير الوحدة فيظهر ضمن مدخل وحدوي مستقل.',
     items: [
       AdminPanelEntry(
         label: 'لوحة المركز الإعلامي',
@@ -362,20 +381,6 @@ class AdminPanelRegistry {
             'لوحة service-first لتشغيل خدمات الإعلام مع إبقاء الحوكمة والتشخيص عند الطلب.',
         route: AppRoutes.adminMediaCenter,
         icon: Icons.perm_media_rounded,
-      ),
-      AdminPanelEntry(
-        label: 'المركز الإعلامي للوحدات',
-        description:
-            'مساحة تحرير محكومة تعرض محتوى الوحدة الحالية فقط، مع اختيار سياق صريح للحسابات ذات السلطة الشاملة.',
-        route: AppRoutes.adminUnitMediaCenter,
-        icon: Icons.account_tree_rounded,
-      ),
-      AdminPanelEntry(
-        label: 'معلومات الحوكمة',
-        description:
-            'حوكمة المركز الإعلامي ومبررات الصفحات وسير التحرير والصلاحيات.',
-        route: AppRoutes.adminMediaCenterGovernance,
-        icon: Icons.policy_rounded,
       ),
       AdminPanelEntry(
         label: 'الأخبار',
@@ -1476,6 +1481,7 @@ class AdminPanelRegistry {
   ];
 
   static const _mediaRoutes = <String>[
+    '/admin/unit-media-center',
     '/admin/media-center',
     '/admin/hero-slider',
     '/admin/breaking-news',

@@ -18,6 +18,87 @@ class PwfAdminSurfaceLayoutTokens {
   const PwfAdminSurfaceLayoutTokens._();
 }
 
+class PwfAdminSurfaceAppBarAction {
+  const PwfAdminSurfaceAppBarAction({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    this.primary = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final bool primary;
+}
+
+/// Keeps operational action bars usable when a browser is narrowed by a
+/// docked DevTools panel. The full row remains visible on wide screens; narrow
+/// screens expose the same operations through a compact overflow menu.
+class PwfAdminSurfaceAppBarActions extends StatelessWidget {
+  const PwfAdminSurfaceAppBarActions({
+    super.key,
+    required this.actions,
+    this.compactBreakpoint = 840,
+  });
+
+  final List<PwfAdminSurfaceAppBarAction> actions;
+  final double compactBreakpoint;
+
+  @override
+  Widget build(BuildContext context) {
+    final availableWidth = MediaQuery.sizeOf(context).width;
+    if (availableWidth < compactBreakpoint) {
+      return PopupMenuButton<int>(
+        tooltip: 'إجراءات الصفحة',
+        icon: const Icon(Icons.more_vert_rounded),
+        onSelected: (index) => actions[index].onPressed?.call(),
+        itemBuilder: (context) => [
+          for (var index = 0; index < actions.length; index++)
+            PopupMenuItem<int>(
+              value: index,
+              enabled: actions[index].onPressed != null,
+              child: Row(
+                children: [
+                  Icon(actions[index].icon, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      actions[index].label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final action in actions) ...[
+          if (action.primary)
+            FilledButton.icon(
+              onPressed: action.onPressed,
+              icon: Icon(action.icon, size: 18),
+              label: Text(action.label),
+            )
+          else
+            IconButton(
+              tooltip: action.label,
+              onPressed: action.onPressed,
+              icon: Icon(action.icon),
+            ),
+          const SizedBox(width: 4),
+        ],
+      ],
+    );
+  }
+}
+
 class PwfAdminSurfaceSplit extends StatelessWidget {
   const PwfAdminSurfaceSplit({
     super.key,
@@ -112,66 +193,108 @@ class PwfAdminSurfaceHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (icon != null) ...[
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0B3A70).withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: const Color(0xFF0B3A70)),
-          ),
-          const SizedBox(width: 12),
-        ],
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                subtitle,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  height: 1.55,
-                  color: PwfAdminSurfaceLayoutTokens.bodyText,
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (badge != null) ...[
-          const SizedBox(width: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0B3A70).withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              badge!,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final useStackedBadge = badge != null && availableWidth < 420;
+
+        final titleBlock = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF0B3A70),
+                height: 1.55,
+                color: PwfAdminSurfaceLayoutTokens.bodyText,
               ),
             ),
-          ),
-        ],
-      ],
+          ],
+        );
+
+        final leadingAndContent = Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (icon != null) ...[
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0B3A70).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: const Color(0xFF0B3A70)),
+              ),
+              const SizedBox(width: 12),
+            ],
+            Expanded(child: titleBlock),
+          ],
+        );
+
+        if (badge == null) return leadingAndContent;
+
+        final badgeWidget = _PwfAdminSurfaceBadge(text: badge!);
+        if (useStackedBadge) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              leadingAndContent,
+              const SizedBox(height: 10),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: badgeWidget,
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: leadingAndContent),
+            const SizedBox(width: 10),
+            Flexible(child: badgeWidget),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PwfAdminSurfaceBadge extends StatelessWidget {
+  const _PwfAdminSurfaceBadge({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B3A70).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF0B3A70),
+        ),
+      ),
     );
   }
 }
@@ -203,19 +326,38 @@ class PwfAdminSurfacePreviewFrame extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: PwfAdminSurfaceHeader(
-                  title: title,
-                  subtitle: subtitle,
-                  badge: badge,
-                  icon: Icons.visibility_rounded,
-                ),
-              ),
-              if (dirty) ...[const SizedBox(width: 10), const _DirtyPill()],
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final narrow = constraints.maxWidth < 460;
+              final header = PwfAdminSurfaceHeader(
+                title: title,
+                subtitle: subtitle,
+                badge: badge,
+                icon: Icons.visibility_rounded,
+              );
+              if (!dirty) return header;
+              if (narrow) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    header,
+                    const SizedBox(height: 10),
+                    const Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: _DirtyPill(),
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: header),
+                  const SizedBox(width: 10),
+                  const _DirtyPill(),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
           SizedBox(

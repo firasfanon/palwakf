@@ -193,10 +193,10 @@ class UserDashboardContractBuilder {
             systemKey: SystemKey.platformAdmin,
           ),
           UserDashboardAdminTool(
-            title: 'الأنظمة والحوكمة',
+            title: 'تشغيل الأنظمة',
             subtitle:
-                'مراجعة الحوكمة والسياسات وأدوات المطور على مستوى المنصة.',
-            route: AppRoutes.adminDeveloper,
+                'متابعة الأنظمة المسجلة والتشغيلية ضمن لوحة إدارة المنصة.',
+            route: AppRoutes.adminSystemOperations,
             systemKey: SystemKey.platformAdmin,
           ),
           UserDashboardAdminTool(
@@ -230,9 +230,9 @@ class UserDashboardContractBuilder {
             systemKey: SystemKey.platformAdmin,
           ),
           UserDashboardAdminTool(
-            title: 'صفحات الوحدة',
-            subtitle: 'إدارة صفحات الوحدة ومحتواها وخدماتها.',
-            route: AppRoutes.adminHomeManagement,
+            title: 'واجهات الوحدة',
+            subtitle: 'إدارة صفحات الوحدة ومحتواها وخدماتها ضمن نطاقها المعتمد.',
+            route: AppRoutes.adminUnitSurfacesManagement,
             systemKey: SystemKey.platformAdmin,
           ),
         ]);

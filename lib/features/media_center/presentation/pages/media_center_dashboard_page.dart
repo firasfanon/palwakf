@@ -50,74 +50,27 @@ class _MediaCenterDashboardBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-            child: _MediaCenterHeader(state: state),
+    // الحوكمة والتشخيص لهما مسارات داخلية منفصلة؛ مساحة العمل اليومية
+    // تركز على إنتاج المحتوى وإدارته ولا تعرض مؤشرات تقنية للمحررين.
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+          child: _MediaCenterHeader(state: state),
+        ),
+        Expanded(
+          child: _MediaCenterTabScroll(
+            onRefresh: onRefresh,
+            children: [
+              _MediaCenterServiceFirstWorkspace(
+                families: state.families,
+                events: state.editorialDecisionEvents,
+                noticeAr: state.noticeAr,
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: _MediaCenterTabsBar(),
-          ),
-          Expanded(
-            child: TabBarView(
-              children: [
-                _MediaCenterTabScroll(
-                  onRefresh: onRefresh,
-                  children: [
-                    _MediaCenterServiceFirstWorkspace(
-                      families: state.families,
-                      events: state.editorialDecisionEvents,
-                      noticeAr: state.noticeAr,
-                    ),
-                  ],
-                ),
-                _MediaCenterTabScroll(
-                  onRefresh: onRefresh,
-                  children: [
-                    _MediaCenterWorkflowCard(steps: state.editorialWorkflow),
-                    const SizedBox(height: 16),
-                    _MediaCenterEditorialRolesMatrixCard(
-                      roles: state.editorialRoles,
-                    ),
-                    const SizedBox(height: 16),
-                    _MediaCenterPublishingGovernanceCard(
-                      rules: state.publishingRules,
-                    ),
-                    const SizedBox(height: 16),
-                    _MediaCenterGovernanceReadinessCard(
-                      stages: state.governanceReadiness,
-                    ),
-                    const SizedBox(height: 16),
-                    _MediaCenterLivePermissionUatCard(
-                      scenarios: state.permissionUatScenarios,
-                    ),
-                    const SizedBox(height: 16),
-                    _MediaCenterEditorialDecisionEventsCard(
-                      events: state.editorialDecisionEvents,
-                    ),
-                  ],
-                ),
-                _MediaCenterTabScroll(
-                  onRefresh: onRefresh,
-                  children: [
-                    _MediaCenterRuntimeUxCard(checks: state.runtimeUxChecks),
-                    const SizedBox(height: 16),
-                    _MediaCenterReadinessCard(stages: state.readinessStages),
-                    const SizedBox(height: 16),
-                    _MediaCenterFamiliesGrid(families: state.families),
-                    const SizedBox(height: 16),
-                    _MediaCenterPolicyCard(),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -484,13 +437,13 @@ class _MediaCenterServiceFamiliesGrid extends StatelessWidget {
             icon: Icons.apps_outlined,
             title: 'الخدمات الإعلامية',
             subtitle:
-                'بطاقات عملية لكل عائلة إعلامية، بدل عرض الحوكمة كواجهة أولى.',
+                'اختصارات تحريرية مدمجة تعرض الحالة والإجراء التالي دون بطاقات ضخمة أو بيانات تشخيصية.',
           ),
           const SizedBox(height: 14),
           LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              final columns = width >= 1100 ? 3 : (width >= 720 ? 2 : 1);
+              final columns = width >= 1240 ? 4 : (width >= 920 ? 3 : (width >= 620 ? 2 : 1));
               final spacing = 12.0;
               final cardWidth = (width - (spacing * (columns - 1))) / columns;
               return Wrap(
@@ -517,14 +470,25 @@ class _MediaCenterServiceCard extends StatelessWidget {
 
   final MediaCenterFamilySummary family;
 
+  bool get _isHighFrequency =>
+      family.familyKey == 'news' || family.familyKey == 'announcements';
+
   @override
   Widget build(BuildContext context) {
+    final accent = _isHighFrequency
+        ? const Color(0xFF0B3A70)
+        : const Color(0xFF475569);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
+      constraints: const BoxConstraints(minHeight: 156),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: _isHighFrequency
+              ? accent.withValues(alpha: 0.22)
+              : const Color(0xFFE5E7EB),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -532,48 +496,58 @@ class _MediaCenterServiceCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0B3A70).withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(16),
+                  color: accent.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  _familyIcon(family.familyKey),
-                  color: const Color(0xFF0B3A70),
-                ),
+                child: Icon(_familyIcon(family.familyKey), color: accent, size: 21),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 9),
               Expanded(
                 child: Text(
                   family.labelAr,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
+              _StatusChip(label: family.statusAr, color: accent),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 9),
           Text(
             family.runtimeNoteAr,
-            maxLines: 2,
+            maxLines: _isHighFrequency ? 1 : 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Color(0xFF475569), height: 1.45),
+            style: const TextStyle(
+              color: Color(0xFF64748B),
+              height: 1.35,
+              fontSize: 12,
+            ),
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          const Spacer(),
+          Row(
             children: [
-              FilledButton.tonalIcon(
-                onPressed: () => context.go(family.adminRoute),
-                icon: const Icon(Icons.edit_note_outlined, size: 18),
-                label: Text(_manageActionLabel(family.familyKey)),
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  onPressed: () => context.go(family.adminRoute),
+                  icon: const Icon(Icons.edit_note_outlined, size: 17),
+                  label: Text(_manageActionLabel(family.familyKey)),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+                  ),
+                ),
               ),
-              OutlinedButton.icon(
+              const SizedBox(width: 6),
+              IconButton.outlined(
+                tooltip: 'فتح العرض العام',
                 onPressed: () => context.go(family.publicRoute),
                 icon: const Icon(Icons.open_in_new_outlined, size: 18),
-                label: const Text('عرض عام'),
               ),
             ],
           ),

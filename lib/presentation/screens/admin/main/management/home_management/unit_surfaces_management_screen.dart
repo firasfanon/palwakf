@@ -169,52 +169,52 @@ class _UnitSurfacesManagementScreenState
         appBar: AppBar(
           title: const Text('إدارة واجهات الوحدات'),
           actions: [
-            IconButton(
-              tooltip: 'تحديث القراءة التشغيلية',
-              onPressed: compositionState.isLoading
-                  ? null
-                  : () async {
-                      if ((_selectedSlug ?? '').isNotEmpty) {
-                        await manager.setUnitSlug(_selectedSlug!);
-                      }
-                      ref.invalidate(unitOperationalActivationStatesProvider);
-                    },
-              icon: const Icon(Icons.refresh),
-            ),
-            IconButton(
-              tooltip: 'تراجع',
-              onPressed: compositionState.isDirty && !compositionState.isSaving
-                  ? manager.resetDraft
-                  : null,
-              icon: const Icon(Icons.undo),
+            PwfAdminSurfaceAppBarActions(
+              actions: [
+                PwfAdminSurfaceAppBarAction(
+                  label: 'تحديث القراءة التشغيلية',
+                  icon: Icons.refresh,
+                  onPressed: compositionState.isLoading
+                      ? null
+                      : () async {
+                          if ((_selectedSlug ?? '').isNotEmpty) {
+                            await manager.setUnitSlug(_selectedSlug!);
+                          }
+                          ref.invalidate(unitOperationalActivationStatesProvider);
+                        },
+                ),
+                PwfAdminSurfaceAppBarAction(
+                  label: 'تراجع',
+                  icon: Icons.undo,
+                  onPressed:
+                      compositionState.isDirty && !compositionState.isSaving
+                      ? manager.resetDraft
+                      : null,
+                ),
+                PwfAdminSurfaceAppBarAction(
+                  label: 'حفظ مسودة التركيب',
+                  icon: Icons.save_outlined,
+                  primary: true,
+                  onPressed:
+                      compositionState.isDirty && !compositionState.isSaving
+                      ? () => _saveAndReconcile(manager)
+                      : null,
+                ),
+                PwfAdminSurfaceAppBarAction(
+                  label: 'نشر التركيب للعامة',
+                  icon: Icons.publish_rounded,
+                  primary: true,
+                  onPressed: isSuperuser &&
+                          !compositionState.isSaving &&
+                          !compositionState.isLoading &&
+                          !compositionState.isDirty &&
+                          (_selectedSlug ?? '').isNotEmpty
+                      ? () => _publishAndReconcile(manager)
+                      : null,
+                ),
+              ],
             ),
             const SizedBox(width: 8),
-            FilledButton.icon(
-              onPressed: compositionState.isDirty && !compositionState.isSaving
-                  ? () => _saveAndReconcile(manager)
-                  : null,
-              icon: compositionState.isSaving
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.save_outlined),
-              label: const Text('حفظ مسودة التركيب'),
-            ),
-            const SizedBox(width: 8),
-            FilledButton.icon(
-              onPressed: isSuperuser &&
-                      !compositionState.isSaving &&
-                      !compositionState.isLoading &&
-                      !compositionState.isDirty &&
-                      (_selectedSlug ?? '').isNotEmpty
-                  ? () => _publishAndReconcile(manager)
-                  : null,
-              icon: const Icon(Icons.publish_rounded),
-              label: const Text('نشر التركيب للعامة'),
-            ),
-            const SizedBox(width: 12),
           ],
         ),
         body: activationStatesAsync.when(
@@ -339,45 +339,45 @@ class _UnitSurfacesManagementScreenState
           if (isSuperuser) const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             value: selectedTarget?.slug,
+            isExpanded: true,
             decoration: const InputDecoration(
               labelText: 'الوزارة أو الوحدة الهدف',
               border: OutlineInputBorder(),
             ),
+            selectedItemBuilder: (context) => units
+                .map(
+                  (item) => Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(
+                      item.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                    ),
+                  ),
+                )
+                .toList(growable: false),
             items: units
                 .map(
                   (item) => DropdownMenuItem<String>(
                     value: item.slug,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 360),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              item.label,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              softWrap: false,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            item.publicReadinessLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: item.isPubliclyEligible
-                                  ? const Color(0xFF1D7A46)
-                                  : const Color(0xFFB45309),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        '${item.label} — ${item.publicReadinessLabel}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: false,
+                        style: TextStyle(
+                          color: item.isPubliclyEligible
+                              ? const Color(0xFF1D7A46)
+                              : const Color(0xFFB45309),
+                        ),
                       ),
                     ),
                   ),
                 )
-                .toList(),
+                .toList(growable: false),
             onChanged: (value) async {
               if (value == null || value == _selectedSlug) return;
               setState(() => _selectedSlug = value);

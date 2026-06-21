@@ -25,73 +25,71 @@ class PwfTopBar extends ConsumerWidget {
       color: t.topBarSurface,
       padding: EdgeInsets.symmetric(vertical: isMobile ? 6 : 8),
       child: PwfWebContainer(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  _A11yButton(
-                    icon: Icons.text_fields,
-                    label: 'الخط',
-                    active: false,
-                    onTap: () =>
-                        ref.read(pwfUiPrefsProvider.notifier).increaseFont(),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final availableWidth = constraints.maxWidth.isFinite
+                ? constraints.maxWidth
+                : MediaQuery.sizeOf(context).width;
+            final compact = availableWidth < 520;
+            final iconOnly = availableWidth < 330;
+
+            return Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: compact ? 8 : 16,
+              runSpacing: 8,
+              children: [
+                _A11yButton(
+                  icon: Icons.text_fields,
+                  label: 'الخط',
+                  active: false,
+                  compact: iconOnly,
+                  onTap: () =>
+                      ref.read(pwfUiPrefsProvider.notifier).increaseFont(),
+                ),
+                _A11yButton(
+                  icon: Icons.contrast,
+                  label: 'التباين',
+                  active: prefs.highContrast,
+                  compact: iconOnly,
+                  onTap: () => ref
+                      .read(pwfUiPrefsProvider.notifier)
+                      .toggleHighContrast(),
+                ),
+                _A11yButton(
+                  icon: Icons.menu_book,
+                  label: 'وضع القراءة',
+                  active: prefs.readMode,
+                  compact: iconOnly,
+                  onTap: () =>
+                      ref.read(pwfUiPrefsProvider.notifier).toggleReadMode(),
+                ),
+                if (!compact) const _LangSelector(),
+                _GradientActionLink(
+                  icon: Icons.forum,
+                  label: 'الشكاوى',
+                  compact: iconOnly,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFDC3545), Color(0xFFE35D6A)],
                   ),
-                  const SizedBox(width: 15),
-                  _A11yButton(
-                    icon: Icons.contrast,
-                    label: 'التباين',
-                    active: prefs.highContrast,
-                    onTap: () => ref
-                        .read(pwfUiPrefsProvider.notifier)
-                        .toggleHighContrast(),
-                  ),
-                  const SizedBox(width: 15),
-                  _A11yButton(
-                    icon: Icons.menu_book,
-                    label: 'وضع القراءة',
-                    active: prefs.readMode,
-                    onTap: () =>
-                        ref.read(pwfUiPrefsProvider.notifier).toggleReadMode(),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 24),
-              Row(
-                children: [
-                  if (!isMobile) ...[
-                    const _LangSelector(),
-                    const SizedBox(width: 20),
-                  ],
+                  onTap: () => context.go(AppRoutes.complaints),
+                ),
+                if (!compact)
                   _GradientActionLink(
-                    icon: Icons.forum,
-                    label: 'الشكاوى',
+                    icon: Icons.menu_book,
+                    label: 'القرآن',
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Color(0xFFDC3545), Color(0xFFE35D6A)],
+                      colors: [PwfHomePalette.secondary, Color(0xFFE6B244)],
                     ),
-                    onTap: () => context.go(AppRoutes.complaints),
+                    onTap: () => context.go(AppRoutes.quran),
                   ),
-                  if (!isMobile) ...[
-                    const SizedBox(width: 12),
-                    _GradientActionLink(
-                      icon: Icons.menu_book,
-                      label: 'القرآن',
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [PwfHomePalette.secondary, Color(0xFFE6B244)],
-                      ),
-                      onTap: () => context.go(AppRoutes.quran),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -104,12 +102,14 @@ class _A11yButton extends StatefulWidget {
     required this.label,
     required this.onTap,
     required this.active,
+    this.compact = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
   final bool active;
+  final bool compact;
 
   @override
   State<_A11yButton> createState() => _A11yButtonState();
@@ -126,21 +126,29 @@ class _A11yButtonState extends State<_A11yButton> {
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Row(
-          children: [
-            Icon(widget.icon, size: 14, color: color),
-            const SizedBox(width: 6),
-            Text(
-              widget.label,
-              style: TextStyle(
-                color: color,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+      child: Tooltip(
+        message: widget.label,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(widget.icon, size: 14, color: color),
+              if (!widget.compact) ...[
+                const SizedBox(width: 6),
+                Text(
+                  widget.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -217,12 +225,14 @@ class _GradientActionLink extends StatefulWidget {
     required this.label,
     required this.gradient,
     required this.onTap,
+    this.compact = false,
   });
 
   final IconData icon;
   final String label;
   final Gradient gradient;
   final VoidCallback onTap;
+  final bool compact;
 
   @override
   State<_GradientActionLink> createState() => _GradientActionLinkState();
@@ -255,20 +265,31 @@ class _GradientActionLinkState extends State<_GradientActionLink> {
                   ]
                 : null,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-          child: Row(
-            children: [
-              Icon(widget.icon, size: 14, color: Colors.white),
-              const SizedBox(width: 8),
-              Text(
-                widget.label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+          padding: EdgeInsets.symmetric(
+            horizontal: widget.compact ? 10 : 15,
+            vertical: 8,
+          ),
+          child: Tooltip(
+            message: widget.label,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(widget.icon, size: 14, color: Colors.white),
+                if (!widget.compact) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       ),

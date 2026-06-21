@@ -55,12 +55,25 @@ class PwfMainHeader extends ConsumerWidget {
             final buttonGap = compact ? 10.0 : 15.0;
             final buttonHorizontal = compact ? 14.0 : 20.0;
             final buttonFont = compact ? 12.0 : 14.0;
-            final titleFont = width < 820 ? 22.0 : 28.8;
-            final subtitleFont = width < 820 ? 12.5 : 14.4;
+            final veryNarrow = width < 300;
+            final titleFont = veryNarrow
+                ? 18.0
+                : width < 820
+                ? 22.0
+                : 28.8;
+            final subtitleFont = veryNarrow
+                ? 11.0
+                : width < 820
+                ? 12.5
+                : 14.4;
+            final logoSize = veryNarrow ? 34.0 : 48.0;
 
             final brand = Row(
               children: [
-                _HeaderLogo(logoUrl: displaySettings.logoUrl),
+                _HeaderLogo(
+                  logoUrl: displaySettings.logoUrl,
+                  size: logoSize,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -97,7 +110,7 @@ class PwfMainHeader extends ConsumerWidget {
 
             if (width < 640) {
               final mobileControlWidth = width.isFinite ? width : 320.0;
-              final stackButtons = width < 380;
+              final stackButtons = width < 460;
               final emergencyLabel = normalizedSlug == 'home'
                   ? 'الطوارئ'
                   : 'طوارئ ${displaySettings.siteName}';
@@ -224,17 +237,18 @@ class PwfMainHeader extends ConsumerWidget {
 }
 
 class _HeaderLogo extends StatelessWidget {
-  const _HeaderLogo({required this.logoUrl});
+  const _HeaderLogo({required this.logoUrl, required this.size});
 
   final String? logoUrl;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     final value = (logoUrl ?? '').trim();
     if (_shouldUseIconFallback(value)) {
-      return const FaIcon(
+      return FaIcon(
         FontAwesomeIcons.mosque,
-        size: 40,
+        size: size * 0.83,
         color: PwfHomePalette.secondary,
       );
     }
@@ -243,12 +257,12 @@ class _HeaderLogo extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Image.network(
         value,
-        width: 48,
-        height: 48,
+        width: size,
+        height: size,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => const FaIcon(
+        errorBuilder: (_, __, ___) => FaIcon(
           FontAwesomeIcons.mosque,
-          size: 40,
+          size: size * 0.83,
           color: PwfHomePalette.secondary,
         ),
       ),

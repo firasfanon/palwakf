@@ -118,34 +118,33 @@ class _BreakingNewsManagementScreenState
   // =====================================================
   Widget _buildTopBar() {
     return Container(
-      constraints: const BoxConstraints(minHeight: 70),
+      constraints: const BoxConstraints(minHeight: 64),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: widget.embedded ? BorderRadius.circular(18) : null,
+        border: widget.embedded
+            ? Border.all(color: Color(0xFFE5E7EB))
+            : null,
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           child: Row(
             children: [
-              const Icon(Icons.campaign, color: Colors.red, size: 28),
-              const SizedBox(width: 12),
-              const Text(
-                'إدارة الأخبار العاجلة',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
+              if (!widget.embedded) ...[
+                const Icon(Icons.priority_high_rounded, color: Color(0xFFB22222), size: 24),
+                const SizedBox(width: 10),
+                const Text(
+                  'إدارة الأخبار العاجلة',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF0B3A70),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 24),
+                const SizedBox(width: 18),
+              ],
 
               // Show Inactive Toggle
               Row(
@@ -154,7 +153,7 @@ class _BreakingNewsManagementScreenState
                     value: _showInactiveItems,
                     onChanged: (v) =>
                         setState(() => _showInactiveItems = v ?? true),
-                    activeColor: Colors.red,
+                    activeColor: Color(0xFFB22222),
                   ),
                   const Text('عرض المخفية'),
                 ],
@@ -189,11 +188,11 @@ class _BreakingNewsManagementScreenState
               if (_isMultiSelectMode) ...[
                 OutlinedButton.icon(
                   onPressed: _handleBulkDelete,
-                  icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                  icon: const Icon(Icons.delete, size: 18, color: Color(0xFFB22222)),
                   label: Text('حذف (${_selectedItems.length})'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    side: const BorderSide(color: Colors.red),
+                    foregroundColor: Color(0xFFB22222),
+                    side: const BorderSide(color: Color(0xFFB22222)),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -215,7 +214,7 @@ class _BreakingNewsManagementScreenState
                 icon: const Icon(Icons.add, size: 20),
                 label: const Text('إضافة خبر عاجل'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: Color(0xFFB22222),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
@@ -262,7 +261,7 @@ class _BreakingNewsManagementScreenState
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(widget.embedded ? 14 : 24),
       child: WebContainer(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,29 +284,28 @@ class _BreakingNewsManagementScreenState
         )
         .length;
 
-    return Row(
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
       children: [
         _buildStatChip(
           icon: Icons.campaign,
           label: 'إجمالي الأخبار',
           value: allItems.length.toString(),
-          color: Colors.red,
+          color: Color(0xFFB22222),
         ),
-        const SizedBox(width: 16),
         _buildStatChip(
           icon: Icons.check_circle,
           label: 'نشطة',
           value: activeCount.toString(),
           color: AppConstants.success,
         ),
-        const SizedBox(width: 16),
         _buildStatChip(
           icon: Icons.warning,
           label: 'عاجلة',
           value: urgentCount.toString(),
           color: Colors.orange,
         ),
-        const SizedBox(width: 16),
         _buildStatChip(
           icon: Icons.schedule,
           label: 'منتهية',
@@ -379,13 +377,13 @@ class _BreakingNewsManagementScreenState
         item.expiresAt != null && item.expiresAt!.isBefore(DateTime.now());
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: isSelected ? 4 : 1,
+      margin: const EdgeInsets.only(bottom: 10),
+      elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
         side: BorderSide(
-          color: isSelected ? Colors.red : Colors.grey[200]!,
-          width: isSelected ? 2 : 1,
+          color: isSelected ? const Color(0xFFB22222) : const Color(0xFFE2E8F0),
+          width: isSelected ? 1.5 : 1,
         ),
       ),
       child: InkWell(
@@ -393,7 +391,7 @@ class _BreakingNewsManagementScreenState
         onLongPress: () => _handleLongPress(item),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           child: Row(
             children: [
               // Selection Checkbox
@@ -401,7 +399,7 @@ class _BreakingNewsManagementScreenState
                 Checkbox(
                   value: isSelected,
                   onChanged: (v) => _toggleSelection(item.id),
-                  activeColor: Colors.red,
+                  activeColor: Color(0xFFB22222),
                 ),
 
               // Order
@@ -409,7 +407,7 @@ class _BreakingNewsManagementScreenState
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
+                  color: Color(0xFFB22222).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -417,7 +415,7 @@ class _BreakingNewsManagementScreenState
                     '${item.displayOrder}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.red,
+                      color: Color(0xFFB22222),
                     ),
                   ),
                 ),
@@ -493,7 +491,7 @@ class _BreakingNewsManagementScreenState
                         'ينتهي في: ${_formatDate(item.expiresAt!)}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: isExpired ? Colors.red : Colors.grey[600],
+                          color: isExpired ? const Color(0xFFB22222) : Colors.grey[600],
                         ),
                       ),
                     ],
@@ -532,7 +530,7 @@ class _BreakingNewsManagementScreenState
                     icon: const Icon(Icons.edit, size: 20),
                     onPressed: () => _handleEditItem(item),
                     tooltip: 'تعديل',
-                    color: Colors.red,
+                    color: Color(0xFFB22222),
                   ),
                   IconButton(
                     icon: Icon(
@@ -547,7 +545,7 @@ class _BreakingNewsManagementScreenState
                     icon: const Icon(Icons.delete, size: 20),
                     onPressed: () => _handleDeleteItem(item),
                     tooltip: 'حذف',
-                    color: Colors.red,
+                    color: Color(0xFFB22222),
                   ),
                 ],
               ),
@@ -587,7 +585,7 @@ class _BreakingNewsManagementScreenState
             icon: const Icon(Icons.add),
             label: const Text('إضافة خبر عاجل'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Color(0xFFB22222),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
@@ -605,14 +603,14 @@ class _BreakingNewsManagementScreenState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 100, color: Colors.red),
+          const Icon(Icons.error_outline, size: 100, color: Color(0xFFB22222)),
           const SizedBox(height: 24),
           const Text(
             'حدث خطأ في تحميل الأخبار',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.red,
+              color: Color(0xFFB22222),
             ),
           ),
           const SizedBox(height: 8),
@@ -627,7 +625,7 @@ class _BreakingNewsManagementScreenState
             icon: const Icon(Icons.refresh),
             label: const Text('إعادة المحاولة'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Color(0xFFB22222),
               foregroundColor: Colors.white,
             ),
           ),
@@ -762,7 +760,7 @@ class _BreakingNewsManagementScreenState
                 );
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFB22222)),
             child: const Text('حذف'),
           ),
         ],
@@ -809,7 +807,7 @@ class _BreakingNewsManagementScreenState
                 );
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFB22222)),
             child: const Text('حذف'),
           ),
         ],
@@ -823,7 +821,7 @@ class _BreakingNewsManagementScreenState
   Color _getPriorityColor(String priority) {
     switch (priority) {
       case 'urgent':
-        return Colors.red;
+        return const Color(0xFFB22222);
       case 'high':
         return Colors.orange;
       default:
@@ -915,7 +913,7 @@ class _ItemFormDialogState extends State<_ItemFormDialog> {
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.red,
+                    color: Color(0xFFB22222),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -1029,7 +1027,7 @@ class _ItemFormDialogState extends State<_ItemFormDialog> {
                   title: const Text('نشط'),
                   value: _isActive,
                   onChanged: (v) => setState(() => _isActive = v ?? true),
-                  activeColor: Colors.red,
+                  activeColor: Color(0xFFB22222),
                   contentPadding: EdgeInsets.zero,
                 ),
                 const SizedBox(height: 32),
@@ -1046,7 +1044,7 @@ class _ItemFormDialogState extends State<_ItemFormDialog> {
                     ElevatedButton(
                       onPressed: _handleSave,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: Color(0xFFB22222),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
