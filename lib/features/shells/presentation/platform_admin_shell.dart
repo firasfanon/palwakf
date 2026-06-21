@@ -31,19 +31,26 @@ class PlatformAdminShell extends ConsumerWidget {
 
     final user = ref.watch(currentUserProvider);
 
-    return Row(
-      children: [
-        WebSidebar(currentRoute: location),
-        const VerticalDivider(width: 1),
-        Expanded(
-          child: Column(
-            children: [
-              _AdminTopStrip(currentUser: user),
-              Expanded(child: PwfAdminRouteBoundary(child: child)),
-            ],
+    // The desktop shell owns a shared Material boundary. WebSidebar contains
+    // PopupMenuButton, IconButton and InkWell controls; placing the boundary
+    // here keeps every shell-level interactive control inside Material without
+    // changing routes, access rules or page content.
+    return Material(
+      color: const Color(0xFFF8FAFC),
+      child: Row(
+        children: [
+          WebSidebar(currentRoute: location),
+          const VerticalDivider(width: 1),
+          Expanded(
+            child: Column(
+              children: [
+                _AdminTopStrip(currentUser: user),
+                Expanded(child: PwfAdminRouteBoundary(child: child)),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -373,33 +373,90 @@ PRODUCTION_NOT_APPROVED
 
 ---
 
-## Platform 15D — Login Surface Privacy + UI/UX Closure (2026-06-21)
+## Platform 15E — Admin Sidebar Information Architecture + UI/UX Closure Mega Batch (2026-06-21)
 
-### Objective
+### Nature and boundary
 
-The login screen is an authentication entry surface, not a pre-auth governance, role, scope or system-architecture disclosure surface.
+- **Nature:** Flutter admin-shell UI/UX development and navigation information-architecture refinement.
+- **Scope:** `WebSidebar` and the central `AdminPanelRegistry` only.
+- **Excluded:** GoRouter route definitions, RBAC decision contracts, access-profile rules, database/Supabase, SQL, RLS, grants, exposed schemas, public routes, `media_center` runtime/security behavior, and domain workflows.
 
-### UI rule
+### Information architecture decision
 
-The login presentation may show only the platform/ministry identity, concise account-entry guidance, password recovery, remember-me, generic privacy guidance and an optional public-home return action. It must not present RBAC/RLS, roles, scopes, global authority, superuser status, workflow governance, policy implementation, MFA configuration or backend security diagnostics before successful authentication.
+The former two-column grid of eight workspaces inside a 264px sidebar was replaced with one compact **workspace selector**. Selecting a workspace filters the sidebar without forcibly navigating away from the operator's current page. Navigation entries are now compact and category-first; descriptions remain hidden in normal operation and are reserved for maintenance visibility modes.
 
-### Implementation boundary
-
-- Web and native mobile login presentations were refreshed with responsive RTL layouts.
-- Authentication logic, safe return paths, password recovery, remember-me storage and existing server-side access enforcement remain intact.
-- The patch does not create a route, database, RLS, grant, API, schema or Media Center change.
-
-### Acceptance gate
+Approved daily-use workspace order:
 
 ```text
-LOGIN_VISIBLE_GOVERNANCE_COPY_REMOVED
-WEB_AND_NATIVE_MOBILE_RESPONSIVE_LAYOUT_IMPLEMENTED
-SAFE_RETURN_AND_RECOVERY_FLOW_PRESERVED
-LOGIN_PRIVACY_CONTRACT_TEST_PASSED
-LOGIN_STATIC_VERIFIER_PASSED
-FLUTTER_ANALYZE_RECORDED
-WEB_RELEASE_BUILD_PASSED
-BROWSER_AND_MOBILE_UAT_RECORDED
-NO_DATABASE_OR_ACCESS_CONTROL_MUTATION
-PRODUCTION_NOT_APPROVED_UNTIL_EVIDENCE_ACCEPTED
+الرئيسية
+الواجهة العامة
+خدمات الجمهور
+الإعلام والنشر
+الأنظمة التشغيلية
+إدارة المنصة
+الرقابة والجودة
+المطور
+```
+
+Each workspace is ordered internally by operating purpose. Examples include: workday/support, public surfaces, service intake/digital access, official publishing/media, waqf assets/sector systems, institutional structure/platform operations, and audit/readiness.
+
+### Runtime behavior preserved
+
+- All registered routes remain in the central registry.
+- Existing sidebar visibility continues to use `AccessProfile`, `AdminRouteAccessContracts`, dynamic-system checks, and Super User short-circuits.
+- Category choice changes only the navigation context; it does not grant access and it does not redirect to a default route.
+- The sidebar is wider when expanded (`304px`) and tighter when collapsed (`76px`), with compact labels, active-route highlighting, tooltips in collapsed mode, and expandable category sections.
+
+### Current gate
+
+```text
+ADMIN_SIDEBAR_INFORMATION_ARCHITECTURE_CANDIDATE_PREPARED
+CENTRAL_REGISTRY_ROUTE_COVERAGE_PRESERVED_BY_STATIC_REVIEW
+NO_ROUTE_OR_RBAC_OR_DATABASE_MUTATION
+MEDIA_CENTER_SECURITY_WORKSTREAM_UNCHANGED
+FOCUSED_SIDEBAR_TEST_PENDING_ON_OPERATOR_WORKSTATION
+FLUTTER_ANALYZE_AND_WEB_BUILD_PENDING_AFTER_15E
+DESKTOP_AND_NARROW_DESKTOP_BROWSER_UAT_PENDING
+PRODUCTION_NOT_APPROVED
+```
+
+---
+
+## Platform 15F — Admin Shell Material Boundary Runtime Hotfix (2026-06-21)
+
+### الطبيعة والنطاق
+
+- **الطبيعة:** إصلاح Flutter Runtime موضعي لمعالجة خطأ Material ancestor في لوحة التحكم.
+- **الدافع:** دليل Chrome لصفحة `/admin/dashboard` أظهر Flutter red screen برسالة `No Material widget found` ضمن منطقة الشريط الجانبي بعد Platform 15E.
+- **النطاق البرمجي:** `PlatformAdminShell` فقط، مع اختبارات وأدوات تحقق وتوثيق لهذا الإصلاح.
+- **خارج النطاق:** GoRouter، RBAC، AccessProfile، scopes، Super User، SQL، Supabase، RLS، grants، exposed schemas، public runtime، و`media_center`.
+
+### السبب الجذري
+
+كان مسار desktop في `PlatformAdminShell` يرجع `Row` مباشرة. وبما أن `WebSidebar` يحتوي عناصر تفاعل Material (`PopupMenuButton`، `IconButton`، `InkWell`)، لم يكن لديها Material ancestor مضمون داخل الـshell. لا يتعلق الخلل ببيانات المستخدم أو قراءة الصلاحيات أو سجل الأبواب.
+
+### العلاج
+
+تم وضع Material boundary مشتركة حول صف الغلاف المكتبي:
+
+```dart
+return Material(
+  color: const Color(0xFFF8FAFC),
+  child: Row(...),
+);
+```
+
+وهذا يغطي الشريط الجانبي وشريط المستخدم العلوي من دون تغيير عرض الشريط أو فئاته أو منطق الرؤية أو المسارات.
+
+### بوابة الحالة الحالية
+
+```text
+ADMIN_SHELL_MATERIAL_BOUNDARY_RUNTIME_HOTFIX_CANDIDATE_PREPARED
+BROWSER_RED_SCREEN_ROOT_CAUSE_FIXED_IN_SOURCE
+FOCUSED_TESTS_ANALYZE_AND_WEB_BUILD_PENDING
+SUPERUSER_AND_SCOPED_USER_BROWSER_RETEST_PENDING
+PLATFORM15E_SIDEBAR_INFORMATION_ARCHITECTURE_REQUIRES_RUNTIME_ACCEPTANCE
+NO_DATABASE_OR_RBAC_OR_ROUTE_CHANGE
+MEDIA_CENTER_UNCHANGED
+PRODUCTION_NOT_APPROVED
 ```
