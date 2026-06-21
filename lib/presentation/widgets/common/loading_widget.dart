@@ -206,3 +206,145 @@ class IslamicLoadingPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+
+class PwfSkeletonLoader extends StatefulWidget {
+  const PwfSkeletonLoader({
+    super.key,
+    this.width,
+    this.height = 16,
+    this.borderRadius = 8,
+  });
+
+  final double? width;
+  final double height;
+  final double borderRadius;
+
+  @override
+  State<PwfSkeletonLoader> createState() => _PwfSkeletonLoaderState();
+}
+
+class _PwfSkeletonLoaderState extends State<PwfSkeletonLoader>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Container(
+          width: widget.width,
+          height: widget.height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            gradient: LinearGradient(
+              begin: Alignment.centerRight,
+              end: Alignment.centerLeft,
+              colors: const [
+                Color(0xFFE5E7EB),
+                Color(0xFFF3F4F6),
+                Color(0xFFE5E7EB),
+              ],
+              stops: [
+                (_controller.value - 0.3).clamp(0.0, 1.0),
+                _controller.value,
+                (_controller.value + 0.3).clamp(0.0, 1.0),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class PwfSkeletonCard extends StatelessWidget {
+  const PwfSkeletonCard({super.key, this.height = 180});
+
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB), width: 0.5),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PwfSkeletonLoader(width: 140, height: 14),
+          SizedBox(height: 12),
+          PwfSkeletonLoader(height: 12),
+          SizedBox(height: 8),
+          PwfSkeletonLoader(width: 200, height: 12),
+          Spacer(),
+          Row(
+            children: [
+              PwfSkeletonLoader(width: 80, height: 28, borderRadius: 999),
+              SizedBox(width: 8),
+              PwfSkeletonLoader(width: 60, height: 28, borderRadius: 999),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PwfSkeletonList extends StatelessWidget {
+  const PwfSkeletonList({super.key, this.itemCount = 5});
+
+  final int itemCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(itemCount, (i) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE5E7EB), width: 0.5),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: const Row(
+            children: [
+              PwfSkeletonLoader(width: 44, height: 44, borderRadius: 12),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    PwfSkeletonLoader(height: 14),
+                    SizedBox(height: 8),
+                    PwfSkeletonLoader(width: 160, height: 11),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      )),
+    );
+  }
+}
