@@ -507,8 +507,8 @@ class _WebHomepageManagementScreenState
   }) {
     final heading = isSystem ? 'إدارة واجهات الأنظمة' : 'إدارة واجهات الوحدات';
     final subtitle = isSystem
-        ? 'هذه المساحة تدير Body الأنظمة تحت العقد الحاكم للمنصة، مع إبقاء الـ Chrome عامًا ومركزيًا. التعديلات تُعاين فورًا قبل الحفظ.'
-        : 'هذه المساحة تدير Body صفحات الوحدات مباشرة من مصدر الوحدات الحقيقي، مع معاينة حيّة للتعديلات قبل الحفظ.';
+        ? 'إدارة أقسام واجهات الأنظمة.'
+        : 'إدارة أقسام صفحات الوحدات.';
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -684,30 +684,29 @@ class _WebHomepageManagementScreenState
           state: state,
           manager: manager,
           title: 'الهوية والبنية العامة',
-          subtitle:
-              'تجميع العناصر السيادية المرتبطة بالهيدر والهيكل العام والشرائح والإطار البصري للواجهة العامة.',
+          subtitle: 'إدارة الهيدر والهيكل العام والشرائح.',
           cards: const [
             _QuickLaunchCardData(
               'إدارة الصفحة الرئيسية',
-              'التحكم بترتيب أقسام الصفحة الرئيسية العامة ومعاينتها ضمن عقد المنصة.',
+              'ترتيب أقسام الصفحة الرئيسية.',
               AppRoutes.adminHomeManagement,
               Icons.home_filled,
             ),
             _QuickLaunchCardData(
               'إدارة واجهات الوحدات',
-              'إدارة الصفحة العامة لكل وحدة ومحتواها وترتيب أقسامها، منفصلة تمامًا عن شاشة Unit Pages التشغيلية القديمة.',
+              'إدارة صفحات الوحدات وترتيب أقسامها.',
               AppRoutes.adminUnitSurfacesManagement,
               Icons.account_tree_rounded,
             ),
             _QuickLaunchCardData(
               'إدارة واجهات الأنظمة',
-              'إدارة Hero وMain Navigation وBody صفحات الأنظمة داخل عقد المنصة الحاكم، دون خلطها مع وحدات المنصة.',
+              'إدارة صفحات الأنظمة.',
               AppRoutes.adminSystemSurfacesManagement,
               Icons.widgets_rounded,
             ),
             _QuickLaunchCardData(
               'إدارة الأجزاء الفرعية للوحدات',
-              'استعادة شاشة Unit Pages التشغيلية القديمة كمسار مستقل، بعيدًا عن واجهات الوحدات العامة.',
+              'إدارة الأجزاء الفرعية للوحدات.',
               AppRoutes.adminUnitPagesExecution,
               Icons.view_list_rounded,
             ),
@@ -725,8 +724,7 @@ class _WebHomepageManagementScreenState
           state: state,
           manager: manager,
           title: 'المحتوى العام',
-          subtitle:
-              'الوصول السريع إلى العناصر التحريرية التي تغذي الصفحة الرئيسية أو ترتبط بها مباشرة.',
+          subtitle: 'إدارة المحتوى التحريري للصفحة الرئيسية.',
           cards: const [
             _QuickLaunchCardData(
               'الأنشطة والفعاليات',
@@ -1198,8 +1196,8 @@ class _WebHomepageManagementScreenState
             const SizedBox(height: 8),
             Text(
               scopeSlug == null || scopeSlug == 'home'
-                  ? 'إدارة الصفحة أصبحت محكومة بعقد تشغيل سيادي: كل قسم له عائلة ومصدر وRenderer واحد. عند وجود تكرار داخل العائلة يُزال التكرار تشغيليًا ويُبقى ممثل واحد فقط.'
-                  : 'يمكنك إعادة ترتيب أقسام السطح المحدد ومعاينة النتيجة فورًا قبل الحفظ. العناصر المثبتة تبقى في مواضعها السيادية، والعائلات الدلالية تمنع التكرار.' ,
+                  ? 'إدارة ترتيب أقسام الصفحة الرئيسية.'
+                  : 'إعادة ترتيب أقسام السطح المحدد ومعاينة النتيجة قبل الحفظ.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.black54,
                 height: 1.4,
@@ -1624,7 +1622,7 @@ class _WebHomepageManagementScreenState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'تنبيه ضبط سيادي: توجد أقسام نشطة داخل نفس العائلة. عند الحفظ ستُزال حالة التكرار تشغيليًا ويبقى ممثل واحد ضمن عائلته الخاصة.',
+            'تنبيه: توجد أقسام مكررة داخل نفس العائلة وسيتم إزالة التكرار عند الحفظ.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: const Color(0xFF7A4B00),
               fontWeight: FontWeight.w800,

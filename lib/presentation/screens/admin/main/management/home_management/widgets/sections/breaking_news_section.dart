@@ -69,6 +69,7 @@ class _BreakingNewsSectionState extends ConsumerState<BreakingNewsSection> {
             maxItems: _maxItems,
           ),
         );
+    ref.read(breakingNewsSectionNotifierProvider.notifier).saveSettings();
   }
 
   @override

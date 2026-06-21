@@ -54,8 +54,8 @@ class MosqueRepository {
         );
       }
 
-      dev.log('Falling back to sample data', name: 'MosqueRepository');
-      return _getSampleMosques();
+      dev.log('Failed to load mosques', name: 'MosqueRepository');
+      return const <Mosque>[];
     }
   }
 
@@ -388,77 +388,8 @@ class MosqueRepository {
     return degrees * (math.pi / 180);
   }
 
-  // Sample data for fallback
   List<Mosque> _getSampleMosques() {
-    return [
-      Mosque(
-        id: 1,
-        name: 'المسجد الأقصى المبارك',
-        nameEn: 'Al-Aqsa Mosque',
-        description:
-            'المسجد الأقصى المبارك أولى القبلتين وثالث الحرمين الشريفين',
-        type: MosqueType.jamia,
-        status: MosqueStatus.active,
-        location: const MosqueLocation(
-          address: 'البلدة القديمة، القدس',
-          latitude: 31.7782778,
-          longitude: 35.2361111,
-        ),
-        imam: 'الشيخ عكرمة صبري',
-        capacity: 5000,
-        hasWheelchairAccess: true,
-        hasAirConditioning: true,
-        hasFemaleSection: true,
-        governorate: 'القدس',
-        district: 'البلدة القديمة',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Mosque(
-        id: 2,
-        name: 'مسجد عمر بن الخطاب',
-        nameEn: 'Omar Ibn Al-Khattab Mosque',
-        description: 'مسجد كبير في وسط مدينة رام الله',
-        type: MosqueType.jamia,
-        status: MosqueStatus.active,
-        location: const MosqueLocation(
-          address: 'وسط البلد، رام الله',
-          latitude: 31.9037,
-          longitude: 35.2034,
-        ),
-        imam: 'الشيخ محمد أحمد',
-        capacity: 1000,
-        hasWheelchairAccess: true,
-        hasAirConditioning: true,
-        hasFemaleSection: true,
-        governorate: 'رام الله والبيرة',
-        district: 'وسط البلد',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      Mosque(
-        id: 3,
-        name: 'مسجد صلاح الدين',
-        nameEn: 'Salah Al-Din Mosque',
-        description: 'مسجد تاريخي في مدينة نابلس',
-        type: MosqueType.jamia,
-        status: MosqueStatus.active,
-        location: const MosqueLocation(
-          address: 'البلدة القديمة، نابلس',
-          latitude: 32.2211,
-          longitude: 35.2544,
-        ),
-        imam: 'الشيخ خالد يوسف',
-        capacity: 800,
-        hasWheelchairAccess: false,
-        hasAirConditioning: true,
-        hasFemaleSection: true,
-        governorate: 'نابلس',
-        district: 'البلدة القديمة',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    ];
+    return const <Mosque>[];
   }
 
   /// Helper: Safely parse enum from string value
