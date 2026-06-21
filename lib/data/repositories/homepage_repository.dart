@@ -982,6 +982,29 @@ class HomepageRepository {
     final userId = _client.auth.currentUser?.id;
     final nowIso = DateTime.now().toUtc().toIso8601String();
 
+    // Phase 1: collect existing row IDs and temporarily set display_order to
+    // unique negative values so reordering never collides with the
+    // ux_homepage_sections_scope_order unique constraint.
+    final existingIds = <String, int>{};
+    for (var i = 0; i < entries.length; i++) {
+      final sectionName = entries[i]['section_name'] as String;
+      final existing = await _client
+          .from(sectionsTable)
+          .select('id')
+          .eq('section_name', sectionName)
+          .eq('unit_id', unitId)
+          .maybeSingle();
+      if (existing != null) {
+        final id = existing['id'] as int;
+        existingIds[sectionName] = id;
+        await _client
+            .from(sectionsTable)
+            .update({'display_order': -(i + 1)})
+            .eq('id', id);
+      }
+    }
+
+    // Phase 2: apply actual values now that display_order slots are free.
     for (final entry in entries) {
       final sectionName = entry['section_name'] as String;
       final payload = <String, dynamic>{
@@ -992,18 +1015,12 @@ class HomepageRepository {
         'updated_by': userId,
       };
 
-      final existing = await _client
-          .from(sectionsTable)
-          .select('id')
-          .eq('section_name', sectionName)
-          .eq('unit_id', unitId)
-          .maybeSingle();
-
-      if (existing != null) {
+      final id = existingIds[sectionName];
+      if (id != null) {
         await _client
             .from(sectionsTable)
             .update(payload)
-            .eq('id', existing['id'] as int);
+            .eq('id', id);
       } else {
         await _client.from(sectionsTable).insert(<String, dynamic>{
           ...payload,
