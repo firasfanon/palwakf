@@ -213,10 +213,10 @@ class _SystemSurfaceAuthorityNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = isSuperuser
-        ? 'تفويض Super User السيادي فعّال على واجهة $systemNameAr. التفعيل والترتيب والحفظ متاحان من هذه الشاشة؛ التنفيذ النهائي يبقى خاضعًا لعقد RPC الخاص بالنطاق عند وجوده.'
+        ? 'لديك صلاحيات كاملة على واجهة $systemNameAr.'
         : canManage
-            ? 'لديك تفويض إدارة فعّال على واجهة $systemNameAr ضمن نطاقك الحالي.'
-            : 'الوضع للقراءة فقط: لا توجد سلطة إدارة فعّالة لواجهة $systemNameAr.';
+            ? 'لديك صلاحية إدارة واجهة $systemNameAr.'
+            : 'الوضع للقراءة فقط.';
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(

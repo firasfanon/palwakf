@@ -6,8 +6,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:waqf/app/routing/app_routes.dart';
 import 'package:waqf/core/constants/app_constants.dart';
 import 'package:waqf/presentation/providers/auth_provider.dart';
-import 'package:waqf/presentation/providers/user_dashboard_provider.dart';
-import 'package:waqf/presentation/widgets/admin/user_access_overview_section.dart';
 import 'package:waqf/presentation/widgets/common/admin_app_bar.dart';
 
 class MobileAdminDashboard extends ConsumerStatefulWidget {
@@ -247,10 +245,6 @@ class _AdminDashboardScreenState extends ConsumerState<MobileAdminDashboard> {
 
             const SizedBox(height: 24),
 
-            _buildCurrentUserAccessSection(),
-
-            const SizedBox(height: 24),
-
             // Statistics Cards
             _buildStatisticsCards(),
 
@@ -327,30 +321,6 @@ class _AdminDashboardScreenState extends ConsumerState<MobileAdminDashboard> {
     );
   }
 
-  Widget _buildCurrentUserAccessSection() {
-    final contractAsync = ref.watch(currentUserDashboardContractProvider);
-
-    return contractAsync.when(
-      data: (contract) {
-        if (contract == null) {
-          return const SizedBox.shrink();
-        }
-        return UserAccessOverviewSection(contract: contract);
-      },
-      loading: () => Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.grey[200]!),
-        ),
-        child: const Padding(
-          padding: EdgeInsets.all(24),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      ),
-      error: (_, __) => const SizedBox.shrink(),
-    );
-  }
 
   Widget _buildStatisticsCards() {
     return Column(

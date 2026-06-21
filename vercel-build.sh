@@ -8,7 +8,6 @@ git clone https://github.com/flutter/flutter.git --depth 1 -b "${FLUTTER_VERSION
 export PATH="$PATH:$HOME/flutter/bin"
 
 flutter --version
-flutter config --enable-web
 flutter pub get
 
-flutter build web --release --no-wasm-dry-run
+flutter build web --release

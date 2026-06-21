@@ -77,10 +77,6 @@ class MyActivityScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  if (contract.isSuperuser) ...[
-                    const SizedBox(height: 16),
-                    const _UniversalAuthorityNotice(),
-                  ],
                   const SizedBox(height: 16),
                   _SectionBlock(
                     title: 'الأنظمة المتاحة حاليًا',

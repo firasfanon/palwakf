@@ -144,7 +144,7 @@ class AdminPanelRegistry {
     id: 'main',
     title: 'الرئيسية',
     subtitle:
-        'مداخل سريعة إلى اللوحة والمساعد ومعاينة الشات العام وبوابة إدارة المنصة.',
+        'اللوحة والمساعد وإدارة المنصة.',
     items: [
       AdminPanelEntry(
         label: 'لوحة التحكم',
@@ -648,7 +648,7 @@ class AdminPanelRegistry {
       AdminPanelEntry(
         label: 'مركز تشغيل الأنظمة المندمجة',
         description:
-            'مراقبة الأنظمة شبه المستقلة، الصلاحيات، الصحة، الصيانة، والمسارات التشغيلية دون خلط منطق الأنظمة داخل المنصة.',
+            'مراقبة الأنظمة والصلاحيات والصيانة.',
         route: AppRoutes.adminSystemOperations,
         icon: Icons.account_tree_rounded,
       ),

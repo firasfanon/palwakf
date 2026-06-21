@@ -54,8 +54,8 @@ class MosqueRepository {
         );
       }
 
-      dev.log('Falling back to sample data', name: 'MosqueRepository');
-      return _getSampleMosques();
+      dev.log('Failed to load mosques', name: 'MosqueRepository');
+      return const <Mosque>[];
     }
   }
 

@@ -493,6 +493,8 @@ class HomepageRepository {
     int? displayOrder,
   }) async {
     final userId = _client.auth.currentUser?.id;
+    final unitId = await _resolveHomeOwnerUnitId();
+
     final payload = <String, dynamic>{
       'section_name': sectionName,
       'settings': settingsJson,
@@ -502,11 +504,33 @@ class HomepageRepository {
       'updated_by': userId,
     };
 
-    final res = await _client
+    var query = _client
         .from(sectionsTable)
-        .upsert(payload, onConflict: 'section_name')
         .select('id')
-        .maybeSingle();
+        .eq('section_name', sectionName);
+    if (unitId.isNotEmpty) {
+      query = query.eq('unit_id', unitId);
+    }
+    final existing = await query.maybeSingle();
+
+    Map<String, dynamic>? res;
+    if (existing != null) {
+      res = await _client
+          .from(sectionsTable)
+          .update(payload)
+          .eq('id', existing['id'] as int)
+          .select('id')
+          .maybeSingle();
+    } else {
+      if (unitId.isNotEmpty) {
+        payload['unit_id'] = unitId;
+      }
+      res = await _client
+          .from(sectionsTable)
+          .insert(payload)
+          .select('id')
+          .maybeSingle();
+    }
 
     log('Upsert "$sectionName" -> ${res?['id']}');
   }
@@ -925,13 +949,86 @@ class HomepageRepository {
       'display_order': section.displayOrder,
     }).toList(growable: false);
 
-    await _client.schema('platform_experience').rpc(
-      'rpc_unit_public_composition_replace_v1',
-      params: <String, dynamic>{
-        'p_org_unit_id': effectiveUnitId,
-        'p_entries': entries,
-      },
-    );
+    try {
+      await _client.schema('platform_experience').rpc(
+        'rpc_unit_public_composition_replace_v1',
+        params: <String, dynamic>{
+          'p_org_unit_id': effectiveUnitId,
+          'p_entries': entries,
+        },
+      );
+    } on PostgrestException catch (e) {
+      // The sovereign replace RPC can fail with a duplicate-key violation on
+      // `ux_homepage_sections_scope` (section_name, unit_id) when legacy rows
+      // already exist for this unit. Fall back to a direct, scoped
+      // update-then-insert per section so admins can still save.
+      if (e.code == '23505') {
+        await _saveSectionsMetaDirect(entries, effectiveUnitId);
+        return;
+      }
+      rethrow;
+    }
+  }
+
+  /// Direct, per-section scoped upsert against the legacy write table.
+  ///
+  /// Used as a fallback when the sovereign replace RPC hits a unique-constraint
+  /// violation. Each section is matched on (section_name, unit_id) and updated
+  /// in place, or inserted if it does not yet exist for this unit.
+  Future<void> _saveSectionsMetaDirect(
+    List<Map<String, dynamic>> entries,
+    String unitId,
+  ) async {
+    final userId = _client.auth.currentUser?.id;
+    final nowIso = DateTime.now().toUtc().toIso8601String();
+
+    // Phase 1: collect existing row IDs and temporarily set display_order to
+    // unique negative values so reordering never collides with the
+    // ux_homepage_sections_scope_order unique constraint.
+    final existingIds = <String, int>{};
+    for (var i = 0; i < entries.length; i++) {
+      final sectionName = entries[i]['section_name'] as String;
+      final existing = await _client
+          .from(sectionsTable)
+          .select('id')
+          .eq('section_name', sectionName)
+          .eq('unit_id', unitId)
+          .maybeSingle();
+      if (existing != null) {
+        final id = existing['id'] as int;
+        existingIds[sectionName] = id;
+        await _client
+            .from(sectionsTable)
+            .update({'display_order': -(i + 1)})
+            .eq('id', id);
+      }
+    }
+
+    // Phase 2: apply actual values now that display_order slots are free.
+    for (final entry in entries) {
+      final sectionName = entry['section_name'] as String;
+      final payload = <String, dynamic>{
+        'settings': entry['settings'],
+        'is_active': entry['is_active'],
+        'display_order': entry['display_order'],
+        'updated_at': nowIso,
+        'updated_by': userId,
+      };
+
+      final id = existingIds[sectionName];
+      if (id != null) {
+        await _client
+            .from(sectionsTable)
+            .update(payload)
+            .eq('id', id);
+      } else {
+        await _client.from(sectionsTable).insert(<String, dynamic>{
+          ...payload,
+          'section_name': sectionName,
+          'unit_id': unitId,
+        });
+      }
+    }
   }
 
 

@@ -63,6 +63,7 @@ class _HeaderSettingsSectionState extends ConsumerState<HeaderSettingsSection> {
                 : _breakingNewsController.text,
           ),
         );
+    ref.read(headerSettingsProvider.notifier).saveSettings();
   }
 
   @override

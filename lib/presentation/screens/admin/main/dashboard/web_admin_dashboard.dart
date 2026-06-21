@@ -12,7 +12,6 @@ import 'package:waqf/core/constants/app_constants.dart';
 import 'package:waqf/core/enums/enums.dart';
 import 'package:waqf/presentation/providers/auth_provider.dart';
 import 'package:waqf/presentation/providers/user_dashboard_provider.dart';
-import 'package:waqf/presentation/widgets/admin/user_access_overview_section.dart';
 import 'package:waqf/features/platform/dynamic_systems/data/models/pwf_dynamic_system_models.dart';
 import 'package:waqf/features/platform/dynamic_systems/presentation/providers/pwf_dynamic_system_registry_providers.dart';
 
@@ -137,9 +136,11 @@ class _WebAdminDashboardState extends ConsumerState<WebAdminDashboard> {
     );
     final isCentral = currentUser?.isCentral ?? false;
     final title = isCentral ? 'لوحة التحكم المركزية' : 'لوحة عملي';
-    final subtitle = isCentral
-        ? 'نظرة عامة موحدة على الأنظمة والسياسات والمحتوى'
-        : 'الأنظمة والأدوات المتاحة لك بحسب دورك وصلاحياتك الحالية.';
+    final displayName = currentUser?.displayName ?? '';
+    final scopeLabel = currentUser?.scopeLabel ?? '';
+    final subtitle = displayName.isNotEmpty
+        ? '$displayName${scopeLabel.isNotEmpty ? '  •  $scopeLabel' : ''}'
+        : scopeLabel;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -314,10 +315,6 @@ class _WebAdminDashboardState extends ConsumerState<WebAdminDashboard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDashboardHero(),
-              const SizedBox(height: 20),
-              _buildCurrentUserAccessSection(),
-              const SizedBox(height: 20),
               _buildAdminOrganizerHub(accessProfile),
               const SizedBox(height: 20),
               if (hasOperationalAccess) ...[
@@ -337,73 +334,6 @@ class _WebAdminDashboardState extends ConsumerState<WebAdminDashboard> {
     );
   }
 
-  Widget _buildDashboardHero() {
-    final currentUser = ref.watch(currentUserProvider);
-    final isCentral = currentUser?.isCentral ?? false;
-    final scopeLabel = currentUser?.scopeLabel ?? 'مركزي';
-    final username = (currentUser?.username ?? '').toString().trim();
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        alignment: WrapAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                isCentral ? 'اللوحة المركزية للمنصة' : 'مساحة العمل الشخصية',
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F4C81),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                isCentral
-                    ? 'واجهة موحدة لإدارة المنصة والأنظمة والمحتوى والمستخدمين ضمن نفس السجل المركزي.'
-                    : 'لوحة ديناميكية تتغير تلقائيًا بحسب الأنظمة المسموحة لك ونطاقك الحالي داخل PalWakf.',
-                style: const TextStyle(color: Color(0xFF6B7280), height: 1.6),
-              ),
-              if (currentUser != null) ...[
-                const SizedBox(height: 10),
-                Text(
-                  '${currentUser.displayName}${username.isNotEmpty ? ' • @$username' : ''} • $scopeLabel',
-                  style: const TextStyle(
-                    color: Color(0xFF0F4C81),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ],
-          ),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _HeroBadge(
-                label: isCentral ? 'مركزي' : 'شخصي',
-                icon: isCentral ? Icons.hub_outlined : Icons.person_outline,
-              ),
-              _HeroBadge(label: scopeLabel, icon: Icons.apartment_outlined),
-              _HeroBadge(label: 'أنظمة متصلة', icon: Icons.widgets_outlined),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildAdminOrganizerHub(AccessProfile? profile) {
     final dynamicSystems =
         ref.watch(visibleDynamicAdminSystemsProvider).valueOrNull ??
@@ -412,7 +342,7 @@ class _WebAdminDashboardState extends ConsumerState<WebAdminDashboard> {
       _AdminHubGroup(
         id: 'general',
         title: 'الرئيسية',
-        subtitle: 'مداخل سريعة إلى اللوحة والمساعد وإدارة المستخدمين والوحدات.',
+        subtitle: 'اللوحة والمساعد والمستخدمون والوحدات.',
         items: const [
           _AdminHubItem(
             'لوحة التحكم',
@@ -445,7 +375,7 @@ class _WebAdminDashboardState extends ConsumerState<WebAdminDashboard> {
         id: 'public',
         title: 'الواجهة العامة',
         subtitle:
-            'إدارة الصفحة الرئيسية والهوية العامة والمحتوى التشغيلي العام.',
+            'الصفحة الرئيسية والهوية العامة والمحتوى.',
         items: const [
           _AdminHubItem(
             'إدارة الصفحة الرئيسية',
@@ -483,7 +413,7 @@ class _WebAdminDashboardState extends ConsumerState<WebAdminDashboard> {
         id: 'public_pages',
         title: 'الصفحات العامة',
         subtitle:
-            'بوابة إدارية موحدة للصفحات العامة المكتملة وربطها بمصادرها الفعلية داخل المنصة.',
+            'إدارة الصفحات العامة.',
         items: const [
           _AdminHubItem(
             'بوابة الصفحات العامة',
@@ -1082,30 +1012,6 @@ class _WebAdminDashboardState extends ConsumerState<WebAdminDashboard> {
     );
   }
 
-  Widget _buildCurrentUserAccessSection() {
-    final contractAsync = ref.watch(currentUserDashboardContractProvider);
-
-    return contractAsync.when(
-      data: (contract) {
-        if (contract == null) {
-          return const SizedBox.shrink();
-        }
-        return UserAccessOverviewSection(contract: contract);
-      },
-      loading: () => Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.grey[200]!),
-        ),
-        child: const Padding(
-          padding: EdgeInsets.all(24),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      ),
-      error: (_, __) => const SizedBox.shrink(),
-    );
-  }
 
   Widget _buildDashboardTypeSelector() {
     return Card(
@@ -1778,39 +1684,6 @@ class _WebAdminDashboardState extends ConsumerState<WebAdminDashboard> {
       style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
     ),
   );
-}
-
-class _HeroBadge extends StatelessWidget {
-  final String label;
-  final IconData icon;
-
-  const _HeroBadge({required this.label, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F0FE),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFBFDBFE)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: const Color(0xFF0F4C81)),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF0F4C81),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _AdminHubGroup {

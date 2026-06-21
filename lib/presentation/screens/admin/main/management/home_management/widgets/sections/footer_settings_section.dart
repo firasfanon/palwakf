@@ -145,6 +145,7 @@ class _FooterSettingsSectionState extends ConsumerState<FooterSettingsSection> {
             showWorkingHours: _showWorkingHours,
           ),
         );
+    ref.read(footerSettingsProvider.notifier).saveSettings();
   }
 
   @override

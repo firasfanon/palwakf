@@ -405,30 +405,11 @@ class _SystemsGovernanceOverviewCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'ليست كل العناصر في هذا التبويب مجرد شاشات تشغيلية. يوجد نظام إداري مرجعي رئيسي (awqaf_system) وأنظمة شبه مستقلة مرتبطة بالعقد الحاكم للمنصة وقاعدة البيانات المشتركة.',
+            'حوكمة الأنظمة المرتبطة بالمنصة.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: const Color(0xFF374151),
               height: 1.5,
             ),
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _buildBadge(
-                context,
-                label: 'العقل الإداري',
-                value: '$coreCount',
-                color: const Color(0xFF0B3A70),
-              ),
-              _buildBadge(
-                context,
-                label: 'أنظمة متصلة',
-                value: '$connectedCount',
-                color: const Color(0xFF2E7D32),
-              ),
-            ],
           ),
         ],
       ),

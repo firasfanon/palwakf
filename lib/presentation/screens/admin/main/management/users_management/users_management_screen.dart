@@ -1144,35 +1144,9 @@ class _PlatformAuthorizationModelCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'PalWakf ليست مركزًا إعلاميًا وخدماتيًا فقط. إدارة المستخدمين هنا تُعامل كطبقة منصة متعددة الأنظمة والنطاقات: مستخدم، وحدة/نطاق، نظام/خدمة، ودور/فعل. Route Access Contract يربط المسارات الإدارية الحساسة بهذه الطبقة بدل الاكتفاء بوجود حساب إداري نشط.',
-            style: TextStyle(color: Color(0xFF92400E), height: 1.55),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _StatusChip(
-                  label: 'عقود مسارات محمية: $protectedContracts',
-                  active: protectedContracts > 0),
-              _StatusChip(
-                  label: 'مسارات قراءة/حوكمة: $readOnlyContracts',
-                  active: readOnlyContracts > 0),
-              _StatusChip(
-                  label: 'مسارات حوكمة: $governanceContracts',
-                  active: governanceContracts > 0),
-              const _StatusChip(
-                  label: 'النموذج: platform-wide + scope-aware', active: true),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'بوابة الإنتاج التالية: SQL UAT للمستخدمين/RBAC، Browser UAT حسب الدور، ثم إغلاق أي direct mutation حساس لا يمر عبر RPC حاكمة.',
-            style: TextStyle(
-                color: Color(0xFF78350F),
-                fontWeight: FontWeight.w700,
-                height: 1.4),
+          Text(
+            'عدد المسارات المحمية: $protectedContracts',
+            style: const TextStyle(color: Color(0xFF92400E), height: 1.55),
           ),
         ],
       ),
@@ -1545,29 +1519,6 @@ class _GovernedSystemCard extends StatelessWidget {
           Text(
             system.description,
             style: const TextStyle(color: Color(0xFF6B7280), height: 1.5),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _StatusChip(
-                label: isRegistered ? 'مسجل في RBAC' : 'غير مسجل في RBAC',
-                active: isRegistered,
-              ),
-              _StatusChip(
-                label: system.adminRoute != null
-                    ? 'له شاشة إدارة'
-                    : 'بدون شاشة إدارة حالية',
-                active: system.adminRoute != null,
-              ),
-              _StatusChip(
-                label: system.visibleInAdminSystemsTab
-                    ? 'ظاهر في تبويب الأنظمة'
-                    : 'مرجع حوكمة فقط',
-                active: system.visibleInAdminSystemsTab,
-              ),
-            ],
           ),
           if (!isRegistered) ...[
             const SizedBox(height: 12),
@@ -2234,7 +2185,7 @@ class _UsersAuditHintCard extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'قبل منح أو سحب أي صلاحية، راجع: الدور، النطاق، هل الحساب نشط، وهل هو Superuser، ثم افتح إدارة الأدوار/الصلاحيات من نفس الصف.',
+            'راجع الدور والنطاق قبل تعديل الصلاحيات.',
             style: TextStyle(color: Color(0xFF4B5563), height: 1.55),
           ),
         ],
