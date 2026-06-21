@@ -26,7 +26,6 @@ dependencies:
   # Pinned (NOT caret) because flutter_riverpod >= 2.6 may remove legacy.dart,
   # and this project still uses StateNotifier (legacy API) in a few providers.
   flutter_riverpod: ^2.6.1
-  js: ^0.6.7
   provider: ^6.1.1
   flutter_bloc: ^9.1.1
   equatable: ^2.0.5
