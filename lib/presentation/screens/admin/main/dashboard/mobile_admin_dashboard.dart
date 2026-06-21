@@ -240,27 +240,22 @@ class _AdminDashboardScreenState extends ConsumerState<MobileAdminDashboard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome Section with user info
             _buildWelcomeSection(currentUser),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Statistics Cards
             _buildStatisticsCards(),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Charts Section
             _buildChartsSection(),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Quick Actions
             _buildQuickActions(),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Recent Activity
             _buildRecentActivity(),
           ],
         ),
@@ -338,7 +333,7 @@ class _AdminDashboardScreenState extends ConsumerState<MobileAdminDashboard> {
             crossAxisCount: 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1.5,
+            childAspectRatio: 1.8,
           ),
           itemCount: _modules.length,
           itemBuilder: (context, index) {
@@ -356,42 +351,42 @@ class _AdminDashboardScreenState extends ConsumerState<MobileAdminDashboard> {
         onTap: () => context.go(module.route),
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
         child: Padding(
-          padding: const EdgeInsets.all(AppConstants.paddingM),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: module.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(module.icon, color: module.color, size: 28),
+                child: Icon(module.icon, color: module.color, size: 20),
               ),
-              const SizedBox(height: 12),
-              Text(
-                '${module.count}',
-                style: AppTextStyles.headlineSmall.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: module.color,
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      module.title,
+                      style: AppTextStyles.labelMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${module.count}',
+                      style: AppTextStyles.titleLarge.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: module.color,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                module.description,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: Colors.grey[600],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                module.title,
-                style: AppTextStyles.labelMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
               ),
             ],
           ),
