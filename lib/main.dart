@@ -27,6 +27,8 @@ void main() async {
   await _initializeServices();
   _configureSystemUI();
 
+  await _preloadFonts();
+
   runApp(
     const ProviderScope(
       child: PalestinianMinistryApp(),
@@ -98,6 +100,20 @@ Future<void> _initializePublishedVisualIdentity() async {
     debugPrint('⚠️ Visual identity bootstrap failed: $e');
     debugPrint('   Stack trace: $stackTrace');
   }
+}
+
+Future<void> _preloadFonts() async {
+  try {
+    final styles = [
+      GoogleFonts.cairo(),
+      GoogleFonts.cairo(fontWeight: FontWeight.w500),
+      GoogleFonts.cairo(fontWeight: FontWeight.w700),
+      GoogleFonts.cairo(fontWeight: FontWeight.w800),
+      GoogleFonts.scheherazadeNew(),
+    ];
+    await GoogleFonts.pendingFonts(styles)
+        .timeout(const Duration(seconds: 5), onTimeout: () => <void>[]);
+  } catch (_) {}
 }
 
 void _configureSystemUI() {

@@ -365,38 +365,7 @@ class UserDashboardContractBuilder {
 
   static List<String> _policyBadges(
       String key, AdminUser user, List<String> managedSystems) {
-    final badges = <String>[];
-    switch (key) {
-      case 'superuser':
-        badges.addAll(['كل الوحدات', 'كل الأنظمة']);
-        break;
-      case 'power_admin':
-        badges.addAll(['نطاق نظامي', 'عبر الوحدات']);
-        break;
-      case 'unit_admin':
-        badges.addAll(['كل خدمات الوحدة', user.scopeLabel]);
-        break;
-      case 'system_super_user':
-        badges.addAll([
-          'داخل الوحدة',
-          if (managedSystems.isNotEmpty) managedSystems.first
-        ]);
-        break;
-      case 'delegate_lawyer':
-        badges.addAll(['تكليف خاص', 'متعدد الوحدات']);
-        break;
-      case 'employee':
-        badges.addAll(['تشغيلي', user.scopeLabel]);
-        break;
-      default:
-        badges.addAll(['تجريبي', 'قراءة فقط']);
-        break;
-    }
-    if (user.unitNameAr?.trim().isNotEmpty == true &&
-        !badges.contains(user.unitNameAr!.trim())) {
-      badges.add(user.unitNameAr!.trim());
-    }
-    return badges;
+    return const <String>[];
   }
 
   static bool _isDelegateLawyer(AdminUser user, AccessProfile? profile) {

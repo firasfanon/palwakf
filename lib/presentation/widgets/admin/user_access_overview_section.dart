@@ -127,7 +127,6 @@ class UserAccessOverviewSection extends StatelessWidget {
               ),
             ],
           ),
-          _HeaderChip(label: contract.scopeLabel),
         ],
       ),
     );

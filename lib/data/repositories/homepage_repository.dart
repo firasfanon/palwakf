@@ -493,6 +493,8 @@ class HomepageRepository {
     int? displayOrder,
   }) async {
     final userId = _client.auth.currentUser?.id;
+    final unitId = await _resolveHomeOwnerUnitId();
+
     final payload = <String, dynamic>{
       'section_name': sectionName,
       'settings': settingsJson,
@@ -502,11 +504,14 @@ class HomepageRepository {
       'updated_by': userId,
     };
 
-    final existing = await _client
+    var query = _client
         .from(sectionsTable)
         .select('id')
-        .eq('section_name', sectionName)
-        .maybeSingle();
+        .eq('section_name', sectionName);
+    if (unitId.isNotEmpty) {
+      query = query.eq('unit_id', unitId);
+    }
+    final existing = await query.maybeSingle();
 
     Map<String, dynamic>? res;
     if (existing != null) {
@@ -517,6 +522,9 @@ class HomepageRepository {
           .select('id')
           .maybeSingle();
     } else {
+      if (unitId.isNotEmpty) {
+        payload['unit_id'] = unitId;
+      }
       res = await _client
           .from(sectionsTable)
           .insert(payload)
