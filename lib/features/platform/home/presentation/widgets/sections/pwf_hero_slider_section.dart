@@ -358,12 +358,12 @@ class _HeroSliderBody extends StatelessWidget {
           Positioned(
             right: 30,
             top: (heroHeight / 2) - 25,
-            child: _ArrowButton(icon: Icons.chevron_left, onTap: onPrev),
+            child: _ArrowButton(icon: Icons.chevron_right, onTap: onPrev),
           ),
           Positioned(
             left: 30,
             top: (heroHeight / 2) - 25,
-            child: _ArrowButton(icon: Icons.chevron_right, onTap: onNext),
+            child: _ArrowButton(icon: Icons.chevron_left, onTap: onNext),
           ),
 
           // Dots (bottom centered)
