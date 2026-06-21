@@ -982,23 +982,27 @@ class HomepageRepository {
     final userId = _client.auth.currentUser?.id;
     final nowIso = DateTime.now().toUtc().toIso8601String();
 
+    // Write to the owner-schema compositions table so the runtime view
+    // (`v_unit_public_composition_runtime_v1`) reflects changes immediately.
+    // The legacy `homepage_sections` table is NOT read by the public runtime.
+
     // Phase 1: collect existing row IDs and temporarily set display_order to
     // unique negative values so reordering never collides with the
     // ux_homepage_sections_scope_order unique constraint.
     final existingIds = <String, int>{};
     for (var i = 0; i < entries.length; i++) {
       final sectionName = entries[i]['section_name'] as String;
-      final existing = await _client
-          .from(sectionsTable)
+      final existing = await _client.schema('platform_experience')
+          .from('org_unit_public_compositions')
           .select('id')
           .eq('section_name', sectionName)
-          .eq('unit_id', unitId)
+          .eq('org_unit_id', unitId)
           .maybeSingle();
       if (existing != null) {
         final id = existing['id'] as int;
         existingIds[sectionName] = id;
-        await _client
-            .from(sectionsTable)
+        await _client.schema('platform_experience')
+            .from('org_unit_public_compositions')
             .update({'display_order': -(i + 1)})
             .eq('id', id);
       }
@@ -1017,16 +1021,41 @@ class HomepageRepository {
 
       final id = existingIds[sectionName];
       if (id != null) {
-        await _client
-            .from(sectionsTable)
+        await _client.schema('platform_experience')
+            .from('org_unit_public_compositions')
             .update(payload)
             .eq('id', id);
       } else {
-        await _client.from(sectionsTable).insert(<String, dynamic>{
+        await _client.schema('platform_experience')
+            .from('org_unit_public_compositions')
+            .insert(<String, dynamic>{
           ...payload,
           'section_name': sectionName,
-          'unit_id': unitId,
+          'org_unit_id': unitId,
         });
+      }
+    }
+
+    // Also sync legacy table for backward compatibility with admin reads.
+    for (final entry in entries) {
+      final sectionName = entry['section_name'] as String;
+      final legacyPayload = <String, dynamic>{
+        'settings': entry['settings'],
+        'is_active': entry['is_active'],
+        'display_order': entry['display_order'],
+        'updated_at': nowIso,
+        'updated_by': userId,
+      };
+      final legacyRow = await _client
+          .from(sectionsTable)
+          .select('id')
+          .eq('section_name', sectionName)
+          .eq('unit_id', unitId)
+          .maybeSingle();
+      if (legacyRow != null) {
+        await _client.from(sectionsTable)
+            .update(legacyPayload)
+            .eq('id', legacyRow['id'] as int);
       }
     }
   }
