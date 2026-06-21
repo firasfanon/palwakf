@@ -12,7 +12,6 @@ import 'package:waqf/core/constants/app_constants.dart';
 import 'package:waqf/core/enums/enums.dart';
 import 'package:waqf/presentation/providers/auth_provider.dart';
 import 'package:waqf/presentation/providers/user_dashboard_provider.dart';
-import 'package:waqf/presentation/widgets/admin/user_access_overview_section.dart';
 import 'package:waqf/features/platform/dynamic_systems/data/models/pwf_dynamic_system_models.dart';
 import 'package:waqf/features/platform/dynamic_systems/presentation/providers/pwf_dynamic_system_registry_providers.dart';
 
@@ -316,8 +315,6 @@ class _WebAdminDashboardState extends ConsumerState<WebAdminDashboard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildCurrentUserAccessSection(),
-              const SizedBox(height: 20),
               _buildAdminOrganizerHub(accessProfile),
               const SizedBox(height: 20),
               if (hasOperationalAccess) ...[
@@ -1015,30 +1012,6 @@ class _WebAdminDashboardState extends ConsumerState<WebAdminDashboard> {
     );
   }
 
-  Widget _buildCurrentUserAccessSection() {
-    final contractAsync = ref.watch(currentUserDashboardContractProvider);
-
-    return contractAsync.when(
-      data: (contract) {
-        if (contract == null) {
-          return const SizedBox.shrink();
-        }
-        return UserAccessOverviewSection(contract: contract);
-      },
-      loading: () => Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.grey[200]!),
-        ),
-        child: const Padding(
-          padding: EdgeInsets.all(24),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      ),
-      error: (_, __) => const SizedBox.shrink(),
-    );
-  }
 
   Widget _buildDashboardTypeSelector() {
     return Card(
