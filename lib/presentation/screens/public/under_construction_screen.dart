@@ -34,7 +34,7 @@ class UnderConstructionScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'سنقوم بإتاحتها قريباً ضمن منصة PalWakf.',
+                    'سيتم إتاحة هذه الصفحة قريباً.',
                     style: theme.textTheme.bodyMedium,
                     textAlign: TextAlign.center,
                   ),

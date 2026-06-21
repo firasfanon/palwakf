@@ -105,48 +105,29 @@ class UserAccessOverviewSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'مساحة عملي الديناميكية',
+                      contract.displayName,
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '${contract.displayName}${contract.username.isNotEmpty ? '  •  @${contract.username}' : ''}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
+                    if (contract.username.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        '@${contract.username}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'هذه اللوحة تتغير تلقائيًا بحسب دورك المؤسسي ونطاقك الإداري والوحدة التابعة لك والأنظمة والصلاحيات الممنوحة لك داخل PalWakf.',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.90),
-                        height: 1.5,
-                      ),
-                    ),
+                    ],
                   ],
                 ),
               ),
             ],
           ),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _HeaderChip(label: contract.policyRoleLabelAr),
-              _HeaderChip(label: contract.scopeLabel),
-              _HeaderChip(
-                label: contract.isActive ? 'الحساب نشط' : 'الحساب غير نشط',
-              ),
-              ...contract.governanceBadges
-                  .take(3)
-                  .map((badge) => _HeaderChip(label: badge)),
-            ],
-          ),
+          _HeaderChip(label: contract.scopeLabel),
         ],
       ),
     );
@@ -187,10 +168,6 @@ class UserAccessOverviewSection extends StatelessWidget {
   Widget _buildSideColumn(BuildContext context) {
     return Column(
       children: [
-        _PolicyCard(contract: contract),
-        const SizedBox(height: 16),
-        _IdentityCard(contract: contract),
-        const SizedBox(height: 16),
         _QuickActionsCard(contract: contract),
         const SizedBox(height: 16),
         _AdminToolsCard(contract: contract),
@@ -227,11 +204,6 @@ class UserAccessOverviewSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'يتم عرض هذه الأنظمة ديناميكيًا بحسب الدور النظامي والصلاحيات الممنوحة لك حاليًا.',
-            style: TextStyle(color: Colors.grey.shade700, height: 1.5),
-          ),
           const SizedBox(height: 14),
           LayoutBuilder(
             builder: (context, constraints) {
@@ -254,94 +226,6 @@ class UserAccessOverviewSection extends StatelessWidget {
               );
             },
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PolicyCard extends StatelessWidget {
-  const _PolicyCard({required this.contract});
-
-  final UserDashboardContract contract;
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      title: 'نموذج الصلاحية المعتمد',
-      icon: Icons.policy_outlined,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            contract.policyRoleLabelAr,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
-              color: Color(0xFF0F4C81),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            contract.governanceScopeDescription,
-            style: TextStyle(color: Colors.grey.shade700, height: 1.55),
-          ),
-          if (contract.governanceBadges.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: contract.governanceBadges
-                  .map(
-                    (badge) => _MiniBadge(
-                      label: badge,
-                      accent: const Color(0xFF0F4C81),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
-          if (contract.managedSystems.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _InfoRow(
-              label: 'الأنظمة المتابعة',
-              value: contract.managedSystems.join('، '),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _IdentityCard extends StatelessWidget {
-  const _IdentityCard({required this.contract});
-
-  final UserDashboardContract contract;
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      title: 'هويتي ونطاقي',
-      icon: Icons.badge_outlined,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _InfoRow(label: 'الاسم', value: contract.displayName),
-          _InfoRow(label: 'البريد', value: contract.email),
-          if (contract.username.isNotEmpty)
-            _InfoRow(label: 'اسم المستخدم', value: '@${contract.username}'),
-          _InfoRow(label: 'الدور التشغيلي', value: contract.policyRoleLabelAr),
-          _InfoRow(label: 'النطاق', value: contract.scopeLabel),
-          if ((contract.unitNameAr ?? '').trim().isNotEmpty)
-            _InfoRow(label: 'الوحدة', value: contract.unitNameAr!),
-          if ((contract.unitSlug ?? '').trim().isNotEmpty)
-            _InfoRow(label: 'Slug', value: contract.unitSlug!),
-          if (contract.managedSystems.isNotEmpty)
-            _InfoRow(
-              label: 'الأنظمة المغطاة',
-              value: contract.managedSystems.join('، '),
-            ),
         ],
       ),
     );
@@ -785,38 +669,3 @@ class _StatTile extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    if (value.trim().isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(
-              '$label:',
-              style: TextStyle(
-                color: Colors.grey.shade700,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w600, height: 1.4),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

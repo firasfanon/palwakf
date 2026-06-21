@@ -351,7 +351,7 @@ class PwfPublicPagesAdminHubScreen extends StatelessWidget {
       currentRoute: AppRoutes.adminPublicPagesHub,
       title: 'إدارة الصفحات العامة',
       subtitle:
-          'بوابة إدارية موحدة للصفحات العامة المنجزة وربطها بمصادرها الحقيقية داخل المنصة.',
+          'إدارة الصفحات العامة.',
       stats: const [
         PwfServiceAdminStat(
           label: 'الصفحات الإدارية',

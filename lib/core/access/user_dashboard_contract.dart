@@ -343,7 +343,7 @@ class UserDashboardContractBuilder {
       String key, AdminUser user, List<String> managedSystems) {
     switch (key) {
       case 'superuser':
-        return 'حساب سيادي مسؤول عن كل وحدات المنصة وكل الأنظمة، ولا يجوز حذف هذا الحساب أو تعطيله من المسارات التشغيلية العادية.';
+        return 'مسؤول عن كل وحدات المنصة وكل الأنظمة.';
       case 'power_admin':
         return managedSystems.isEmpty
             ? 'مسؤول عن نظام واحد عبر جميع الوحدات التي تعمل عليه.'
@@ -368,7 +368,7 @@ class UserDashboardContractBuilder {
     final badges = <String>[];
     switch (key) {
       case 'superuser':
-        badges.addAll(['كل الوحدات', 'كل الأنظمة', 'حساب محمي']);
+        badges.addAll(['كل الوحدات', 'كل الأنظمة']);
         break;
       case 'power_admin':
         badges.addAll(['نطاق نظامي', 'عبر الوحدات']);

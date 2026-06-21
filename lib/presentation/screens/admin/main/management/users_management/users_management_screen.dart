@@ -2234,7 +2234,7 @@ class _UsersAuditHintCard extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'قبل منح أو سحب أي صلاحية، راجع: الدور، النطاق، هل الحساب نشط، وهل هو Superuser، ثم افتح إدارة الأدوار/الصلاحيات من نفس الصف.',
+            'راجع الدور والنطاق قبل تعديل الصلاحيات.',
             style: TextStyle(color: Color(0xFF4B5563), height: 1.55),
           ),
         ],

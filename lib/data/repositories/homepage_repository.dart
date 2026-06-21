@@ -502,11 +502,27 @@ class HomepageRepository {
       'updated_by': userId,
     };
 
-    final res = await _client
+    final existing = await _client
         .from(sectionsTable)
-        .upsert(payload, onConflict: 'section_name')
         .select('id')
+        .eq('section_name', sectionName)
         .maybeSingle();
+
+    Map<String, dynamic>? res;
+    if (existing != null) {
+      res = await _client
+          .from(sectionsTable)
+          .update(payload)
+          .eq('id', existing['id'] as int)
+          .select('id')
+          .maybeSingle();
+    } else {
+      res = await _client
+          .from(sectionsTable)
+          .insert(payload)
+          .select('id')
+          .maybeSingle();
+    }
 
     log('Upsert "$sectionName" -> ${res?['id']}');
   }
