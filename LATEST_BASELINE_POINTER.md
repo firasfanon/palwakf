@@ -1,22 +1,9 @@
-
 # Latest Baseline Pointer
 
-## Latest accepted stable baseline
+## Last Accepted Baseline
+`PLATFORM15O3_1_COMPILE_CLOSURE_ACCEPTED`
 
-`palwakf_platform16_o3_1_compile_closure_evidence_accepted_baseline_2026_06_22`
+## Current Candidate
+`PLATFORM16_DIRECT_PUBLIC_MEDIA_DETAIL_COMPILE_RECOVERY_CANDIDATE`
 
-## Current candidate overlay
-
-`palwakf_platform16_p5_p6_operational_rollout_media_center_formal_uat_acceleration_candidate_2026_06_22`
-
-## Candidate state
-
-```text
-PLATFORM16_P5_P6_CANDIDATE_PREPARED
-LOCAL_VERIFIER_PENDING
-P6_BROWSER_UAT_PENDING
-P1_BROWSER_UAT_DEFERRED_NOT_ACCEPTED
-PLATFORM15K_RUNTIME_PUBLICATION_EVIDENCE_BLOCKED
-NO_PUBLICATION
-NO_PRODUCTION_APPROVAL
-```
+The P5/P6 local foundation is accepted only at its documented static/build scope. The temporal ordering, unit-navigation, and PalWakf roadmap overlays are applied locally but not individually accepted as stable baselines. This hotfix is not accepted until evidence completion.

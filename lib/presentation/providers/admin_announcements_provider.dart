@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:waqf/core/content/pwf_temporal_ordering.dart';
 
 import '../../data/models/announcement.dart';
 import 'package:waqf/presentation/providers/supabase_providers.dart';
@@ -63,21 +64,19 @@ final adminAnnouncementsProvider =
       }
 
       final res = await query
+          .order('publish_at', ascending: false)
           .order('created_at', ascending: false)
           .limit(q.limit);
       final items = (res as List)
           .map((e) => Announcement.fromDb(e as Map<String, dynamic>))
           .toList(growable: true);
-      items.sort((a, b) {
-        final pinned = (b.isPinned ? 1 : 0).compareTo(a.isPinned ? 1 : 0);
-        if (pinned != 0) return pinned;
-        final featured = (b.isFeatured ? 1 : 0).compareTo(a.isFeatured ? 1 : 0);
-        if (featured != 0) return featured;
-        final order = b.sortOrder.compareTo(a.sortOrder);
-        if (order != 0) return order;
-        return (b.publishAt ?? b.createdAt).compareTo(
+      items.sort(
+        (a, b) => PwfTemporalOrdering.newestFirst(
           a.publishAt ?? a.createdAt,
-        );
-      });
+          b.publishAt ?? b.createdAt,
+          leftStableKey: a.id.toString(),
+          rightStableKey: b.id.toString(),
+        ),
+      );
       return List<Announcement>.unmodifiable(items);
     });

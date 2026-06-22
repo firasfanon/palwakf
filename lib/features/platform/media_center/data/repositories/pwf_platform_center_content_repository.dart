@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:waqf/core/content/pwf_temporal_ordering.dart';
 
 import '../models/pwf_platform_center_content_item.dart';
 import 'package:waqf/core/database/pwf_database_owner_surfaces.dart';
@@ -37,9 +38,9 @@ class PwfPlatformCenterContentRepository {
         params: query.toRpcParams(),
       );
       final rows = _normalizeRows(response);
-      final items = rows
-          .map(PwfPlatformCenterContentItem.fromJson)
-          .toList(growable: false);
+      final items = _sortNewestFirst(
+        rows.map(PwfPlatformCenterContentItem.fromJson),
+      );
       return items.take(query.limit).toList(growable: false);
     } on PostgrestException catch (error) {
       if (!_isMissingBackend(error.message)) rethrow;
@@ -56,11 +57,12 @@ class PwfPlatformCenterContentRepository {
         familyKey: query.normalizedFamilyKey,
         limit: query.limit,
       );
-      return response
-          .map(PwfPlatformCenterContentItem.fromJson)
-          .where((item) => item.isPublished)
-          .take(query.limit)
-          .toList(growable: false);
+      final items = _sortNewestFirst(
+        response
+            .map(PwfPlatformCenterContentItem.fromJson)
+            .where((item) => item.isPublished),
+      );
+      return items.take(query.limit).toList(growable: false);
     } on PwfPublicRuntimeReadException {
       rethrow;
     } on Object catch (error) {
@@ -72,35 +74,62 @@ class PwfPlatformCenterContentRepository {
     }
   }
 
-  /// Public details are always resolved by the scoped RPC. Do not scan a feed
-  /// page or return locally fabricated content when the server rejects scope.
+  List<PwfPlatformCenterContentItem> _sortNewestFirst(
+    Iterable<PwfPlatformCenterContentItem> items,
+  ) {
+    final sorted = items.toList(growable: true)
+      ..sort(
+        (a, b) => PwfTemporalOrdering.newestFirst(
+          a.chronologyDate,
+          b.chronologyDate,
+          leftStableKey: a.id,
+          rightStableKey: b.id,
+        ),
+      );
+    return List<PwfPlatformCenterContentItem>.unmodifiable(sorted);
+  }
+
   Future<PwfPlatformCenterContentItem?> fetchItemById({
     required String id,
     required String familyKey,
     required String unitSlug,
   }) async {
-    final safeId = id.trim();
-    if (safeId.isEmpty) return null;
-    try {
-      final response = await PwfPublicMediaRuntimeGateway(_client).fetchDetail(
-        unitRef: unitSlug.trim().isEmpty ? 'home' : unitSlug.trim(),
-        contentId: safeId,
-        familyKey: familyKey.trim().replaceAll('-', '_'),
-      );
-      if (response.isEmpty) return null;
-      final item = PwfPlatformCenterContentItem.fromJson(response.first);
-      return item.isPublished ? item : null;
-    } on PwfPublicRuntimeReadException {
-      rethrow;
-    } on Object catch (error) {
-      throw PwfPublicRuntimeReadException.fromError(
-        error,
-        surface: PwfDatabaseOwnerSurfaces.publicMediaRuntimeDetailRpcV2,
-        operation: 'media-center-public-detail',
-      );
+    if (_enableOperationalRpcReads) {
+      try {
+        final response = await _client.rpc(
+          'pwf_platform_center_content_get',
+          params: <String, dynamic>{
+            'p_id': id,
+            'p_family_key': familyKey.trim().replaceAll('-', '_'),
+            'p_unit_slug': unitSlug.trim().isEmpty ? 'home' : unitSlug.trim(),
+          },
+        );
+        final rows = _normalizeRows(response);
+        if (rows.isNotEmpty)
+          return PwfPlatformCenterContentItem.fromJson(rows.first);
+        if (response is Map && response.isNotEmpty) {
+          return PwfPlatformCenterContentItem.fromJson(
+            response.map((key, value) => MapEntry(key.toString(), value)),
+          );
+        }
+      } on PostgrestException catch (error) {
+        if (!_isMissingBackend(error.message)) rethrow;
+      }
     }
-  }
 
+    final fallbackList = await fetchItems(
+      PwfPlatformCenterContentQuery(
+        familyKey: familyKey,
+        unitSlug: unitSlug,
+        publishedOnly: true,
+        limit: 50,
+      ),
+    );
+    for (final item in fallbackList) {
+      if (item.id == id) return item;
+    }
+    return null;
+  }
 
   Future<PwfPlatformCenterContentWriteResult> createDraft(
     PwfPlatformCenterContentDraft draft,

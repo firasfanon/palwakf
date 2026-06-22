@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:waqf/core/content/pwf_temporal_ordering.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/news_article.dart';
@@ -92,18 +93,15 @@ class NewsService {
   }
 
   void _sortNewsOwnerRows(List<NewsArticle> items) {
-    items.sort((a, b) {
-      final pinned = _boolDesc(a.isPinned, b.isPinned);
-      if (pinned != 0) return pinned;
-      final order = a.sortOrder.compareTo(b.sortOrder);
-      if (order != 0) return order;
-      final aDate = a.publishedAt ?? a.createdAt;
-      final bDate = b.publishedAt ?? b.createdAt;
-      return bDate.compareTo(aDate);
-    });
+    items.sort(
+      (a, b) => PwfTemporalOrdering.newestFirst(
+        a.publishedAt ?? a.createdAt,
+        b.publishedAt ?? b.createdAt,
+        leftStableKey: a.id.toString(),
+        rightStableKey: b.id.toString(),
+      ),
+    );
   }
-
-  int _boolDesc(bool a, bool b) => a == b ? 0 : (a ? -1 : 1);
 
   List<T> _window<T>(List<T> items, {int? limit, int? offset}) {
     final start = offset == null || offset < 0 ? 0 : offset;
@@ -127,7 +125,7 @@ class NewsService {
       'surface=$surface '
       'projection=allow-listed '
       'filtering=server-resolved-unit '
-      'ordering=server-side '
+      'ordering=newest-first-client-enforced '
       'rows=$rows '
       'decision=media-center-owner-read-default-root-cutover',
     );
@@ -147,51 +145,25 @@ class NewsService {
     );
   }
 
-  Future<NewsArticle?> _getCompatNewsByContentId(
-    String contentId, {
+  Future<NewsArticle?> _getCompatNewsById(
+    int id, {
     String? unitSlug,
     String? ownerOrgUnitId,
+    Set<String>? unitScopeKeys,
   }) async {
     if (!_mediaOwnerReadDefault) return null;
-    final safeContentId = contentId.trim();
-    if (safeContentId.isEmpty) return null;
-    final unitRef = unitSlug?.trim().isNotEmpty == true
-        ? unitSlug!.trim()
-        : (ownerOrgUnitId?.trim().isNotEmpty == true
-            ? ownerOrgUnitId!.trim()
-            : 'home');
     try {
-      final rows = await PwfPublicMediaRuntimeGateway(_supabase)
-          .fetchDetail(
-            unitRef: unitRef,
-            contentId: safeContentId,
-            familyKey: 'news',
-          )
-          .timeout(_mediaOwnerRuntimeTimeout);
-      if (rows.isEmpty) return null;
-      final article = MediaCompatMapper.newsFromCompatRow(rows.first);
-      if (article.status != PublishStatus.published) return null;
-      if (article != null) {
-        _logMediaRuntimeSource(
-          family: 'news',
-          surface: PwfDatabaseOwnerSurfaces.publicMediaRuntimeDetailRpcV2,
-          rows: 1,
-        );
+      final items = await _getCompatNews(
+        limit: 500,
+        unitSlug: unitSlug,
+        ownerOrgUnitId: ownerOrgUnitId,
+        unitScopeKeys: unitScopeKeys,
+      );
+      for (final item in items) {
+        if (item.id == id) return item;
       }
-      return article;
-    } on TimeoutException {
-      _logMediaRuntimeFallback(family: 'news', reason: 'public-detail-rpc-timeout');
       return null;
     } catch (_) {
-      if (kDebugMode) {
-        debugPrint(
-          'PWF_MEDIA_CENTER_PUBLIC_DETAIL_RPC_UNAVAILABLE '
-          'family=news '
-          'rpc=${PwfDatabaseOwnerSurfaces.publicMediaRuntimeDetailRpcV2} '
-          'fallback=false',
-        );
-      }
-      _logMediaRuntimeFallback(family: 'news', reason: 'public-detail-rpc-failure');
       return null;
     }
   }
@@ -218,20 +190,7 @@ class NewsService {
   }
 
   Future<NewsArticle?> getNewsById(int id) {
-    return _getCompatNewsByContentId(id.toString());
-  }
-
-  /// Scoped public detail resolver. No feed/cache/list fallback is permitted.
-  Future<NewsArticle?> getNewsByContentIdForUnit(
-    String contentId,
-    String unitId, {
-    String? unitSlug,
-  }) {
-    return _getCompatNewsByContentId(
-      contentId,
-      unitSlug: unitSlug ?? unitId,
-      ownerOrgUnitId: unitId,
-    );
+    return _getCompatNewsById(id);
   }
 
   Future<List<NewsArticle>> searchNews(String query) {
@@ -480,12 +439,66 @@ class NewsService {
     String unitId, {
     String? unitSlug,
   }) async {
-    final compat = await _getCompatNewsByContentId(
-      id.toString(),
+    final compat = await _getCompatNewsById(
+      id,
       unitSlug: unitSlug ?? unitId,
       ownerOrgUnitId: unitId,
     );
     return compat;
+  }
+
+
+  /// Resolves a public news detail by opaque server-issued content_id.
+  ///
+  /// The public RPC server-locks unit, family, and content identity on every
+  /// navigation. It intentionally does not fall back to a feed/list window or
+  /// direct public relation.
+  Future<NewsArticle?> getNewsByContentIdForUnit(
+    String contentId,
+    String unitId, {
+    String? unitSlug,
+  }) async {
+    if (!_mediaOwnerReadDefault) return null;
+
+    final safeContentId = contentId.trim();
+    final safeUnitId = unitId.trim();
+    if (safeContentId.isEmpty || safeUnitId.isEmpty) return null;
+
+    final unitRef = unitSlug?.trim().isNotEmpty == true
+        ? unitSlug!.trim()
+        : safeUnitId;
+
+    try {
+      final rows = await PwfPublicMediaRuntimeGateway(
+        _supabase,
+      ).fetchDetail(
+        unitRef: unitRef,
+        contentId: safeContentId,
+        familyKey: 'news',
+      ).timeout(_mediaOwnerRuntimeTimeout);
+
+      if (rows.isEmpty) return null;
+      return MediaCompatMapper.newsFromCompatRow(rows.first);
+    } on TimeoutException {
+      _logMediaRuntimeFallback(
+        family: 'news',
+        reason: 'public-detail-rpc-timeout',
+      );
+      return null;
+    } catch (_) {
+      if (kDebugMode) {
+        debugPrint(
+          'PWF_MEDIA_CENTER_PUBLIC_DETAIL_RPC_UNAVAILABLE '
+          'family=news '
+          'fallback=false',
+        );
+      }
+      _logMediaRuntimeFallback(
+        family: 'news',
+        reason: 'public-detail-rpc-failure',
+      );
+      return null;
+    }
   }
 
   Future<List<NewsArticle>> searchNewsForUnit(

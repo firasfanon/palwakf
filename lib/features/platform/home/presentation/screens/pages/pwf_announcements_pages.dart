@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:waqf/core/content/pwf_temporal_ordering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -196,12 +197,14 @@ class _PwfAnnouncementsListWebScreenState
       return haystack.contains(q);
     }).toList();
 
-    list.sort((a, b) {
-      final aWeight = (a.isPinned ? 3 : 0) + (_priorityRank(a.priority));
-      final bWeight = (b.isPinned ? 3 : 0) + (_priorityRank(b.priority));
-      if (aWeight != bWeight) return bWeight.compareTo(aWeight);
-      return b.createdAt.compareTo(a.createdAt);
-    });
+    list.sort(
+      (a, b) => PwfTemporalOrdering.newestFirst(
+        a.publishAt ?? a.createdAt,
+        b.publishAt ?? b.createdAt,
+        leftStableKey: a.id.toString(),
+        rightStableKey: b.id.toString(),
+      ),
+    );
     return list;
   }
 }
@@ -210,18 +213,16 @@ class PwfAnnouncementDetailWebScreen extends ConsumerWidget {
   const PwfAnnouncementDetailWebScreen({
     super.key,
     required this.unitSlug,
-    required this.contentId,
+    required this.id,
   });
 
   final String unitSlug;
-  final String contentId;
+  final int id;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(
-      announcementContentDetailForUnitProvider(
-        UnitAnnouncementContentIdParam(unitSlug, contentId),
-      ),
+      announcementForUnitByIdProvider(UnitAnnouncementIdParam(unitSlug, id)),
     );
 
     return PwfWebPageScaffold(
@@ -231,23 +232,22 @@ class PwfAnnouncementDetailWebScreen extends ConsumerWidget {
       child: PwfSectionContainer(
         sectionKey: 'PwfAnnouncementDetailWebScreen',
         child: async.when(
-          data: (item) {
-            if (item == null) {
+          data: (a) {
+            if (a == null) {
               return const PwfEmptyBlock(
                 title: 'الإعلان غير موجود',
-                message:
-                    'العنصر غير منشور أو لا يطابق نطاق الوحدة أو فئة المحتوى المطلوبة.',
+                message: 'قد يكون تم حذف الإعلان أو تغيير مساره.',
                 icon: Icons.notifications_off_outlined,
               );
             }
-            return _AnnouncementDetailBody(item: item, unitSlug: unitSlug);
+            return _AnnouncementDetailBody(item: a, unitSlug: unitSlug);
           },
           loading: () =>
               const PwfLoadingBlock(message: 'جاري تحميل تفاصيل الإعلان...'),
           error: (e, _) => PwfErrorBlock(
             onRetry: () => ref.invalidate(
-              announcementContentDetailForUnitProvider(
-                UnitAnnouncementContentIdParam(unitSlug, contentId),
+              announcementForUnitByIdProvider(
+                UnitAnnouncementIdParam(unitSlug, id),
               ),
             ),
             message: e.toString(),
@@ -315,7 +315,7 @@ class _InlineComplementaryAnnouncementsCard extends StatelessWidget {
                   width: 260,
                   child: OutlinedButton(
                     onPressed: () => context.go(
-                      UnitRoutes.announcementDetail(unitSlug, item.publicDetailId),
+                      UnitRoutes.announcementDetail(unitSlug, item.id),
                     ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.all(14),
@@ -571,7 +571,7 @@ class _AnnouncementHeroCard extends StatelessWidget {
           const SizedBox(height: 18),
           ElevatedButton.icon(
             onPressed: () =>
-                context.go(UnitRoutes.announcementDetail(unitSlug, item.publicDetailId)),
+                context.go(UnitRoutes.announcementDetail(unitSlug, item.id)),
             icon: const Icon(Icons.arrow_back),
             label: const Text('عرض تفاصيل الإعلان'),
             style: ElevatedButton.styleFrom(
@@ -629,7 +629,7 @@ class _AnnouncementCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = _priorityColor(item.priority);
     return InkWell(
-      onTap: () => context.go(UnitRoutes.announcementDetail(unitSlug, item.publicDetailId)),
+      onTap: () => context.go(UnitRoutes.announcementDetail(unitSlug, item.id)),
       borderRadius: PwfHomeRadii.br16,
       child: PwfSurfaceCard(
         padding: EdgeInsets.zero,
@@ -814,7 +814,7 @@ class _AnnouncementDetailBody extends ConsumerWidget {
             .where((e) => e.id != item.id)
             .take(3)
             .toList(growable: false);
-    final detailPath = UnitRoutes.announcementDetail(unitSlug, item.publicDetailId);
+    final detailPath = UnitRoutes.announcementDetail(unitSlug, item.id);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1018,7 +1018,7 @@ class _AnnouncementDetailBody extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 10),
                   child: InkWell(
                     onTap: () => context.go(
-                      UnitRoutes.announcementDetail(unitSlug, related.publicDetailId),
+                      UnitRoutes.announcementDetail(unitSlug, related.id),
                     ),
                     borderRadius: BorderRadius.circular(14),
                     child: Container(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as dev;
 import 'package:flutter/foundation.dart';
+import 'package:waqf/core/content/pwf_temporal_ordering.dart';
 import '../models/announcement.dart';
 import '../services/media_compat_mapper.dart';
 import '../services/supabase_service.dart';
@@ -100,20 +101,15 @@ class AnnouncementRepository {
   }
 
   void _sortAnnouncementOwnerRows(List<Announcement> items) {
-    items.sort((a, b) {
-      final pinned = _boolDesc(a.isPinned, b.isPinned);
-      if (pinned != 0) return pinned;
-      final order = a.sortOrder.compareTo(b.sortOrder);
-      if (order != 0) return order;
-      final priority = b.priority.index.compareTo(a.priority.index);
-      if (priority != 0) return priority;
-      final aDate = a.publishAt ?? a.createdAt;
-      final bDate = b.publishAt ?? b.createdAt;
-      return bDate.compareTo(aDate);
-    });
+    items.sort(
+      (a, b) => PwfTemporalOrdering.newestFirst(
+        a.publishAt ?? a.createdAt,
+        b.publishAt ?? b.createdAt,
+        leftStableKey: a.id.toString(),
+        rightStableKey: b.id.toString(),
+      ),
+    );
   }
-
-  int _boolDesc(bool a, bool b) => a == b ? 0 : (a ? -1 : 1);
 
   List<T> _window<T>(List<T> items, {int? limit, int? offset}) {
     final start = offset == null || offset < 0 ? 0 : offset;
@@ -137,7 +133,7 @@ class AnnouncementRepository {
       'surface=$surface '
       'projection=allow-listed '
       'filtering=server-resolved-unit '
-      'ordering=server-side '
+      'ordering=newest-first-client-enforced '
       'rows=$rows '
       'decision=media-center-owner-read-default-root-cutover',
     );
@@ -157,59 +153,40 @@ class AnnouncementRepository {
     );
   }
 
-  Future<Announcement?> _getCompatAnnouncementByContentId(
-    String contentId, {
+  Future<Announcement?> _getCompatAnnouncementById(
+    int id, {
     String? unitSlug,
     String? ownerOrgUnitId,
+    Set<String>? unitScopeKeys,
   }) async {
     if (!_mediaOwnerReadDefault) return null;
-    final safeContentId = contentId.trim();
-    if (safeContentId.isEmpty) return null;
-    final unitRef = unitSlug?.trim().isNotEmpty == true
-        ? unitSlug!.trim()
-        : (ownerOrgUnitId?.trim().isNotEmpty == true
-            ? ownerOrgUnitId!.trim()
-            : 'home');
     try {
-      final rows = await PwfPublicMediaRuntimeGateway(_supabaseService.client)
-          .fetchDetail(
-            unitRef: unitRef,
-            contentId: safeContentId,
-            familyKey: 'announcements',
-          )
-          .timeout(_mediaOwnerRuntimeTimeout);
-      if (rows.isEmpty) return null;
-      final item = MediaCompatMapper.announcementFromCompatRow(rows.first);
-      if (!item.isActive) return null;
-      if (item != null) {
-        _logMediaRuntimeSource(
-          family: 'announcements',
-          surface: PwfDatabaseOwnerSurfaces.publicMediaRuntimeDetailRpcV2,
-          rows: 1,
-        );
+      final items = await _getCompatAnnouncements(
+        limit: 1000,
+        unitSlug: unitSlug,
+        ownerOrgUnitId: ownerOrgUnitId,
+        unitScopeKeys: unitScopeKeys,
+      );
+      for (final item in items) {
+        if (item.id == id) return item;
       }
-      return item;
+      return null;
     } on TimeoutException {
-      _logMediaRuntimeFallback(
-        family: 'announcements',
-        reason: 'public-detail-rpc-timeout',
+      dev.log(
+        'Media Center owner-read announcement detail resolver timed out',
+        name: 'AnnouncementRepository',
       );
       return null;
     } catch (e, stackTrace) {
       dev.log(
-        'Media Center public announcement detail RPC failed without feed fallback',
+        'Media Center owner-read announcement detail resolver failed',
         name: 'AnnouncementRepository',
         error: e,
         stackTrace: stackTrace,
       );
-      _logMediaRuntimeFallback(
-        family: 'announcements',
-        reason: 'public-detail-rpc-failure',
-      );
       return null;
     }
   }
-
 
   /// Public runtime resolver for B-1A media compatibility announcement details.
   ///
@@ -217,19 +194,7 @@ class AnnouncementRepository {
   /// public detail page cannot remain in a loading state when legacy unit
   /// scoping is slow or unavailable. Legacy fallback remains unchanged.
   Future<Announcement?> getCompatRuntimeAnnouncementById(int id) {
-    return _getCompatAnnouncementByContentId(id.toString());
-  }
-
-  Future<Announcement?> getAnnouncementByContentIdForUnit(
-    String contentId,
-    String unitId, {
-    String? unitSlug,
-  }) {
-    return _getCompatAnnouncementByContentId(
-      contentId,
-      unitSlug: unitSlug ?? unitId,
-      ownerOrgUnitId: unitId,
-    );
+    return _getCompatAnnouncementById(id);
   }
 
   // ============================================
@@ -253,7 +218,7 @@ class AnnouncementRepository {
 
   /// Get announcement by ID.
   Future<Announcement?> getAnnouncementById(int id) {
-    return _getCompatAnnouncementByContentId(id.toString());
+    return _getCompatAnnouncementById(id);
   }
 
   /// Get announcement by ID scoped to a specific unit.
@@ -267,12 +232,65 @@ class AnnouncementRepository {
     String unitId, {
     String? unitSlug,
   }) async {
-    final compat = await _getCompatAnnouncementByContentId(
-      id.toString(),
+    final compat = await _getCompatAnnouncementById(
+      id,
       unitSlug: unitSlug ?? unitId,
       ownerOrgUnitId: unitId,
     );
     return compat;
+  }
+
+
+  /// Resolves a public announcement detail by opaque server-issued content_id.
+  ///
+  /// The server proves the `unit + family + content_id` relationship. No
+  /// feed/cache reconstruction, legacy public relation, or ministry fallback
+  /// is permitted for this detail route.
+  Future<Announcement?> getAnnouncementByContentIdForUnit(
+    String contentId,
+    String unitId, {
+    String? unitSlug,
+  }) async {
+    if (!_mediaOwnerReadDefault) return null;
+
+    final safeContentId = contentId.trim();
+    final safeUnitId = unitId.trim();
+    if (safeContentId.isEmpty || safeUnitId.isEmpty) return null;
+
+    final unitRef = unitSlug?.trim().isNotEmpty == true
+        ? unitSlug!.trim()
+        : safeUnitId;
+
+    try {
+      final rows = await PwfPublicMediaRuntimeGateway(
+        _supabaseService.client,
+      ).fetchDetail(
+        unitRef: unitRef,
+        contentId: safeContentId,
+        familyKey: 'announcements',
+      ).timeout(_mediaOwnerRuntimeTimeout);
+
+      if (rows.isEmpty) return null;
+      return MediaCompatMapper.announcementFromCompatRow(rows.first);
+    } on TimeoutException {
+      _logMediaRuntimeFallback(
+        family: 'announcements',
+        reason: 'public-detail-rpc-timeout',
+      );
+      return null;
+    } catch (error, stackTrace) {
+      dev.log(
+        'Media Center public announcement detail resolver failed',
+        name: 'AnnouncementRepository',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      _logMediaRuntimeFallback(
+        family: 'announcements',
+        reason: 'public-detail-rpc-failure',
+      );
+      return null;
+    }
   }
 
   /// Get announcements by priority
@@ -290,6 +308,7 @@ class AnnouncementRepository {
           .from(PwfDatabaseOwnerSurfaces.announcements)
           .select()
           .eq('priority', priority.name)
+          .order('publish_at', ascending: false)
           .order('created_at', ascending: false);
 
       if (limit != null) query = query.limit(limit);
@@ -326,7 +345,7 @@ class AnnouncementRepository {
           .select()
           .eq('target_audience', targetAudience)
           .eq('is_active', true)
-          .order('priority', ascending: false)
+          .order('publish_at', ascending: false)
           .order('created_at', ascending: false);
 
       if (limit != null) query = query.limit(limit);
@@ -357,7 +376,7 @@ class AnnouncementRepository {
           .select()
           .eq('is_active', true)
           .or('priority.eq.urgent,priority.eq.critical')
-          .order('priority', ascending: false)
+          .order('publish_at', ascending: false)
           .order('created_at', ascending: false);
 
       return (response as List<dynamic>)

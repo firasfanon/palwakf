@@ -211,6 +211,10 @@ RouteBase _buildPublicShellRoute() {
             : const MosquesScreen(),
       ),
       GoRoute(
+        path: AppRoutes.palWakf,
+        builder: (context, state) => const PwfPalWakfRoadmapWebScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.projects,
         builder: (context, state) => kIsWeb
             ? const PwfProjectsWebScreen(unitSlug: 'home')
@@ -417,16 +421,20 @@ RouteBase _buildPublicShellRoute() {
             builder: (context, state) {
               final slug =
                   PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
-              final contentId = state.pathParameters['id'] ?? '';
+              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              final extra = state.extra is NewsArticle
+                  ? state.extra as NewsArticle
+                  : null;
               return kIsWeb
                   ? PwfNewsDetailWebScreen(
                       unitSlug: slug,
-                      contentId: contentId,
+                      id: id,
+                      extraArticle: extra,
                     )
                   : NewsDetailRouteScreen(
                       unitSlug: slug,
-                      id: int.tryParse(contentId) ?? 0,
-                      contentId: contentId,
+                      id: id,
+                      extraArticle: extra,
                     );
             },
           ),
@@ -445,12 +453,9 @@ RouteBase _buildPublicShellRoute() {
             builder: (context, state) {
               final slug =
                   PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
-              final contentId = state.pathParameters['id'] ?? '';
+              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
               return kIsWeb
-                  ? PwfAnnouncementDetailWebScreen(
-                      unitSlug: slug,
-                      contentId: contentId,
-                    )
+                  ? PwfAnnouncementDetailWebScreen(unitSlug: slug, id: id)
                   : const UnderConstructionScreen();
             },
           ),
@@ -489,12 +494,9 @@ RouteBase _buildPublicShellRoute() {
             builder: (context, state) {
               final slug =
                   PwfUnitSlugRegistry.internalSlugFor(state.pathParameters['unitSlug'] ?? 'home');
-              final contentId = state.pathParameters['id'] ?? '';
+              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
               return kIsWeb
-                  ? PwfActivityDetailWebScreen(
-                      unitSlug: slug,
-                      contentId: contentId,
-                    )
+                  ? PwfActivityDetailWebScreen(unitSlug: slug, id: id)
                   : const UnderConstructionScreen();
             },
           ),

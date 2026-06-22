@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:waqf/core/content/pwf_temporal_ordering.dart';
 
 import '../models/media_center_models.dart';
 
@@ -144,7 +145,15 @@ class MediaCenterRepository {
       if (rows.isNotEmpty) {
         editorialDecisionEvents = rows
             .map(MediaCenterEditorialDecisionEventSummary.fromJson)
-            .toList(growable: false);
+            .toList(growable: true)
+          ..sort(
+            (a, b) => PwfTemporalOrdering.newestFirst(
+              a.createdAt,
+              b.createdAt,
+              leftStableKey: a.id,
+              rightStableKey: b.id,
+            ),
+          );
       }
     } catch (_) {
       remoteEditorialEventsAvailable = false;

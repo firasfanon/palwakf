@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:waqf/core/content/pwf_temporal_ordering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -203,12 +204,14 @@ class _PwfActivitiesListWebScreenState
       return haystack.contains(q);
     }).toList();
 
-    list.sort((a, b) {
-      final aUpcoming = _isUpcoming(a) ? 1 : 0;
-      final bUpcoming = _isUpcoming(b) ? 1 : 0;
-      if (aUpcoming != bUpcoming) return bUpcoming.compareTo(aUpcoming);
-      return b.startDate.compareTo(a.startDate);
-    });
+    list.sort(
+      (a, b) => PwfTemporalOrdering.newestFirst(
+        a.startDate,
+        b.startDate,
+        leftStableKey: a.id.toString(),
+        rightStableKey: b.id.toString(),
+      ),
+    );
     return list;
   }
 }
@@ -217,18 +220,16 @@ class PwfActivityDetailWebScreen extends ConsumerWidget {
   const PwfActivityDetailWebScreen({
     super.key,
     required this.unitSlug,
-    required this.contentId,
+    required this.id,
   });
 
   final String unitSlug;
-  final String contentId;
+  final int id;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(
-      activityContentDetailForUnitProvider(
-        UnitActivityContentIdParam(unitSlug, contentId),
-      ),
+      activityForUnitByIdProvider(UnitActivityIdParam(unitSlug, id)),
     );
 
     return PwfWebPageScaffold(
@@ -238,24 +239,21 @@ class PwfActivityDetailWebScreen extends ConsumerWidget {
       child: PwfSectionContainer(
         sectionKey: 'PwfActivityDetailWebScreen',
         child: async.when(
-          data: (item) {
-            if (item == null) {
+          data: (a) {
+            if (a == null) {
               return const PwfEmptyBlock(
                 title: 'النشاط غير موجود',
-                message:
-                    'العنصر غير منشور أو لا يطابق نطاق الوحدة أو فئة المحتوى المطلوبة.',
+                message: 'قد يكون تم حذف النشاط أو تغيير مساره.',
                 icon: Icons.event_busy_outlined,
               );
             }
-            return _ActivityDetailBody(item: item, unitSlug: unitSlug);
+            return _ActivityDetailBody(item: a, unitSlug: unitSlug);
           },
           loading: () =>
               const PwfLoadingBlock(message: 'جاري تحميل تفاصيل النشاط...'),
           error: (e, _) => PwfErrorBlock(
             onRetry: () => ref.invalidate(
-              activityContentDetailForUnitProvider(
-                UnitActivityContentIdParam(unitSlug, contentId),
-              ),
+              activityForUnitByIdProvider(UnitActivityIdParam(unitSlug, id)),
             ),
             message: e.toString(),
           ),
@@ -589,7 +587,7 @@ class _ActivityHeroCard extends StatelessWidget {
                       const SizedBox(height: 18),
                       ElevatedButton.icon(
                         onPressed: () => context.go(
-                          UnitRoutes.activityDetail(unitSlug, item.publicDetailId),
+                          UnitRoutes.activityDetail(unitSlug, item.id),
                         ),
                         icon: const Icon(Icons.arrow_back),
                         label: const Text('عرض تفاصيل النشاط'),
@@ -679,7 +677,7 @@ class _ActivityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => context.go(UnitRoutes.activityDetail(unitSlug, item.publicDetailId)),
+      onTap: () => context.go(UnitRoutes.activityDetail(unitSlug, item.id)),
       borderRadius: PwfHomeRadii.br16,
       child: PwfSurfaceCard(
         padding: EdgeInsets.zero,
@@ -845,7 +843,7 @@ class _ActivityDetailBody extends ConsumerWidget {
             .where((e) => e.id != item.id)
             .take(3)
             .toList(growable: false);
-    final detailPath = UnitRoutes.activityDetail(unitSlug, item.publicDetailId);
+    final detailPath = UnitRoutes.activityDetail(unitSlug, item.id);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1066,7 +1064,7 @@ class _ActivityDetailBody extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 10),
                   child: InkWell(
                     onTap: () => context.go(
-                      UnitRoutes.activityDetail(unitSlug, related.publicDetailId),
+                      UnitRoutes.activityDetail(unitSlug, related.id),
                     ),
                     borderRadius: BorderRadius.circular(14),
                     child: Container(

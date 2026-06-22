@@ -357,14 +357,50 @@ class AdminPanelRegistry {
     id: 'unit_media_center',
     title: 'المركز الإعلامي للوحدة',
     subtitle:
-        'تحرير الأخبار والإعلانات والأنشطة والفعاليات والوسائط ضمن نطاق الوحدة المعتمد فقط.',
+        'تحرير محلي مقيد: الأخبار والإعلانات والأنشطة والفعاليات والصور والفيديوهات ضمن نطاق الوحدة المعتمد فقط.',
     items: [
       AdminPanelEntry(
-        label: 'مساحة تحرير الوحدة',
+        label: 'لوحة المركز الإعلامي للوحدة',
         description:
-            'محتوى الوحدة فقط مع اختيار سياق صريح للحسابات ذات السلطة الشاملة.',
+            'مدخل تحريري موحد للوحدة؛ لا يمنح وصولًا إلى المحتوى الوطني أو إلى وحدات أخرى.',
         route: AppRoutes.adminUnitMediaCenter,
         icon: Icons.perm_media_rounded,
+      ),
+      AdminPanelEntry(
+        label: 'أخبار الوحدة',
+        description: 'تحرير ومراجعة أخبار الوحدة الحالية فقط.',
+        route: AppRoutes.adminUnitMediaCenterNews,
+        icon: Icons.newspaper_rounded,
+      ),
+      AdminPanelEntry(
+        label: 'إعلانات الوحدة',
+        description: 'إدارة الإعلانات ضمن النطاق المحلي للوحدة.',
+        route: AppRoutes.adminUnitMediaCenterAnnouncements,
+        icon: Icons.campaign_rounded,
+      ),
+      AdminPanelEntry(
+        label: 'أنشطة الوحدة',
+        description: 'توثيق الأنشطة المنفذة من الوحدة فقط.',
+        route: AppRoutes.adminUnitMediaCenterActivities,
+        icon: Icons.event_note_rounded,
+      ),
+      AdminPanelEntry(
+        label: 'فعاليات الوحدة',
+        description: 'إدارة الفعاليات بمواعيدها وبياناتها المحلية.',
+        route: AppRoutes.adminUnitMediaCenterEvents,
+        icon: Icons.celebration_rounded,
+      ),
+      AdminPanelEntry(
+        label: 'صور الوحدة',
+        description: 'معرض الصور الرسمي الخاص بالوحدة الحالية.',
+        route: AppRoutes.adminUnitMediaCenterPhotos,
+        icon: Icons.photo_library_rounded,
+      ),
+      AdminPanelEntry(
+        label: 'فيديوهات الوحدة',
+        description: 'الفيديوهات والمواد المرئية الخاصة بالوحدة الحالية.',
+        route: AppRoutes.adminUnitMediaCenterVideos,
+        icon: Icons.ondemand_video_rounded,
       ),
     ],
   );
@@ -1138,6 +1174,32 @@ class AdminPanelRegistry {
           AppRoutes.adminPrayerTimes,
           AppRoutes.adminQuran,
           AppRoutes.adminSurfacesServicesLegalReferences,
+        ],
+      ),
+    ],
+    'unit_media_center': [
+      AdminPanelEntrySection(
+        title: 'النشر المحلي',
+        icon: Icons.article_rounded,
+        routes: [
+          AppRoutes.adminUnitMediaCenterNews,
+          AppRoutes.adminUnitMediaCenterAnnouncements,
+        ],
+      ),
+      AdminPanelEntrySection(
+        title: 'الأنشطة والفعاليات',
+        icon: Icons.event_available_rounded,
+        routes: [
+          AppRoutes.adminUnitMediaCenterActivities,
+          AppRoutes.adminUnitMediaCenterEvents,
+        ],
+      ),
+      AdminPanelEntrySection(
+        title: 'الوسائط المحلية',
+        icon: Icons.photo_library_rounded,
+        routes: [
+          AppRoutes.adminUnitMediaCenterPhotos,
+          AppRoutes.adminUnitMediaCenterVideos,
         ],
       ),
     ],

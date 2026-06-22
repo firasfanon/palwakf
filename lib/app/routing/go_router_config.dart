@@ -59,6 +59,7 @@ import '../../features/platform/home/presentation/screens/pages/pwf_activities_p
 import '../../features/platform/home/presentation/screens/pages/pwf_misc_pages.dart';
 import '../../features/platform/home/presentation/screens/pages/pwf_content_pages.dart';
 import '../../features/platform/home/presentation/screens/pages/pwf_platform_frontend_pages.dart';
+import '../../features/platform/home/presentation/screens/pages/pwf_palwakf_roadmap_web_screen.dart';
 
 import 'app_routes.dart';
 import 'router_refresh_notifier.dart';

@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:waqf/core/content/pwf_temporal_ordering.dart';
 
 import '../models/media_gallery_item.dart';
 import '../services/media_compat_mapper.dart';
@@ -33,7 +34,7 @@ class MediaGalleryRepository {
         limit: limit,
         publicMode: true,
       );
-      return rows.map(MediaGalleryItem.fromMap).toList();
+      return _sortNewestFirst(rows.map(MediaGalleryItem.fromMap));
     } on PostgrestException catch (e) {
       final msg = e.message.toLowerCase();
       if (_isSchemaMismatch(msg)) {
@@ -63,7 +64,7 @@ class MediaGalleryRepository {
         limit: limit,
         publicMode: false,
       );
-      return rows.map(MediaGalleryItem.fromMap).toList();
+      return _sortNewestFirst(rows.map(MediaGalleryItem.fromMap));
     } on PostgrestException catch (e) {
       final msg = e.message.toLowerCase();
       if (_isSchemaMismatch(msg)) {
@@ -92,7 +93,7 @@ class MediaGalleryRepository {
         limit: limit,
         publicMode: true,
       );
-      return rows.map(MediaGalleryItem.fromMap).toList();
+      return _sortNewestFirst(rows.map(MediaGalleryItem.fromMap));
     } on PostgrestException catch (e) {
       final msg = e.message.toLowerCase();
       if (_isSchemaMismatch(msg)) {
@@ -102,6 +103,21 @@ class MediaGalleryRepository {
     } catch (_) {
       return [];
     }
+  }
+
+  List<MediaGalleryItem> _sortNewestFirst(
+    Iterable<MediaGalleryItem> items,
+  ) {
+    final sorted = items.toList(growable: true)
+      ..sort(
+        (a, b) => PwfTemporalOrdering.newestFirst(
+          a.publishAt ?? a.createdAt,
+          b.publishAt ?? b.createdAt,
+          leftStableKey: a.id,
+          rightStableKey: b.id,
+        ),
+      );
+    return List<MediaGalleryItem>.unmodifiable(sorted);
   }
 
   Future<MediaGalleryItem> createItem({
@@ -372,14 +388,9 @@ class MediaGalleryRepository {
 
     final ordered = extendedSchema
         ? filtered
-              .order('is_pinned', ascending: false)
-              .order('is_featured', ascending: false)
-              .order('display_order', ascending: true)
               .order('publish_at', ascending: false)
               .order('created_at', ascending: false)
-        : filtered
-              .order('display_order', ascending: true)
-              .order('created_at', ascending: false);
+        : filtered.order('created_at', ascending: false);
 
     final res = limit != null ? await ordered.limit(limit) : await ordered;
     return List<Map<String, dynamic>>.from(res);

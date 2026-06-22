@@ -779,15 +779,19 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     required bool showDescription,
   }) {
     if (group.items.isEmpty) return const SizedBox.shrink();
+    // Preserve query-selected local pages (for example
+    // `/admin/unit-media-center?section=news`) as distinct sidebar entries.
+    // Access checks remain path-normalized elsewhere, but lookup/rendering must
+    // keep the full route so each unit-media section is visible and navigable.
     final byRoute = <String, AdminPanelEntry>{
-      for (final item in group.items) _normalizeRoute(item.route): item,
+      for (final item in group.items) _sidebarEntryKey(item.route): item,
     };
     final sectionedRoutes = <String>{
       for (final section in sections)
-        for (final route in section.routes) _normalizeRoute(route),
+        for (final route in section.routes) _sidebarEntryKey(route),
     };
     final hubItems = group.items
-        .where((item) => !sectionedRoutes.contains(_normalizeRoute(item.route)))
+        .where((item) => !sectionedRoutes.contains(_sidebarEntryKey(item.route)))
         .toList(growable: false);
 
     if (collapsed) {
@@ -831,7 +835,7 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
                 routes: section.routes,
               ),
               entries: section.routes
-                  .map((route) => byRoute[_normalizeRoute(route)])
+                  .map((route) => byRoute[_sidebarEntryKey(route)])
                   .whereType<AdminPanelEntry>()
                   .toList(growable: false),
               showRoutes: showRoutes,
@@ -841,11 +845,32 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     );
   }
 
+  String _sidebarEntryKey(String? route) {
+    final value = (route ?? '').trim();
+    if (value.isEmpty) return '';
+    final uri = Uri.tryParse(value);
+    if (uri == null || uri.queryParameters.isEmpty) return _normalizeRoute(value);
+    final sortedQuery = uri.queryParameters.entries.toList()
+      ..sort((left, right) => left.key.compareTo(right.key));
+    final query = sortedQuery
+        .map((entry) => '${entry.key}=${entry.value}')
+        .join('&');
+    return '${_normalizeRoute(uri.path)}?$query';
+  }
+
   bool _routeIsActive(String route) {
+    final currentKey = _sidebarEntryKey(widget.currentRoute);
+    final candidateKey = _sidebarEntryKey(route);
+    if (currentKey == candidateKey) return true;
+
+    // A query-selected local page must not activate every sibling which shares
+    // the same path. Base routes still act as active hubs for their sections.
+    final candidateUri = Uri.tryParse(route);
+    if (candidateUri?.queryParameters.isNotEmpty == true) return false;
+
     final current = _normalizeRoute(widget.currentRoute);
     final candidate = _normalizeRoute(route);
-    return current == candidate ||
-        (candidate.isNotEmpty && current.startsWith('$candidate/'));
+    return candidate.isNotEmpty && current.startsWith('$candidate/');
   }
 
   Widget _buildSurfacesServicesDropdown(

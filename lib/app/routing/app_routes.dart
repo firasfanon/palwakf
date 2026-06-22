@@ -51,6 +51,9 @@ class AppRoutes {
 
   static const mosques = '/mosques';
   static const projects = '/projects';
+
+  /// Public PalWakf roadmap. This is a ministry-home-only navigation target.
+  static const palWakf = '/palwakf';
   static const about = '/about';
   static const minister = '/minister';
   static const visionMission = '/vision-mission';
@@ -202,6 +205,21 @@ class AppRoutes {
   // Media Center
   static const adminMediaCenter = '/admin/media-center';
   static const adminUnitMediaCenter = '/admin/unit-media-center';
+
+  /// Section-specific unit-media routes use one scoped workspace with a
+  /// query-selected tab. They do not grant access to central media routes.
+  static const adminUnitMediaCenterNews =
+      '$adminUnitMediaCenter?section=news';
+  static const adminUnitMediaCenterAnnouncements =
+      '$adminUnitMediaCenter?section=announcements';
+  static const adminUnitMediaCenterActivities =
+      '$adminUnitMediaCenter?section=activities';
+  static const adminUnitMediaCenterEvents =
+      '$adminUnitMediaCenter?section=events';
+  static const adminUnitMediaCenterPhotos =
+      '$adminUnitMediaCenter?section=photos';
+  static const adminUnitMediaCenterVideos =
+      '$adminUnitMediaCenter?section=videos';
   static const adminMediaCenterNews = '/admin/media-center/news';
   static const adminMediaCenterAnnouncements =
       '/admin/media-center/announcements';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:waqf/core/content/pwf_temporal_ordering.dart';
 
 import 'package:waqf/app/routing/app_routes.dart';
 import 'package:waqf/data/models/media_gallery_item.dart';
@@ -613,7 +614,7 @@ class _CompletedMediaCenterWorkspaceState
     List<PwfPlatformCenterContentItem> rows,
   ) {
     final q = _query.trim().toLowerCase();
-    return rows
+    final filtered = rows
         .where((row) {
           final matchesQuery =
               q.isEmpty ||
@@ -625,7 +626,16 @@ class _CompletedMediaCenterWorkspaceState
           final matchesStatus = _status == 'الكل' || statusLabel == _status;
           return matchesQuery && matchesScope && matchesStatus;
         })
-        .toList(growable: false);
+        .toList(growable: true)
+      ..sort(
+        (a, b) => PwfTemporalOrdering.newestFirst(
+          a.chronologyDate,
+          b.chronologyDate,
+          leftStableKey: a.id,
+          rightStableKey: b.id,
+        ),
+      );
+    return List<PwfPlatformCenterContentItem>.unmodifiable(filtered);
   }
 
   Future<void> _openCreateDraft() async {

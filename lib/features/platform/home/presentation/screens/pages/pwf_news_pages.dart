@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:waqf/core/content/pwf_temporal_ordering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -232,14 +233,14 @@ class _PwfNewsListWebScreenState extends ConsumerState<PwfNewsListWebScreen> {
       return haystack.contains(q);
     }).toList();
 
-    list.sort((a, b) {
-      final aWeight = (a.isPinned ? 2 : 0) + (a.isFeatured ? 1 : 0);
-      final bWeight = (b.isPinned ? 2 : 0) + (b.isFeatured ? 1 : 0);
-      if (aWeight != bWeight) return bWeight.compareTo(aWeight);
-      final ad = a.publishedAt ?? a.createdAt;
-      final bd = b.publishedAt ?? b.createdAt;
-      return bd.compareTo(ad);
-    });
+    list.sort(
+      (a, b) => PwfTemporalOrdering.newestFirst(
+        a.publishedAt ?? a.createdAt,
+        b.publishedAt ?? b.createdAt,
+        leftStableKey: a.id.toString(),
+        rightStableKey: b.id.toString(),
+      ),
+    );
     return list;
   }
 }
@@ -248,19 +249,59 @@ class PwfNewsDetailWebScreen extends ConsumerWidget {
   const PwfNewsDetailWebScreen({
     super.key,
     required this.unitSlug,
-    required this.contentId,
+    required this.id,
+    this.extraArticle,
   });
 
   final String unitSlug;
-  final String contentId;
+  final int id;
+  final NewsArticle? extraArticle;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(
-      unitNewsContentDetailProvider(
-        UnitNewsContentIdParam(unitSlug, contentId),
-      ),
-    );
+    final normalizedSlug = unitSlug.trim().toLowerCase();
+    final scopedAsync = extraArticle != null
+        ? AsyncValue.data(extraArticle)
+        : ref.watch(unitNewsArticleProvider(UnitNewsIdParam(unitSlug, id)));
+    final globalAsync = extraArticle != null
+        ? AsyncValue.data(extraArticle)
+        : ref.watch(newsArticleProvider(id));
+
+    Widget buildArticle(NewsArticle? a) {
+      if (a == null) {
+        return const PwfEmptyBlock(
+          title: 'الخبر غير موجود',
+          message: 'قد يكون تم حذف الخبر أو تغيير مساره.',
+          icon: Icons.article_outlined,
+        );
+      }
+      return _NewsDetailBody(article: a, unitSlug: unitSlug);
+    }
+
+    Widget buildRetry(String message) {
+      return PwfErrorBlock(
+        onRetry: () {
+          ref.invalidate(
+            unitNewsArticleProvider(UnitNewsIdParam(unitSlug, id)),
+          );
+          ref.invalidate(newsArticleProvider(id));
+        },
+        message: message,
+      );
+    }
+
+    late final AsyncValue<NewsArticle?> effectiveAsync;
+    if (normalizedSlug == 'home') {
+      effectiveAsync = globalAsync;
+    } else if (scopedAsync.hasValue && scopedAsync.valueOrNull != null) {
+      effectiveAsync = AsyncValue.data(scopedAsync.valueOrNull);
+    } else if (globalAsync.hasValue && globalAsync.valueOrNull != null) {
+      effectiveAsync = AsyncValue.data(globalAsync.valueOrNull);
+    } else if (scopedAsync.isLoading || globalAsync.isLoading) {
+      effectiveAsync = const AsyncLoading<NewsArticle?>();
+    } else {
+      effectiveAsync = globalAsync;
+    }
 
     return PwfWebPageScaffold(
       unitSlug: unitSlug,
@@ -268,28 +309,11 @@ class PwfNewsDetailWebScreen extends ConsumerWidget {
       showTitleSection: false,
       child: PwfSectionContainer(
         sectionKey: 'PwfNewsDetailWebScreen',
-        child: async.when(
-          data: (article) {
-            if (article == null) {
-              return const PwfEmptyBlock(
-                title: 'الخبر غير موجود',
-                message:
-                    'العنصر غير منشور أو لا يطابق نطاق الوحدة أو فئة المحتوى المطلوبة.',
-                icon: Icons.article_outlined,
-              );
-            }
-            return _NewsDetailBody(article: article, unitSlug: unitSlug);
-          },
+        child: effectiveAsync.when(
+          data: buildArticle,
           loading: () =>
               const PwfLoadingBlock(message: 'جاري تحميل تفاصيل الخبر...'),
-          error: (e, _) => PwfErrorBlock(
-            onRetry: () => ref.invalidate(
-              unitNewsContentDetailProvider(
-                UnitNewsContentIdParam(unitSlug, contentId),
-              ),
-            ),
-            message: e.toString(),
-          ),
+          error: (e, _) => buildRetry(e.toString()),
         ),
       ),
     );
@@ -762,7 +786,7 @@ class _NewsHeroCard extends StatelessWidget {
                     width: mobile ? double.infinity : null,
                     child: ElevatedButton.icon(
                       onPressed: () => context.go(
-                        UnitRoutes.newsDetail(unitSlug, article.publicDetailId),
+                        UnitRoutes.newsDetail(unitSlug, article.id),
                         extra: article,
                       ),
                       icon: const Icon(Icons.arrow_back),
@@ -935,7 +959,7 @@ class _MobileNewsCard extends StatelessWidget {
 
     return InkWell(
       onTap: () => context.go(
-        UnitRoutes.newsDetail(unitSlug, article.publicDetailId),
+        UnitRoutes.newsDetail(unitSlug, article.id),
         extra: article,
       ),
       borderRadius: BorderRadius.circular(18),
@@ -1081,7 +1105,7 @@ class _NewsCard extends StatelessWidget {
     final published = article.publishedAt ?? article.createdAt;
     return InkWell(
       onTap: () => context.go(
-        UnitRoutes.newsDetail(unitSlug, article.publicDetailId),
+        UnitRoutes.newsDetail(unitSlug, article.id),
         extra: article,
       ),
       borderRadius: PwfHomeRadii.br16,
@@ -1254,7 +1278,7 @@ class _NewsDetailBody extends ConsumerWidget {
             .where((item) => item.id != article.id)
             .take(3)
             .toList(growable: false);
-    final detailPath = UnitRoutes.newsDetail(unitSlug, article.publicDetailId);
+    final detailPath = UnitRoutes.newsDetail(unitSlug, article.id);
     final mobile = MediaQuery.sizeOf(context).width < 640;
     final gap = mobile ? 12.0 : 18.0;
 
@@ -1537,7 +1561,7 @@ class _NewsDetailBody extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 10),
                   child: InkWell(
                     onTap: () => context.go(
-                      UnitRoutes.newsDetail(unitSlug, item.publicDetailId),
+                      UnitRoutes.newsDetail(unitSlug, item.id),
                       extra: item,
                     ),
                     borderRadius: BorderRadius.circular(14),

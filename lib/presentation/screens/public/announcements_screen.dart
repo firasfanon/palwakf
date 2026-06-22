@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:waqf/core/content/pwf_temporal_ordering.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -191,14 +192,14 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
       }).toList();
     }
 
-    // Put high priority first when equal dates
-    announcements.sort((a, b) {
-      final da = a.createdAt;
-      final db = b.createdAt;
-      final dateComp = db.compareTo(da);
-      if (dateComp != 0) return dateComp;
-      return b.priority.index.compareTo(a.priority.index);
-    });
+    announcements.sort(
+      (a, b) => PwfTemporalOrdering.newestFirst(
+        a.publishAt ?? a.createdAt,
+        b.publishAt ?? b.createdAt,
+        leftStableKey: a.id.toString(),
+        rightStableKey: b.id.toString(),
+      ),
+    );
 
     return announcements;
   }
@@ -262,7 +263,7 @@ class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
     return InkWell(
       borderRadius: BorderRadius.circular(AppConstants.radiusL),
       onTap: () =>
-          context.go(UnitRoutes.announcementDetail(widget.unitSlug, item.publicDetailId)),
+          context.go(UnitRoutes.announcementDetail(widget.unitSlug, item.id)),
       child: Card(
         elevation: isWeb ? 4 : 2,
         shape: RoundedRectangleBorder(

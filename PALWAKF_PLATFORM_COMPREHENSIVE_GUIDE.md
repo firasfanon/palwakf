@@ -1,4 +1,14 @@
-# PalWakf Platform Comprehensive Guide — Update Note
+﻿# PalWakf Platform Comprehensive Guide — Update Note
+
+## Platform 13 — Unit Analytics, SEO & Public Performance Closure (2026-06-17)
+
+- Unit identity is sovereignly resolved from `core.org_units` through approved read wrappers/RPCs. Public tables and cache surfaces are not truth sources.
+- The historical static contract records unit-aware SEO metadata, canonical public slugs, a unit sitemap, analytics events, and mobile public performance assertions.
+- This historical contract does not authorize a current `core.org_units` slug migration or alias/redirect rollout. The `bth`/`bethlehem` and `jiricho`/`jericho` canonical slug plus alias contract remains separately deferred.
+- Governance boundary: no SQL, `service_role`, schema change, `waqf_assets` mutation, or production approval was part of this closure.
+
+
+---
 
 
 ## Platform 15N1 — Verifier Tooling Hotfix
@@ -83,22 +93,134 @@ DIRECTORATES_14_GOVERNANCE_ONLY
 CANONICAL_SLUG_ALIAS_CONTRACT_DEFERRED
 PRODUCTION_NOT_APPROVED
 ```
+
 ---
 
-## Platform 16 — P5/P6 Operational Rollout + Media Center Formal UAT Acceleration Candidate (2026-06-22)
+## Platform 16 — P5/P6 Local Execution Evidence Acceptance (2026-06-22)
 
-- A consolidated candidate package now adds source-contract coverage, a local 14-directorate Hero asset scaffold, a PowerShell verifier, a safe overlay applicator, and a formal P6 UAT/evidence protocol.
-- P5 coverage includes existing public/unit surfaces, control-plane routes, central/Unit Media Center families, official communications and protected operational domains.
-- P6 covers central and unit-scoped Media Center routes, official communications drafts, breaking-news responsive verification, negative authorization and public RPC read-boundary proof.
-- This is not a runtime-publication, storage-upload, database, RLS, grant, schema, profile or production batch.
-- P1 Browser UAT remains deferred but unaccepted. Platform 15K remains blocked until its separate lifecycle evidence is authorized and completed.
+### Accepted local execution scope
+
+- The candidate overlay `PLATFORM16_P5_P6_OPERATIONAL_ROLLOUT_AND_MEDIA_CENTER_FORMAL_UAT_ACCELERATION_MEGA_BATCH` was applied locally to the Flutter project.
+- A timestamped backup was created before overlay application:
+  `C:\Users\DELL\StudioProjects\palwakf\.palwakf_backups\platform16_p5_p6_20260622_073804`.
+- The 14-directorate local Hero asset scaffold was merged without overwriting existing image files.
+- Static verifier passed for Media Center route registration, service-first dashboard markers, official-communication fields, and the public media RPC runtime gateway boundary.
+- Flutter test evidence passed: `+5`, `+5`, `+3`, `+3` for the P5/P6 contract suite, scoped unit Media Center suite, least-privilege containment suite, and responsive public Chrome suite respectively.
+- `flutter analyze` completed with no error diagnostics. The existing 19 `warning/info` items remain recorded as analyzer debt, outside this batch.
+- `flutter build web --release` passed and generated `build\\web`.
+
+### Exact scope boundary
+
+- No SQL, RLS, grant, schema, Storage upload, directorate profile, publication, or production action was executed.
+- This acceptance confirms local overlay application and static/build readiness only.
+- It does **not** accept P6 formal Browser UAT, controlled-draft write/readback, negative-authorization Browser proof, public RPC Network proof, or responsive Browser evidence.
+- It does **not** accept P5 as a fully closed operational rollout; P5 remains an inventory-driven runtime rollout program after local foundation acceptance.
+- P1 Unit/Admin Browser UAT remains deferred and unaccepted; Platform 15K publication evidence remains blocked by P1.
+
+### Current gate status
 
 ```text
-PLATFORM16_P5_P6_CANDIDATE_PREPARED
-LOCAL_VERIFIER_PENDING
-P6_BROWSER_UAT_PENDING
+PLATFORM16_P5_P6_CANDIDATE_OVERLAY_APPLIED
+PLATFORM16_P5_P6_STATIC_ROLLOUT_CONTRACT_PASSED
+UNIT_PUBLIC_ASSET_HERO_FOLDERS_14_CONFIRMED
+MEDIA_CENTER_ROUTE_CONTRACT_PASSED
+PUBLIC_MEDIA_RPC_GATEWAY_CONTRACT_PASSED
+P5_LOCAL_FOUNDATION_ACCEPTED
+P5_OPERATIONAL_ROLLOUT_FULL_ACCEPTANCE_PENDING
+P6_STATIC_AND_BUILD_READINESS_ACCEPTED
+P6_FORMAL_BROWSER_UAT_PENDING
 P1_BROWSER_UAT_DEFERRED_NOT_ACCEPTED
-PLATFORM15K_RUNTIME_PUBLICATION_EVIDENCE_BLOCKED
-NO_PUBLICATION
-NO_PRODUCTION_APPROVAL
+PLATFORM15K_RUNTIME_PUBLICATION_EVIDENCE_BLOCKED_BY_P1
+NO_SQL_RLS_GRANT_SCHEMA_STORAGE_PROFILE_PUBLICATION_OR_PRODUCTION_MUTATION
+```
+
+---
+
+## Platform 16 — Unit Public Navigation Scope + Unit Media Center Sectional Sidebar Candidate (2026-06-22)
+
+- **User-facing requirement:** a directorate/unit public navigation must not expose ministry-only information such as the Minister’s Word, Former Ministers, the ministry organizational structure, or the central ministry vision/mission. These remain visible only at `home` (the ministry scope). Unit routes retain their own profile, local vision/mission, local media center, and the permitted service center paths.
+- **Unit editor requirement:** a unit-bound actor must see explicit local Media Center pages in the admin sidebar, not only one generic Media Center entry.
+- **Implementation contract:** `/admin/unit-media-center` stays one scoped workspace. The query parameter `section` selects only one of six local pages: `news`, `announcements`, `activities`, `events`, `photos`, and `videos`. It does not create or expose central editorial routes, change RBAC, or expand the user’s unit scope.
+- **Sidebar contract:** query-aware entry identities prevent the six local section entries from collapsing into one route or all appearing active together.
+- **Out of scope:** SQL, RLS, grants, schema changes, storage uploads, profile/contact changes, public composition publication, `core.org_units` slug change, alias redirects, and production approval.
+- **Required evidence after local apply:** targeted tests, `flutter analyze`, `flutter build web --release`, then browser UAT under `bthadmin` and Super User.
+
+---
+
+## Platform 16 — PalWakf Public Roadmap Candidate (2026-06-22)
+
+### Authorized scope
+Add a ministry-home-only public navigation entry labeled `PalWakf`, opening `/palwakf`. The route presents a responsive, public roadmap of planned systems using explanatory cards.
+
+### Scope isolation
+- Navigation entry is gated by `isHome`; unit/directorate menus do not receive the central platform roadmap entry.
+- The page is static public copy and does not expose internal planning records, administrative backlog data, or private system information.
+
+### Planned-card catalogue
+1. Waqf asset management.
+2. Legal system.
+3. Billing and collection.
+4. Tasks and follow-up.
+5. Mustakshif spatial/historical explorer.
+6. Trust-aligned waqf assistant.
+7. Knowledge and documentation center.
+8. Unified services gateway.
+
+### Authority and safety
+No SQL, RLS, grants, schema, storage, profile, publication, production, or role-scope mutation is authorized by this candidate. Local Flutter evidence and browser UAT remain required before baseline acceptance.
+
+---
+
+## Platform 16 — Media Center and Public Temporal Ordering Candidate (2026-06-22)
+
+- The local overlay was applied with `FILES_APPLIED=19` and a timestamped backup before the PowerShell verifier stopped on an UTF-8 parser failure.
+- Scope: news, announcements, activities, events, photos, videos, official communications, and other dated material must render newest-to-oldest. Editorial flags such as pinned, priority, featured, `sort_order`, or `display_order` do not supersede chronological order.
+- Local Flutter evidence and Browser ordering evidence were not completed in that command run. This remains unaccepted until the verifier, targeted tests, `flutter analyze`, `flutter build web --release`, and live Browser checks pass.
+- No SQL, RLS, grant, schema, storage, profile, publication, or production action is included.
+
+
+---
+
+## Platform 16 — Unit Navigation and Media Section Overlay Local Status (2026-06-22)
+
+- The local overlay was applied with `FILES_APPLIED=8` and a timestamped backup. Its verifier then failed due to a PowerShell UTF-8 parsing defect before Flutter checks began.
+- Intended scope: unit public menus must exclude ministry-only pages; unit editors receive explicit local Media Center entries for news, announcements, activities, events, photos, and videos.
+- Static and Browser acceptance remains pending. No SQL, RLS, grant, schema, storage, profile, publication, or production change is authorized.
+
+
+---
+
+## Platform 16 — PalWakf Public Roadmap Local Status (2026-06-22)
+
+- The local overlay was applied with `FILES_APPLIED=6`; static route checks passed for `/palwakf` and ministry-home-only navigation.
+- The original apply verifier stopped on an uninitialized PowerShell `$LASTEXITCODE`. The targeted PalWakf route test later passed.
+- Full Flutter evidence is blocked by the Unit public-detail repository/provider contract mismatch recorded below. The roadmap feature is not yet accepted as a stable baseline.
+- No database mutation, publication action, or production approval occurred.
+
+
+---
+
+## Platform 16 — Direct Public Media Detail Compile Recovery Candidate (2026-06-22)
+
+- A compile regression was found after the public detail providers began calling `getActivityByContentIdForUnit`, `getAnnouncementByContentIdForUnit`, and `getNewsByContentIdForUnit` while the corresponding repository/service methods were absent.
+- The corrective candidate restores those three methods as direct `rpc_public_media_detail_v2` reads through `PwfPublicMediaRuntimeGateway.fetchDetail`, preserving the server-side unit + family + opaque content id lock and prohibiting list/cache or ministry fallbacks.
+- The prior guide-recovery command must not be considered successful: it wrote an empty local guide after its search found no matching backup. This candidate replaces that empty guide with this restored comprehensive baseline.
+- Candidate only: local tests, `flutter analyze`, `flutter build web --release`, Chrome launch, and Browser UAT remain required. No SQL, RLS, grants, schema, storage, publication, or production action is authorized.
+
+
+---
+
+## Current Recovery Gate — 2026-06-22
+
+```text
+COMPREHENSIVE_GUIDE_RESTORATION_CANDIDATE_PREPARED
+UNIT_PUBLIC_DETAIL_PROVIDER_REPOSITORY_CONTRACT_HOTFIX_PREPARED
+FLUTTER_CHROME_COMPILE_BLOCKED_PENDING_LOCAL_APPLY
+TEMPORAL_ORDERING_LOCAL_OVERLAY_APPLIED_NOT_ACCEPTED
+UNIT_NAVIGATION_MEDIA_SECTIONS_LOCAL_OVERLAY_APPLIED_NOT_ACCEPTED
+PALWAKF_ROADMAP_LOCAL_OVERLAY_APPLIED_NOT_ACCEPTED
+P1_BROWSER_UAT_DEFERRED_NOT_ACCEPTED
+P6_FORMAL_BROWSER_UAT_PENDING
+PLATFORM15K_RUNTIME_PUBLICATION_EVIDENCE_BLOCKED_BY_P1
+PRODUCTION_NOT_APPROVED
 ```

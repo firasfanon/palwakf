@@ -77,7 +77,7 @@ class BreakingNewsManagementScreen extends ConsumerStatefulWidget {
 class _BreakingNewsManagementScreenState
     extends ConsumerState<BreakingNewsManagementScreen> {
   bool _showInactiveItems = true;
-  String _sortBy = 'order';
+  String _sortBy = 'created';
   final Set<String> _selectedItems = {};
   bool _isMultiSelectMode = false;
 
@@ -171,14 +171,12 @@ class _BreakingNewsManagementScreenState
                   child: DropdownButton<String>(
                     value: _sortBy,
                     items: const [
-                      DropdownMenuItem(value: 'order', child: Text('الترتيب')),
-                      DropdownMenuItem(value: 'created', child: Text('الأحدث')),
                       DropdownMenuItem(
-                        value: 'priority',
-                        child: Text('الأولوية'),
+                        value: 'created',
+                        child: Text('الأحدث إلى الأقدم'),
                       ),
                     ],
-                    onChanged: (v) => setState(() => _sortBy = v!),
+                    onChanged: null,
                   ),
                 ),
               ),
@@ -238,23 +236,8 @@ class _BreakingNewsManagementScreenState
       items = items.where((s) => s.isActive).toList();
     }
 
-    // Sort items
-    switch (_sortBy) {
-      case 'created':
-        items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        break;
-      case 'priority':
-        items.sort((a, b) {
-          final priorities = {'urgent': 0, 'high': 1, 'normal': 2};
-          return (priorities[a.priority] ?? 2).compareTo(
-            priorities[b.priority] ?? 2,
-          );
-        });
-        break;
-      case 'order':
-      default:
-        items.sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
-    }
+    // Chronology is the sole display order for dated urgent content.
+    items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     if (items.isEmpty) {
       return _buildEmptyState();

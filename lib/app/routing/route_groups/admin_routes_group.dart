@@ -215,7 +215,9 @@ RouteBase _buildAdminShellRoute(Ref ref) {
       ),
       GoRoute(
         path: AppRoutes.adminUnitMediaCenter,
-        builder: (context, state) => const UnitMediaCenterAdministrationPage(),
+        builder: (context, state) => UnitMediaCenterAdministrationPage(
+          initialSectionKey: state.uri.queryParameters['section'],
+        ),
       ),
       GoRoute(
         path: AppRoutes.adminMediaCenterNews,

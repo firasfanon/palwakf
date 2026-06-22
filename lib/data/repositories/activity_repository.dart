@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as dev;
 import 'package:flutter/foundation.dart';
+import 'package:waqf/core/content/pwf_temporal_ordering.dart';
 import '../models/activity.dart';
 import '../services/media_compat_mapper.dart';
 import '../services/supabase_service.dart';
@@ -100,16 +101,15 @@ class ActivityRepository {
   }
 
   void _sortActivityOwnerRows(List<Activity> items) {
-    items.sort((a, b) {
-      final pinned = _boolDesc(a.isPinned, b.isPinned);
-      if (pinned != 0) return pinned;
-      final order = a.sortOrder.compareTo(b.sortOrder);
-      if (order != 0) return order;
-      return b.startDate.compareTo(a.startDate);
-    });
+    items.sort(
+      (a, b) => PwfTemporalOrdering.newestFirst(
+        a.startDate,
+        b.startDate,
+        leftStableKey: a.id.toString(),
+        rightStableKey: b.id.toString(),
+      ),
+    );
   }
-
-  int _boolDesc(bool a, bool b) => a == b ? 0 : (a ? -1 : 1);
 
   List<T> _window<T>(List<T> items, {int? limit, int? offset}) {
     final start = offset == null || offset < 0 ? 0 : offset;
@@ -133,7 +133,7 @@ class ActivityRepository {
       'surface=$surface '
       'projection=allow-listed '
       'filtering=server-resolved-unit '
-      'ordering=server-side '
+      'ordering=newest-first-client-enforced '
       'rows=$rows '
       'decision=media-center-owner-read-default-root-cutover',
     );
@@ -153,59 +153,23 @@ class ActivityRepository {
     );
   }
 
-  Future<Activity?> _getCompatActivityByContentId(
-    String contentId, {
+  Future<Activity?> _getCompatActivityById(
+    int id, {
     String? unitSlug,
     String? ownerOrgUnitId,
+    Set<String>? unitScopeKeys,
   }) async {
-    if (!_mediaOwnerReadDefault) return null;
-    final safeContentId = contentId.trim();
-    if (safeContentId.isEmpty) return null;
-    final unitRef = unitSlug?.trim().isNotEmpty == true
-        ? unitSlug!.trim()
-        : (ownerOrgUnitId?.trim().isNotEmpty == true
-            ? ownerOrgUnitId!.trim()
-            : 'home');
-    try {
-      final rows = await PwfPublicMediaRuntimeGateway(_supabaseService.client)
-          .fetchDetail(
-            unitRef: unitRef,
-            contentId: safeContentId,
-            familyKey: 'activities',
-          )
-          .timeout(_mediaOwnerRuntimeTimeout);
-      if (rows.isEmpty) return null;
-      final item = MediaCompatMapper.activityFromCompatRow(rows.first);
-      if (item.status == ActivityStatus.cancelled) return null;
-      if (item != null) {
-        _logMediaRuntimeSource(
-          family: 'activities',
-          surface: PwfDatabaseOwnerSurfaces.publicMediaRuntimeDetailRpcV2,
-          rows: 1,
-        );
-      }
-      return item;
-    } on TimeoutException {
-      _logMediaRuntimeFallback(
-        family: 'activities',
-        reason: 'public-detail-rpc-timeout',
-      );
-      return null;
-    } catch (e, stackTrace) {
-      dev.log(
-        'Media Center public activity detail RPC failed without feed fallback',
-        name: 'ActivityRepository',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      _logMediaRuntimeFallback(
-        family: 'activities',
-        reason: 'public-detail-rpc-failure',
-      );
-      return null;
+    final items = await _getCompatActivities(
+      limit: 500,
+      unitSlug: unitSlug,
+      ownerOrgUnitId: ownerOrgUnitId,
+      unitScopeKeys: unitScopeKeys,
+    );
+    for (final item in items) {
+      if (item.id == id) return item;
     }
+    return null;
   }
-
 
   // ============================================
   // READ OPERATIONS
@@ -218,19 +182,7 @@ class ActivityRepository {
 
   /// Get activity by ID.
   Future<Activity?> getActivityById(int id) {
-    return _getCompatActivityByContentId(id.toString());
-  }
-
-  Future<Activity?> getActivityByContentIdForUnit(
-    String contentId,
-    String unitId, {
-    String? unitSlug,
-  }) {
-    return _getCompatActivityByContentId(
-      contentId,
-      unitSlug: unitSlug ?? unitId,
-      ownerOrgUnitId: unitId,
-    );
+    return _getCompatActivityById(id);
   }
 
   /// Get activity by ID scoped to a specific unit.
@@ -244,12 +196,65 @@ class ActivityRepository {
     String unitId, {
     String? unitSlug,
   }) async {
-    final compat = await _getCompatActivityByContentId(
-      id.toString(),
+    final compat = await _getCompatActivityById(
+      id,
       unitSlug: unitSlug ?? unitId,
       ownerOrgUnitId: unitId,
     );
     return compat;
+  }
+
+
+  /// Resolves a public activity detail by opaque server-issued content_id.
+  ///
+  /// The public RPC receives both the unit reference and family key. It returns
+  /// null when the content is not published for that unit. No bounded feed,
+  /// cache, legacy table, or ministry fallback is used for this route.
+  Future<Activity?> getActivityByContentIdForUnit(
+    String contentId,
+    String unitId, {
+    String? unitSlug,
+  }) async {
+    if (!_mediaOwnerReadDefault) return null;
+
+    final safeContentId = contentId.trim();
+    final safeUnitId = unitId.trim();
+    if (safeContentId.isEmpty || safeUnitId.isEmpty) return null;
+
+    final unitRef = unitSlug?.trim().isNotEmpty == true
+        ? unitSlug!.trim()
+        : safeUnitId;
+
+    try {
+      final rows = await PwfPublicMediaRuntimeGateway(
+        _supabaseService.client,
+      ).fetchDetail(
+        unitRef: unitRef,
+        contentId: safeContentId,
+        familyKey: 'activities',
+      ).timeout(_mediaOwnerRuntimeTimeout);
+
+      if (rows.isEmpty) return null;
+      return MediaCompatMapper.activityFromCompatRow(rows.first);
+    } on TimeoutException {
+      _logMediaRuntimeFallback(
+        family: 'activities',
+        reason: 'public-detail-rpc-timeout',
+      );
+      return null;
+    } catch (error, stackTrace) {
+      dev.log(
+        'Media Center public activity detail resolver failed',
+        name: 'ActivityRepository',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      _logMediaRuntimeFallback(
+        family: 'activities',
+        reason: 'public-detail-rpc-failure',
+      );
+      return null;
+    }
   }
 
   /// Get activities by category.

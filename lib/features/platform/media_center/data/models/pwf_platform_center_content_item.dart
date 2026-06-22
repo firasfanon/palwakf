@@ -90,6 +90,39 @@ class PwfPlatformCenterContentItem {
   bool get isDraft =>
       status.trim().toLowerCase() == 'draft' || status == 'مسودة';
 
+  /// Date used for strict newest-first display across Media Center lists.
+  /// Activities and events use their occurrence date; other families use their
+  /// publication/issue date with created-at as a final fallback.
+  DateTime? get chronologyDate {
+    final family = familyKey.trim().toLowerCase().replaceAll('-', '_');
+    if (family == 'activities' || family == 'events') {
+      return _metadataDate(const <String>[
+        'event_date',
+        'start_date',
+        'published_at',
+        'publish_at',
+        'created_at',
+      ]) ?? publishedAt;
+    }
+    return publishedAt ?? _metadataDate(const <String>[
+      'issue_date',
+      'published_at',
+      'publish_at',
+      'date',
+      'created_at',
+    ]);
+  }
+
+  DateTime? _metadataDate(List<String> keys) {
+    for (final key in keys) {
+      final value = metadata[key];
+      if (value is DateTime) return value;
+      final parsed = DateTime.tryParse(value?.toString() ?? '');
+      if (parsed != null) return parsed;
+    }
+    return null;
+  }
+
   factory PwfPlatformCenterContentItem.fromJson(Map<String, dynamic> json) {
     String text(List<String> keys, String fallback) {
       for (final key in keys) {

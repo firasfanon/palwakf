@@ -92,42 +92,50 @@ List<Widget> _navItems(
       onTap: () =>
           context.go(isHome ? AppRoutes.home : UnitRoutes.home(unitSlug)),
     ),
+    if (isHome)
+      _NavLink(
+        icon: Icons.account_tree_outlined,
+        label: 'PalWakf',
+        onTap: () => context.go(AppRoutes.palWakf),
+      ),
     _NavDropdown(
       label: isHome ? 'عن الوزارة' : 'عن $scopeLabel',
       icon: Icons.info_outline,
       children: [
         _DropdownLink(
           icon: Icons.info_outline,
-          label: isHome ? 'عن الوزارة' : 'الصفحة الرئيسية لـ $scopeLabel',
+          label: isHome ? 'عن الوزارة' : 'عن $scopeLabel',
           onTap: () =>
               context.go(isHome ? AppRoutes.about : UnitRoutes.about(unitSlug)),
         ),
-        _DropdownLink(
-          icon: Icons.person,
-          label: 'كلمة الوزير',
-          onTap: () => context.go(AppRoutes.minister),
-        ),
-        _DropdownLink(
-          icon: Icons.flag,
-          label: 'الرؤيا والرسالة',
-          onTap: () => context.go(
-            isHome ? AppRoutes.visionMission : UnitRoutes.visionMission(unitSlug),
+        if (isHome) ...[
+          _DropdownLink(
+            icon: Icons.person,
+            label: 'كلمة الوزير',
+            onTap: () => context.go(AppRoutes.minister),
           ),
-        ),
-        _DropdownLink(
-          icon: Icons.account_tree,
-          label: 'الهيكل التنظيمي',
-          onTap: () => context.go(
-            isHome ? AppRoutes.structure : UnitRoutes.structure(unitSlug),
+          _DropdownLink(
+            icon: Icons.flag,
+            label: 'الرؤيا والرسالة',
+            onTap: () => context.go(AppRoutes.visionMission),
           ),
-        ),
-        _DropdownLink(
-          icon: Icons.groups_2_outlined,
-          label: 'الوزراء السابقون',
-          onTap: () => context.go(
-            isHome ? AppRoutes.formerMinisters : UnitRoutes.formerMinisters(unitSlug),
+          _DropdownLink(
+            icon: Icons.account_tree,
+            label: 'الهيكل التنظيمي',
+            onTap: () => context.go(AppRoutes.structure),
           ),
-        ),
+          _DropdownLink(
+            icon: Icons.groups_2_outlined,
+            label: 'الوزراء السابقون',
+            onTap: () => context.go(AppRoutes.formerMinisters),
+          ),
+        ] else ...[
+          _DropdownLink(
+            icon: Icons.flag,
+            label: 'رؤيا ورسالة $scopeLabel',
+            onTap: () => context.go(UnitRoutes.visionMission(unitSlug)),
+          ),
+        ],
       ],
     ),
     _NavDropdown(
