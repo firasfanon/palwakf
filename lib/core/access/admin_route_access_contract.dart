@@ -1,4 +1,5 @@
 import '../enums/enums.dart';
+import '../unit/pwf_unit_slug_registry.dart';
 import 'access_profile.dart';
 
 /// Platform-wide route authorization contract for PalWakf admin surfaces.
@@ -19,6 +20,7 @@ class AdminRouteAccessContract {
     required this.scopePolicyAr,
     this.readOnly = false,
     this.governanceRoute = false,
+    this.allowOwnUnitAdministrator = false,
   });
 
   final String routePrefix;
@@ -30,6 +32,11 @@ class AdminRouteAccessContract {
   final String scopePolicyAr;
   final bool readOnly;
   final bool governanceRoute;
+
+  /// Allows a unit administrator to open this surface only for the unit
+  /// resolved in their authenticated platform profile. This is a route-scope
+  /// admission rule; owner RPCs and RLS remain the record-level authority.
+  final bool allowOwnUnitAdministrator;
 
   bool matches(String location) {
     final path = _normalize(location);
@@ -47,6 +54,27 @@ class AdminRouteAccessContract {
       if (profile.can(systemKey, permission)) return true;
     }
     return false;
+  }
+
+  bool allowsOwnUnitAdministrator({
+    required bool actorIsUnitAdmin,
+    required String? actorUnitSlug,
+    required String? requestedUnitSlug,
+  }) {
+    if (!allowOwnUnitAdministrator || !actorIsUnitAdmin) return false;
+
+    final actorSlug = (actorUnitSlug ?? '').trim();
+    final requestedSlug = (requestedUnitSlug ?? '').trim();
+    if (actorSlug.isEmpty || requestedSlug.isEmpty) return false;
+
+    final actorInternal = PwfUnitSlugRegistry.internalSlugFor(actorSlug);
+    final requestedInternal = PwfUnitSlugRegistry.internalSlugFor(requestedSlug);
+
+    // A unit administrator is never promoted to ministry/home authority merely
+    // by navigating to an administrative route.
+    if (actorInternal == 'home') return false;
+
+    return actorInternal == requestedInternal;
   }
 
   static String _normalize(String value) {
@@ -129,7 +157,8 @@ class AdminRouteAccessContracts {
       readPermission: Permission.manageHome,
       writePermissions: {Permission.manageHome, Permission.manageSite},
       labelAr: 'إدارة واجهات الوحدات',
-      scopePolicyAr: 'وحدات إدارية مرتبطة بنطاق المستخدم.',
+      scopePolicyAr: 'وحدات إدارية مرتبطة بنطاق المستخدم؛ مدير الوحدة يفتح وحدته فقط.',
+      allowOwnUnitAdministrator: true,
     ),
     AdminRouteAccessContract(
       routePrefix: '/admin/system-surfaces-management',
@@ -517,8 +546,11 @@ class AdminRouteAccessContracts {
 
   static AdminRouteAccessDecision decide(
     String location,
-    AccessProfile profile,
-  ) {
+    AccessProfile profile, {
+    bool actorIsUnitAdmin = false,
+    String? actorUnitSlug,
+    String? requestedUnitSlug,
+  }) {
     if (isCommonActiveAdminRoute(location)) {
       return const AdminRouteAccessDecision(
         allowed: true,
@@ -559,13 +591,20 @@ class AdminRouteAccessContracts {
       );
     }
 
-    final allowed = contract.allows(profile);
+    final allowedByOwnUnit = contract.allowsOwnUnitAdministrator(
+      actorIsUnitAdmin: actorIsUnitAdmin,
+      actorUnitSlug: actorUnitSlug,
+      requestedUnitSlug: requestedUnitSlug,
+    );
+    final allowed = allowedByOwnUnit || contract.allows(profile);
     return AdminRouteAccessDecision(
       allowed: allowed,
       contract: contract,
-      reasonAr: allowed
-          ? 'السماح وفق عقد الوصول: ${contract.labelAr}'
-          : 'غير مصرح: ${contract.labelAr} يتطلب صلاحية/دورًا ضمن ${contract.systemKey.name}.',
+      reasonAr: allowedByOwnUnit
+          ? 'السماح وفق نطاق الوحدة: مدير الوحدة يفتح واجهة وحدته فقط.'
+          : allowed
+              ? 'السماح وفق عقد الوصول: ${contract.labelAr}'
+              : 'غير مصرح: ${contract.labelAr} يتطلب صلاحية/دورًا ضمن ${contract.systemKey.name}.',
     );
   }
 }

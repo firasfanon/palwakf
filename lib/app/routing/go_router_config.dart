@@ -66,6 +66,7 @@ import 'unit_routes.dart';
 import 'unit_path_utils.dart';
 import 'public_route_canonicalization.dart';
 import '../../core/unit/pwf_unit_slug_registry.dart';
+import '../../data/models/admin_user.dart' hide UserRole;
 import '../../data/models/news_article.dart';
 import '../../presentation/screens/public/news_details/news_detail_route_screen.dart';
 import '../../presentation/screens/public/unit/unit_home_screen.dart';
@@ -240,10 +241,31 @@ class GoRouterConfig {
             return _forbiddenLocation(state, PwfAccessReason.systemRoleDenied);
           }
 
-          final routeDecision =
-              AdminRouteAccessContracts.decide(location, profile);
+          final actor = ref.read(currentUserProvider);
+          final unitRouteNormalization =
+              _normalizeOwnUnitSurfaceLocation(state, actor);
+          if (unitRouteNormalization != null) {
+            return unitRouteNormalization;
+          }
+
+          final routeDecision = AdminRouteAccessContracts.decide(
+            location,
+            profile,
+            actorIsUnitAdmin: actor?.isUnitAdmin == true,
+            actorUnitSlug: actor?.unitSlug,
+            requestedUnitSlug: state.uri.queryParameters['unit'],
+          );
           if (!routeDecision.allowed) {
-            return _forbiddenLocation(state, PwfAccessReason.adminAccessDenied);
+            final isUnitScopeMismatch =
+                location == AppRoutes.adminUnitSurfacesManagement &&
+                    actor?.isUnitAdmin == true;
+            return _forbiddenLocation(
+              state,
+              isUnitScopeMismatch
+                  ? PwfAccessReason.unitScopeDenied
+                  : PwfAccessReason.adminAccessDenied,
+              unitSlug: state.uri.queryParameters['unit'],
+            );
           }
 
           // Legacy task routes remain guarded explicitly because some task detail
@@ -400,6 +422,28 @@ class GoRouterConfig {
       default:
         return SystemKey.awqafSystem;
     }
+  }
+
+  static String? _normalizeOwnUnitSurfaceLocation(
+    GoRouterState state,
+    AdminUser? actor,
+  ) {
+    if (state.uri.path != AppRoutes.adminUnitSurfacesManagement) return null;
+    if (actor == null || !actor.isActive || !actor.isUnitAdmin) return null;
+
+    final actorUnitSlug = (actor.unitSlug ?? '').trim();
+    if (actorUnitSlug.isEmpty) return null;
+
+    final requestedUnitSlug = (state.uri.queryParameters['unit'] ?? '').trim();
+    if (requestedUnitSlug.isNotEmpty) return null;
+
+    final query = Map<String, String>.from(state.uri.queryParameters)
+      ..['unit'] = PwfUnitSlugRegistry.publicSlugFor(actorUnitSlug);
+
+    return Uri(
+      path: state.uri.path,
+      queryParameters: query,
+    ).toString();
   }
 
   static String _forbiddenLocation(

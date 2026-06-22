@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import 'package:waqf/app/routing/app_routes.dart';
 import 'package:waqf/core/access/access_provider.dart';
+import 'package:waqf/core/unit/pwf_unit_slug_registry.dart';
 import 'package:waqf/data/models/homepage_section.dart';
 import 'package:waqf/features/platform/home/presentation/widgets/sections/pwf_home_sections_renderer.dart';
 import 'package:waqf/features/platform/unit_operations/domain/unit_operational_activation_contract.dart';
 import 'package:waqf/features/platform/unit_operations/presentation/providers/unit_operational_activation_providers.dart';
+import 'package:waqf/presentation/providers/auth_provider.dart';
 import 'package:waqf/presentation/providers/homepage_settings_provider.dart';
 import 'package:waqf/presentation/screens/admin/main/management/home_management/pwf_homepage_sections_manager.dart';
 import 'package:waqf/presentation/screens/admin/main/management/home_management/pwf_unit_pages_repository.dart';
@@ -36,8 +38,10 @@ class _UnitSurfacesManagementScreenState
   @override
   void initState() {
     super.initState();
-    final candidate = widget.initialUnitSlug?.trim().toLowerCase();
-    _selectedSlug = candidate == null || candidate.isEmpty ? null : candidate;
+    final candidate = widget.initialUnitSlug?.trim();
+    _selectedSlug = candidate == null || candidate.isEmpty
+        ? null
+        : PwfUnitSlugRegistry.internalSlugFor(candidate);
   }
 
   void _queueCompositionLoad(
@@ -160,7 +164,14 @@ class _UnitSurfacesManagementScreenState
     final compositionState = ref.watch(pwfHomepageSectionsManagerProvider);
     final manager = ref.read(pwfHomepageSectionsManagerProvider.notifier);
     final accessProfile = ref.watch(accessProfileProvider).valueOrNull;
+    final currentUser = ref.watch(currentUserProvider);
     final isSuperuser = accessProfile?.hasPlatformRootAuthority ?? false;
+    final isOwnUnitAdministrator = !isSuperuser &&
+        currentUser?.isUnitAdmin == true &&
+        (currentUser?.unitSlug ?? '').trim().isNotEmpty;
+    final ownUnitSlug = isOwnUnitAdministrator
+        ? PwfUnitSlugRegistry.internalSlugFor(currentUser!.unitSlug!)
+        : null;
     final activationStatesAsync = ref.watch(unitOperationalActivationStatesProvider);
 
     return Directionality(
@@ -239,13 +250,30 @@ class _UnitSurfacesManagementScreenState
                 return a.label.compareTo(b.label);
               });
 
-            if (units.isEmpty) {
-              return const Center(child: Text('لا توجد وحدات قابلة للعرض.'));
+            final scopedUnits = isOwnUnitAdministrator
+                ? units
+                    .where((unit) =>
+                        PwfUnitSlugRegistry.internalSlugFor(unit.slug) ==
+                        ownUnitSlug)
+                    .toList(growable: false)
+                : units;
+
+            if (scopedUnits.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    isOwnUnitAdministrator
+                        ? 'تعذر العثور على وحدة المستخدم ضمن تركيب الواجهة المتاح.'
+                        : 'لا توجد وحدات قابلة للعرض.',
+                  ),
+                ),
+              );
             }
 
             final selectedTarget = _selectedSlug == null
                 ? null
-                : units.cast<_UnitSurfaceTarget?>().firstWhere(
+                : scopedUnits.cast<_UnitSurfaceTarget?>().firstWhere(
                       (item) => item?.slug == _selectedSlug,
                       orElse: () => null,
                     );
@@ -263,10 +291,11 @@ class _UnitSurfacesManagementScreenState
                 children: [
                   _buildSelectorCard(
                     context,
-                    units,
+                    scopedUnits,
                     null,
                     manager,
                     isSuperuser,
+                    canOpenActivation: isSuperuser,
                   ),
                   const SizedBox(height: 12),
                   _buildEmptyCard(context),
@@ -280,10 +309,11 @@ class _UnitSurfacesManagementScreenState
                 children: [
                   _buildSelectorCard(
                     context,
-                    units,
+                    scopedUnits,
                     selectedTarget,
                     manager,
                     isSuperuser,
+                    canOpenActivation: isSuperuser,
                   ),
                   const SizedBox(height: 12),
                   _buildEditorCard(
@@ -311,8 +341,9 @@ class _UnitSurfacesManagementScreenState
     List<_UnitSurfaceTarget> units,
     _UnitSurfaceTarget? selectedTarget,
     PwfHomepageSectionsManager manager,
-    bool isSuperuser,
-  ) {
+    bool isSuperuser, {
+    required bool canOpenActivation,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -387,17 +418,19 @@ class _UnitSurfacesManagementScreenState
           if (selectedTarget != null) ...[
             const SizedBox(height: 12),
             _UnitSurfaceRuntimeStatus(target: selectedTarget),
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerRight,
-              child: OutlinedButton.icon(
-                onPressed: () => context.go(
-                  '${AppRoutes.adminUnitOperationalActivation}?unit=${Uri.encodeComponent(selectedTarget.slug)}',
+            if (canOpenActivation) ...[
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton.icon(
+                  onPressed: () => context.go(
+                    '${AppRoutes.adminUnitOperationalActivation}?unit=${Uri.encodeComponent(selectedTarget.slug)}',
+                  ),
+                  icon: const Icon(Icons.fact_check_outlined),
+                  label: const Text('فتح حالة التفعيل والجاهزية'),
                 ),
-                icon: const Icon(Icons.fact_check_outlined),
-                label: const Text('فتح حالة التفعيل والجاهزية'),
               ),
-            ),
+            ],
           ],
         ],
       ),

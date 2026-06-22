@@ -3,6 +3,7 @@ import '../../data/models/admin_user.dart';
 import '../enums/permission.dart';
 import '../enums/system_key.dart';
 import '../enums/user_role.dart' as platform_role;
+import '../unit/pwf_unit_slug_registry.dart';
 import 'access_profile.dart';
 
 class UserDashboardContract {
@@ -222,8 +223,8 @@ class UserDashboardContractBuilder {
         }
         break;
       case 'unit_admin':
-        adminTools.addAll(const [
-          UserDashboardAdminTool(
+        adminTools.addAll([
+          const UserDashboardAdminTool(
             title: 'مستخدمو الوحدة',
             subtitle: 'إدارة مستخدمي الوحدة الإدارية التابعة لك فقط.',
             route: AppRoutes.adminUsers,
@@ -232,7 +233,7 @@ class UserDashboardContractBuilder {
           UserDashboardAdminTool(
             title: 'واجهات الوحدة',
             subtitle: 'إدارة صفحات الوحدة ومحتواها وخدماتها ضمن نطاقها المعتمد.',
-            route: AppRoutes.adminUnitSurfacesManagement,
+            route: _unitSurfacesRouteFor(user),
             systemKey: SystemKey.platformAdmin,
           ),
         ]);
@@ -285,6 +286,13 @@ class UserDashboardContractBuilder {
       canViewOwnActivityLog: user.isActive,
       canViewOwnSessionLog: user.isActive,
     );
+  }
+
+  static String _unitSurfacesRouteFor(AdminUser user) {
+    final unitSlug = (user.unitSlug ?? '').trim();
+    if (unitSlug.isEmpty) return AppRoutes.adminUnitSurfacesManagement;
+    final publicSlug = PwfUnitSlugRegistry.publicSlugFor(unitSlug);
+    return '${AppRoutes.adminUnitSurfacesManagement}?unit=${Uri.encodeQueryComponent(publicSlug)}';
   }
 
   static bool _hasPlatformRootAuthority(

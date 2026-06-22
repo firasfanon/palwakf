@@ -7,6 +7,7 @@ enum PwfAccessReason {
   missingAccessProfile('missing_access_profile'),
   awqafOperationsDenied('awqaf_operations_denied'),
   awqafScopeDenied('awqaf_scope_denied'),
+  unitScopeDenied('unit_scope_denied'),
   adminAccessDenied('admin_access_denied'),
   systemRoleDenied('system_role_denied'),
   unauthorizedProtectedRoute('unauthorized_protected_route'),
@@ -36,6 +37,8 @@ enum PwfAccessReason {
         return 'تم رفض الوصول لأن المستخدم لا يملك صلاحية تشغيل أوقاف سيستم.';
       case PwfAccessReason.awqafScopeDenied:
         return 'تم رفض الوصول لأن نطاق الوحدة التنظيمية لا يطابق صلاحيات المستخدم.';
+      case PwfAccessReason.unitScopeDenied:
+        return 'تم رفض الوصول لأن نطاق الوحدة المطلوب لا يطابق وحدة المستخدم الإدارية.';
       case PwfAccessReason.adminAccessDenied:
         return 'تم رفض الوصول لأن صلاحيات الإدارة العامة غير متوفرة لهذا المستخدم.';
       case PwfAccessReason.systemRoleDenied:
