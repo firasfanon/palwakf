@@ -1079,8 +1079,9 @@ class HomepageRepository {
           });
         }
       }
-    } catch (e) {
-      log('Owner-schema composition sync failed (non-fatal): $e');
+    } catch (e, st) {
+      log('Owner-schema composition sync failed for unit $unitId '
+          '(${entries.length} entries): $e\n$st');
     }
   }
 

@@ -1,3 +1,9 @@
+# Environment files (contain secrets)
+.env
+.env.local
+.env.production
+.env.staging
+
 # Miscellaneous
 *.class
 *.log

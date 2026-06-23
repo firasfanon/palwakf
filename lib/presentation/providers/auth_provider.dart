@@ -1,4 +1,6 @@
 // lib/presentation/providers/auth_provider.dart
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import '../../data/repositories/auth_repository.dart';
@@ -53,8 +55,8 @@ class AuthState {
 class AuthStateNotifier extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
   bool _initialized = false;
+  StreamSubscription<supabase.AuthState>? _authSubscription;
 
-  // FIXED: Removed _init() call from constructor
   AuthStateNotifier(this._authRepository) : super(const AuthState());
 
   /// Initialize - check if user is already logged in
@@ -82,12 +84,18 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       state = const AuthState();
     }
 
-    // Listen to auth state changes
-    _authRepository.authStateChanges.listen((authState) {
+    _authSubscription?.cancel();
+    _authSubscription = _authRepository.authStateChanges.listen((authState) {
       if (authState.event == supabase.AuthChangeEvent.signedOut) {
         state = const AuthState();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   /// Login
