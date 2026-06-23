@@ -1,3 +1,8 @@
+# Environment files (local overrides)
+.env.local
+.env.production
+.env.staging
+
 # Miscellaneous
 *.class
 *.log
