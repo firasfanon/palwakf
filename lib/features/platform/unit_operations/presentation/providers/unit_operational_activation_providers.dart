@@ -7,3 +7,8 @@ final unitOperationalActivationProvider =
     return UnitOperationalActivationContract(unitId: unitId);
   },
 );
+
+final unitOperationalActivationStatesProvider =
+    FutureProvider<List<UnitOperationalActivationState>>((ref) async {
+  return const <UnitOperationalActivationState>[];
+});
